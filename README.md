@@ -20,7 +20,7 @@ to install using [composer](http://getcomposer.org/), add the fellowing to your 
 }
 ```
 
-if you're not using composer, donwload [here](https://github.com/zweifisch/zf/tags)
+if you're not using composer, download soruce code [here](https://github.com/zweifisch/zf/tags)
 
 ```php
 require 'vendor/autoload.php'; #  require 'zf/zf.php'; if you are not using composer
@@ -78,7 +78,7 @@ $app->delete('/users/:user_ids', function() {
 
 $app->param('user_ids', function($user_ids) {
 	$ids = explode('-', $user_ids);
-	if(count($ids) > 0){
+	if(count($ids) <= 10){
 		return $ids;
 	}
 	$this->send(401);
