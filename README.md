@@ -85,6 +85,14 @@ $app->param('user_ids', function($user_ids) {
 });
 ```
 
+### access inputs
+
+`$this->requestBody` is an array, parsed from raw request body according to content type (json|formdata)
+
+`$this->getParam($key, $defaultValue)` gets value from requestBody
+
+`$this->getQuery($key, $defaultValue)` gets value from `$_GET`
+
 ### jsonp
 
 ```php
@@ -112,7 +120,13 @@ $app->cmd('ls user --skip <from> --limit <max> <pattern>', function(){
 })->defaults(['max' => 20]);
 ```
 
+### help info
+
 if no command matched(404), a help message will be printed, and program will exit with err(code 1);
+
+### get piped input
+
+use `$this->getstdin`
 
 ### handle signals
 
