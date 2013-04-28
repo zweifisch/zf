@@ -106,16 +106,18 @@ $app->cmd('ls user <pattern>', ['--skip', '--limit', '--female-only'], function(
 ```
 
 ### handle signals
+
+see `examples/cli.php` for more details
 ```php
 $app->sigint(function(){
-	echo 'ctrl-z pressed';
+	echo 'ctrl-c pressed';
 	exit(0);
 });
 ```
 
 ## scalability
 
-routing to a class
+using class as request handler
 ```php
 $app
 	->get('/user/:id', ['\controllers\User', 'get'])
@@ -123,7 +125,7 @@ $app
 	->param('id', ['\handlers\Param', 'ensureInt'])
 ```
 
-the same using a namespace prefix
+using a namespace prefix
 ```php
 $app->ns('\controllers')
 	->get('/user/:id', ['User', 'get'])
@@ -169,7 +171,7 @@ return [
 
 ## examples
 
-there is an exmaple demostrate how to add/list/delte users, to runing it using php's builtin server: (needs the php mongo extension metioned above)
+there is an exmaple demostrating how to add/list/delte users, to run it using php's builtin server: (needs the php mongo extension metioned above)
 ```sh
 cd examples && php -S localhost:5000
 ```
