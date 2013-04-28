@@ -91,7 +91,7 @@ $app->param('user_ids', function($user_ids) {
 $app->jsonp($result);
 ```
 
-if `$_GET['callback']` is set js will returned, otherwise it's equivelent to `$this->send($result)`
+if `$_GET['callback']` is set, javascript will be returned, otherwise it's equivelent to `$this->send($result)`
 
 ## cli
 
@@ -100,10 +100,19 @@ $app->cmd('hello <name>', function(){
 	echo 'say hello to ', $this->params->name;
 });
 
-$app->cmd('ls user <pattern>', ['--skip', '--limit', '--female-only'], function(){
+$app->cmd('ls user --skip <from> --limit <max> <pattern>', function(){
 	var_dump($this->params);
 });
 ```
+
+all params are required, unless default values are provided
+```php
+$app->cmd('ls user --skip <from> --limit <max> <pattern>', function(){
+	var_dump($this->params);
+})->defaults(['max' => 20]);
+```
+
+if no command matched(404), a help message will be printed, and program will exit with err(code 1);
 
 ### handle signals
 

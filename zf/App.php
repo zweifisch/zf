@@ -36,30 +36,13 @@ class App
 	{
 		if (in_array($name, ['get', 'post', 'put', 'delete', 'patch', 'cmd'], true))
 		{
-			if (3 == count($args))
-			{
-				list($pattern, $options, $callable) = $args;
-			}
-			else
-			{
-				list($pattern, $callable) = $args;
-			}
-
+			list($pattern, $callable) = $args;
 			if(is_array($callable))
 			{
 				list($classname, $method) = $callable;
 				$callable = [$this->nsPrefix . '\\' . $classname, $method];
 			}
-
-			if (3 == count($args))
-			{
-				$this->router->append($name, [$pattern, $options, $callable]);
-			}
-			else
-			{
-				$this->router->append($name, [$pattern, $callable]);
-			}
-
+			$this->router->append($name, [$pattern, $callable]);
 			return $this;
 		}
 		elseif ($this->is_cli())
@@ -151,6 +134,11 @@ class App
 		{
 			if ($this->is_cli())
 			{
+				echo "Usage:\n\n";
+				foreach ($this->router->cmds() as $cmd)
+				{
+					echo '  php ', $_SERVER['argv'][0], ' ' , $cmd, "\n";
+				}
 				exit(1);
 			}
 			else
@@ -217,6 +205,11 @@ class App
 			$ret .= fgets(STDIN);
 		}
 		return $ret;
+	}
+
+	public function defaults($defaults)
+	{
+		$this->router->attach($defaults);
 	}
 
 	private function processParams()

@@ -4,11 +4,18 @@ namespace zf;
 
 class CliRouter
 {
-	private $rules = array();
+	private $rules;
+	private $defaults;
 
 	public function append($_, $rule)
 	{
 		$this->rules[] = $rule;
+		$this->defaults[] = [];
+	}
+
+	public function attach($defaults)
+	{
+		$this->defaults[count($this->rules) - 1] = $defaults;
 	}
 
 	private function parse($args)
@@ -22,7 +29,7 @@ class CliRouter
 			{
 				if ($optname)
 				{
-					$options[substr($optname,2)] = true;
+					$options[$optname] = true;
 				}
 				$optname = $arg;
 			}
@@ -30,7 +37,7 @@ class CliRouter
 			{
 				if ($optname)
 				{
-					$options[substr($optname,2)] = $arg;
+					$options[$optname] = $arg;
 					$optname = null;
 				}
 				else
@@ -48,57 +55,96 @@ class CliRouter
 		return [$positionalArgs, $options];
 	}
 
-	private function match($positionalArgs, $cmd)
+	private function match($positionalArgs, $options, $pattern, $defaults)
 	{
-		if (count($positionalArgs) == count($cmd))
+		$pos = 0;
+		$ret = [];
+		$optionName = null;
+		foreach(explode(' ', $pattern) as $item)
 		{
-			$ret = [];
-			foreach($cmd as $idx => $name)
+			if (0 == strncmp('<', $item, 1))
 			{
-				if (0 == strncmp('<', $name, 1))
+				$name = substr($item, 1, strlen($item) - 2);
+				if($optionName)
 				{
-					$ret[substr($name, 1, strlen($name) - 2)] = $positionalArgs[$idx];
+					if (isset($options[$optionName]))
+					{
+						$ret[$name] = $options[$optionName];
+					}
+					elseif (isset($defaults[$name]))
+					{
+						$ret[$name] = $defaults[$name];
+					}
+					else
+					{
+						return false;
+					}
+					$optionName = null;
 				}
-				elseif($name !== $positionalArgs[$idx])
+				else
+				{
+					if (isset($positionalArgs[$pos]))
+					{
+						$ret[$name] = $positionalArgs[$pos];
+						$pos ++;
+					}
+					else
+					{
+						return false;
+					}
+				}
+			}
+			elseif(0 == strncmp('--', $item, 2))
+			{
+				$optionName = $item;
+			}
+			else
+			{
+				if ($item !== $positionalArgs[$pos])
 				{
 					return false;
 				}
+				$pos ++;
 			}
+		}
+		if (count($positionalArgs) == $pos)
+		{
 			return $ret;
 		}
 		return false;
+	}
+
+	public function dispatch($args)
+	{
+		list($positionalArgs, $options) = $this->parse($args);
+
+		foreach($this->rules as $idx => $rule)
+		{
+			list($pattern, $callable) = $rule;
+			$params = $this->match($positionalArgs, $options, $pattern, $this->defaults[$idx]);
+			if ($params !== false)
+			{
+				return [$callable, $params];
+			}
+		}
 	}
 
 	public function run()
 	{
 		if (isset($_SERVER['argv']) && count($_SERVER['argv']) > 1)
 		{
-			list($positionalArgs, $options) = $this->parse(array_slice($_SERVER['argv'], 1));
-
-			foreach($this->rules as $rule)
-			{
-				if (3 == count($rule))
-				{
-					list($cmd, $expectedOptions, $callable) = $rule;
-				}
-				else
-				{
-					list($cmd, $callable) = $rule;
-					$expectedOptions = [];
-				}
-				$cmd = explode(' ', $cmd);
-				$matched = $this->match($positionalArgs, $cmd);
-				if ($matched !== false)
-				{
-					foreach($expectedOptions as $optname)
-					{
-						$optname = substr($optname, 2);
-						$matched[$optname] = isset($options[$optname]) ?  $options[$optname] : false;
-					}
-					return [$callable, $matched];
-				}
-			}
+			return $this->dispatch(array_slice($_SERVER['argv'], 1));
 		}
 		return [false, false];
+	}
+
+	public function cmds()
+	{
+		$cmds = [];
+		foreach ($this->rules as $rule)
+		{
+			$cmds[] = $rule[0];
+		}
+		return $cmds;
 	}
 }
