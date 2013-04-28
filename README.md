@@ -38,10 +38,11 @@ $app->run();
 
 ```php
 
-$app
-	->get('/user/:id', ['User', 'get'])
-	->post('/user', ['User', 'create'])
-	->run();
+$app->get('/user/:id', function(){
+	# ...
+})->post('/user', function(){
+	# ...
+})->run();
 ```
 
 ### component
