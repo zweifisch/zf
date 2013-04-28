@@ -1,0 +1,27 @@
+{
+    "authors": [
+        {
+            "email": "zf.pascal@gmail.com", 
+            "name": "Feng Zhou"
+        }
+    ], 
+    "autoload": {
+        "psr-0": {
+            "zf": "."
+        }
+    }, 
+    "description": "a micro php framework", 
+    "homepage": "https://github.com/zweifisch/zf", 
+    "keywords": [
+        "microframework", 
+        "rest", 
+        "cli", 
+        "router"
+    ], 
+    "license": "MIT", 
+    "name": "zf/zf", 
+    "require": {
+        "php": ">=5.4.0"
+    }, 
+    "type": "library"
+}
