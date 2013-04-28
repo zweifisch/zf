@@ -1,6 +1,6 @@
 <?php
 
-// php -S localhost:5000 demo.php
+// php -S localhost:5000
 // curl -d name=zf -d passwd=secret -d _id=1 localhost:5000/user
 // curl -d name=dos -d passwd=secret -d _id=2 localhost:5000/user
 // curl -d name=dres -d passwd=secret -d _id=3 localhost:5000/user

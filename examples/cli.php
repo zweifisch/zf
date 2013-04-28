@@ -1,10 +1,10 @@
 <?php
 
-// php demo-cli.php time Y-m-d
-// php demo-cli.php ls users --female-only --skip 100 --limit 50 '*admin*'
-// php demo-cli.php ls goods --female-only --skip 100 --limit 50 '*apple*'
-// php demo-cli.php cat < ~/.bashrc
-// php demo-cli.php forever
+// php cli.php time Y-m-d
+// php cli.php ls users --female-only --skip 100 --limit 50 '*admin*'
+// php cli.php ls goods --female-only --skip 100 --limit 50 '*apple*'
+// php cli.php cat < ~/.bashrc
+// php cli.php forever
 
 require '../zf/zf.php';
 
