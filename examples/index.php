@@ -5,9 +5,9 @@
 // curl -d name=dos -d passwd=secret -d _id=2 localhost:5000/user
 // curl -d name=dres -d passwd=secret -d _id=3 localhost:5000/user
 // curl -i localhost:5000/users
-// curl -i localhost:5000/users/1-3
-// curl -i localhost:5000/users/1-2\?callback=my_cb
-// curl -i -X DELETE localhost:5000/users/1-2
+// curl -i localhost:5000/users/1,3
+// curl -i localhost:5000/users/1,2\?callback=my_cb
+// curl -i -X DELETE localhost:5000/users/1,2
 // curl -i localhost:5000/users
 // curl -i -X DELETE localhost:5000/users/3
 // curl -i localhost:5000/users
@@ -25,12 +25,12 @@ $app->helper->register('getTime', function($format){
 });
 
 $app->param('ids', function($ids){
-	return explode('-', $ids);
+	return explode(',', $ids);
 });
 
 $app->get('/users/:ids?', function(){
 	$criteria = [];
-	if ($this->params->ids)
+	if (isset($this->params->ids))
 	{
 		$criteria = ['_id' => ['$in' => $this->params->ids]];
 	}
