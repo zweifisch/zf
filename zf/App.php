@@ -85,6 +85,7 @@ class App
 		$args = func_get_args();
 		array_shift($args);
 		$this->components[$alias] = $args;
+		return $this;
 	}
 
 	public function is_cli()
@@ -210,6 +211,7 @@ class App
 	public function defaults($defaults)
 	{
 		$this->router->attach($defaults);
+		return $this;
 	}
 
 	private function processParams()
