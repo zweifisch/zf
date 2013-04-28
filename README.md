@@ -11,12 +11,7 @@ a micro php framework/router
 
 ## synopsis
 
-if you're not using composer, you need to import it
-```php
-require 'zf/zf.php';
-```
-
-install using [composer](http://getcomposer.org/)
+to install using [composer](http://getcomposer.org/), add the fellowing to your `composer.json`
 ```javascript
 {
   "require": {
@@ -25,13 +20,16 @@ install using [composer](http://getcomposer.org/)
 }
 ```
 
+if you're not using composer, donwload [here](https://github.com/zweifisch/zf/tags)
 
 ```php
+require 'vendor/autoload.php'; #  require 'zf/zf.php'; if you are not using composer
+
 $app = new \zf\App();
 
 $app->get('/hello/:name', function(){
 	$this->send($this->params->name);
-})
+});
 
 $app->run();
 ```
@@ -168,3 +166,10 @@ return [
 * [phpredis](https://github.com/nicolasff/phpredis)
 * mongo `sudo pecl install mongo`
 
+## examples
+
+there is an exmaple demostrate how to add/list/delte users, to runing it using php's builtin server: (needs the php mongo extension metioned above)
+```sh
+cd examples && php -S localhost:5000
+```
+a cli example is also included.
