@@ -2,7 +2,7 @@
 
 a micro php framework/router
 
-* routeing to closure or class method(*scalability*)
+* both closure and class method can be used as request handler(easy to scale)
 * `param` handler (inspired by expressjs)
 * jsonp support
 * commandline routing
@@ -20,7 +20,7 @@ install using [composer](http://getcomposer.org/)
 ```javascript
 {
   "require": {
-    "zweifisch/zf": "*"
+    "zf/zf": "*"
   }
 }
 ```
@@ -65,7 +65,7 @@ $app->helper->register('item', function($array, $key, $default=null){
 });
 
 $app->get('/user/:id', function(){
-	$users = [2=>'zf'];
+	$users = [2 => 'zf'];
 	$this->send($this->helper->item($users, $this->params->id, 'not found'));
 });
 ```
@@ -166,8 +166,5 @@ return [
 ## optional dependencies
 
 * [phpredis](https://github.com/nicolasff/phpredis)
-* mongo
-```sh
-sudo pecl install mongo
-```
+* mongo `sudo pecl install mongo`
 
