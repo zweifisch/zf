@@ -1,6 +1,6 @@
 # zf
 
-a micro php framework/router
+a micro php web/cli framework/router
 
 * both closure and class method can be used as request handler(easy to scale)
 * `param` handler (inspired by expressjs)
@@ -15,7 +15,7 @@ to install using [composer](http://getcomposer.org/), add the fellowing to your 
 ```javascript
 {
   "require": {
-    "zf/zf": "*"
+    "zweifisch/zf": "*"
   }
 }
 ```

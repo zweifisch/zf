@@ -10,7 +10,7 @@
             "zf": "."
         }
     }, 
-    "description": "a micro php framework", 
+    "description": "a micro php web/cli framework/router", 
     "homepage": "https://github.com/zweifisch/zf", 
     "keywords": [
         "microframework", 
@@ -19,7 +19,7 @@
         "router"
     ], 
     "license": "MIT", 
-    "name": "zf/zf", 
+    "name": "zweifisch/zf", 
     "require": {
         "php": ">=5.4.0"
     }, 
