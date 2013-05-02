@@ -12,6 +12,10 @@ class Helper
 		{
 			return call_user_func_array($this->registeredHelpers[$name]->bindTo(App::getApp()), $args);
 		}
+		else
+		{
+			throw new \Exception("Helper $name not found");
+		}
 	}
 
 	function register($name, $closure=null)
@@ -19,7 +23,7 @@ class Helper
 		if(is_array($name))
 		{
 			$helpers = $name;
-			if($isset($this->registeredHelpers))
+			if(isset($this->registeredHelpers))
 			{
 				$this->registeredHelpers = array_merge($this->registeredHelpers, $helpers);
 			}
