@@ -4,37 +4,49 @@ namespace zf;
 
 class Helper
 {
-	private $registeredHelpers;
+	private $registered;
+	private $binded;
+	private $context;
 
-	function __call($name, $args)
+	public function __construct($context)
 	{
-		if(isset($this->registeredHelpers[$name]))
-		{
-			return call_user_func_array($this->registeredHelpers[$name]->bindTo(App::getApp()), $args);
-		}
-		else
-		{
-			throw new \Exception("Helper $name not found");
-		}
+		$this->context = $context;
 	}
 
-	function register($name, $closure=null)
+	public function __call($name, $args)
+	{
+		if (!isset($this->bineded[$name]))
+		{
+			if (isset($this->registered[$name]))
+			{
+				$this->bineded[$name] = $this->registered[$name]->bindTo($this->context);
+				unset($this->registered[$name]);
+			}
+			else
+			{
+				throw new \Exception("Helper $name not found");
+			}
+		}
+		return call_user_func_array($this->bineded[$name], $args);
+	}
+
+	public function register($name, $closure=null)
 	{
 		if(is_array($name))
 		{
 			$helpers = $name;
-			if(isset($this->registeredHelpers))
+			if(isset($this->registered))
 			{
-				$this->registeredHelpers = array_merge($this->registeredHelpers, $helpers);
+				$this->registered = array_merge($this->registered, $helpers);
 			}
 			else
 			{
-				$this->registeredHelpers = $helpers;
+				$this->registered = $helpers;
 			}
 		}
 		else
 		{
-			$this->registeredHelpers[$name] = $closure;
+			$this->registered[$name] = $closure;
 		}
 	}
 }

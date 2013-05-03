@@ -1,0 +1,77 @@
+<?php
+
+namespace zf;
+
+trait Response
+{
+	public function lastModified($time)
+	{
+		if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $time)
+		{
+			 header('HTTP/1.0 304 Not Modified');
+			 exit;
+		}
+		header('Last-Modified: '. gmdate(DATE_RFC2822, $time));
+	}
+
+	public function send($code, $body='', $type='text/html')
+	{
+		if(!is_int($code))
+		{
+			$body = $code;
+			$code = 200;
+		}
+
+		if(!is_string($body))
+		{
+			$body = json_encode($body);
+			$type = 'application/json';
+		}
+
+		$this->response([ 'body' => $body, 'code' => $code, 'type' => $type ]);
+	}
+
+	public function response($response)
+	{
+		header('HTTP/1.1: '. $response['code']);
+		header('Status: '. $response['code']);
+		header('Content-Type: '. $response['type']);
+		exit($response['body']);
+	}
+
+	public function notFound()
+	{
+		if ($this->isCli())
+		{
+			echo "Usage:\n\n";
+			foreach ($this->router->cmds() as $cmd)
+			{
+				echo '  php ', $_SERVER['argv'][0], ' ' , $cmd, "\n";
+			}
+			exit(1);
+		}
+		else
+		{
+			$this->send(404);
+		}
+	}
+
+	public function jsonp($body)
+	{
+		if(isset($_GET['callback']))
+		{
+			$callback = $_GET['callback'];
+			$body = json_encode($body);
+			$this->response([
+				'body' => "$callback && $callback($body)",
+				'code' => '200',
+				'type' => 'text/javascript',
+			]);
+		}
+		else
+		{
+			$this->send($body);
+		}
+	}
+
+}

@@ -4,22 +4,29 @@ namespace zf;
 
 class Config
 {
-	private $__configs;
+	private $configs;
+
+	public function __construct()
+	{
+		$this->configs = [];
+		$this->load('configs.php');
+	}
+
 	public function __get($name)
 	{
-		if(!is_array($this->__configs))
-		{
-			$this->__configs = [];
-			$this->load('configs.php');
-		}
-		return $this->__configs[$name];
+		return $this->configs[$name];
 	}
 
 	public function load($path)
 	{
 		if (is_readable($path))
 		{
-			$this->__configs = array_merge($this->__configs, require_once $path);
+			$this->configs = array_merge($this->configs, require_once $path);
 		}
+	}
+
+	public function __set($name, $value)
+	{
+		$this->configs[$name] = $value;
 	}
 }

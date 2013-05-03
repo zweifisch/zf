@@ -11,13 +11,14 @@
 // curl -i localhost:5000/users
 // curl -i -X DELETE localhost:5000/users/3
 // curl -i localhost:5000/users
+// curl -i localhost:5000/git/ls
 // curl localhost:5000/time/Y-m-d
 
 require '../zf/zf.php';
 
 $app = new \zf\App();
 
-$app->register('helper','\zf\Helper');
+$app->register('helper','\zf\Helper', $app);
 $app->register('mongo','\zf\Mongo', $app->config->mongo);
 
 $app->helper->register('getTime', function($format){
@@ -30,8 +31,7 @@ $app->param('ids', function($ids){
 
 $app->get('/users/:ids?', function(){
 	$criteria = [];
-	if (isset($this->params->ids))
-	{
+	if (isset($this->params->ids)){
 		$criteria = ['_id' => ['$in' => $this->params->ids]];
 	}
 	$users = $this->mongo->users->find($criteria);
@@ -39,7 +39,7 @@ $app->get('/users/:ids?', function(){
 });
 
 $app->post('/user', function(){
-	$this->mongo->users->insert($this->requestBody);
+	$this->mongo->users->save($this->requestBody);
 	$this->send(['ok' => true]);
 });
 
@@ -51,5 +51,7 @@ $app->delete('/users/:ids', function(){
 $app->get('/time/:format', function(){
 	$this->send($this->helper->getTime($this->params->format));
 });
+
+$app->get('/git/:cmd', 'git');
 
 $app->run();
