@@ -102,6 +102,34 @@ $app->jsonp($result);
 
 if `$_GET['callback']` is set, javascript will be returned, otherwise it's equivelent to `$this->send($result)`
 
+### views
+
+there is no nested, complicated server side view rendering mechanism in `zf`.
+but it's still possible to rendering simple views in plain old php. please
+consider client side view rendering using requirejs with knockoutjs, angularjs
+or similar libs/framworks.
+
+in request handler
+```php
+$this->render('index',['pageview'=>1000]);
+```
+
+and in `views/index.php`
+```php
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+</head>
+<body>
+	Pageview today: <?= $this->pageview ?> 
+</body>
+</html>
+```
+
+to specify a different location other than `views`, use `$app->config('views','path/to/templates');`
+
 ## cli
 
 ```php
@@ -141,35 +169,18 @@ $app->sigint(function(){
 
 ## scalability
 
-using class as request handler
+single handler in it's own file
 ```php
-$app
-	->get('/user/:id', ['\controllers\User', 'get'])
-	->post('/user', ['\controllers\User', 'create'])
-	->param('id', ['\handlers\Param', 'ensureInt'])
+$app->post('/user', 'create-user');
+```
+here is `handlers/create-user.php`
+```php
+return function() {
+	// ...
+};
 ```
 
-using a namespace prefix
-```php
-$app->ns('\controllers')
-	->get('/user/:id', ['User', 'get'])
-	->post('/user', ['User', 'create'])
-	->ns('\handlers')
-	->param('id', ['Param', 'ensureInt'])
-```
-
-```php
-namespace controllers;
-class User
-{
-	function get($params, $app){ }
-	
-	function create(){ }
-}
-```
-
-you have to make `\controllers\Users` and `\handlers\Param` reachable
-and they won't be loaded and initialized unless necessary, (zf is *lazy*)
+request handlers should be located in `handlers` by default, this can be changed using `$app->config('handlers','path/to/handlers');`
 
 ### helpers
 
@@ -182,10 +193,10 @@ $app->helper->register(require 'more-helpers.php');
 
 `helpers.php`
 ```php
-return [
-	'item' => function(){ ... }
-	'eleemnt' => function(){ ... }
-];
+$exports = [];
+$exports['item'] = function(){ ... };
+$exports['element'] = function(){ ... };
+return $exports;
 ```
 
 ## optional dependencies
