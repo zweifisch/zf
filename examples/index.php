@@ -13,6 +13,7 @@
 // curl -i localhost:5000/users
 // curl -i localhost:5000/git/ls
 // curl localhost:5000/time/Y-m-d
+// curl -i localhost:5000/
 
 require '../zf/zf.php';
 
@@ -53,5 +54,9 @@ $app->get('/time/:format', function(){
 });
 
 $app->get('/git/:cmd', 'git');
+
+$app->get('/', function(){
+	$this->render('index',['now'=> date('H:i:s')]);
+});
 
 $app->run();

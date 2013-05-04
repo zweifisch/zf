@@ -74,4 +74,18 @@ trait Response
 		}
 	}
 
+	public function render($template, $context)
+	{
+		$path = $this->config->views . DIRECTORY_SEPARATOR . $template . $this->config->viewext;
+
+		if (!is_readable($path)) throw \Exception("template $template($path) not found");
+
+		$render = function($path){
+			include $path;
+		};
+
+		$render = $render->bindTo((object)$context);
+		$render($path);
+		$this->send(200);
+	}
 }

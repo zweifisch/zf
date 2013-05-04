@@ -6,12 +6,9 @@ class Laziness
 {
 	protected $container;
 
-	public function __construct($array=[])
+	public function __construct($array=null)
 	{
-		if ($array)
-		{
-			$this->container = $array;
-		}
+		$this->container = $array ? $array : [];
 	}
 
 	public function __get($name)

@@ -24,6 +24,9 @@ class App extends Laziness
 		$this->config('handlers', 'handlers');
 		$this->config('helpers', 'helpers');
 		$this->config('params', 'params');
+		$this->config('views', 'views');
+		$this->config('viewext', '.php');
+		$this->config('rootdir', $this->isCli() ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT']);
 	}
 
 	function __call($name, $args)
@@ -79,7 +82,7 @@ class App extends Laziness
 	public function register($alias,$className,$constructArg=null)
 	{
 		$this->$alias = function() use ($className, $constructArg){
-			return null === $constructArg
+			return is_null($constructArg)
 				? $this->reflection->getInstance($className)
 				: $this->reflection->getInstance($className, [$constructArg]);
 		};
@@ -126,19 +129,9 @@ class App extends Laziness
 	{
 		if (is_string($closure))
 		{
-			if (!isset($this->config->rootdir))
-			{
-				$this->config('rootdir', $this->isCli() ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT']);
-			}
-			$path = $this->config->rootdir . DIRECTORY_SEPARATOR . $this->config->$type . DIRECTORY_SEPARATOR . $closure. '.php';
-			if (is_readable($path))
-			{
-				$closure = require_once $path;
-			}
-			else
-			{
-				throw new \Exception("$closure($path) not found");
-			}
+			$path = $this->config->$type . DIRECTORY_SEPARATOR . $closure. '.php';
+			if (!is_readable($path)) throw new \Exception("$closure($path) not found");
+			$closure = require_once $path;
 		}
 		$closure = $closure->bindTo($this);
 		return $args ? call_user_func_array($closure, $args) : $closure();
