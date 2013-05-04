@@ -2,12 +2,12 @@
 
 a micro php web/cli framework/router
 
-* both closure and class method can be used as request handler(easy to scale)
+* use closure as request handler
 * `param` handler (inspired by expressjs)
-* jsonp support
 * commandline routing
+* jsonp support
 * can be used with or without composer
-* ideal for building apis and commandline apps
+* ideal for building restful apis or commandline apps
 
 ## synopsis
 
@@ -28,20 +28,7 @@ require 'vendor/autoload.php'; #  require 'zf/zf.php'; if you are not using comp
 $app = new \zf\App();
 
 $app->get('/hello/:name', function(){
-	$this->send($this->params->name);
-});
-
-$app->run();
-```
-
-### chaining
-
-```php
-
-$app->get('/user/:id', function(){
-	# ...
-})->post('/user', function(){
-	# ...
+	$this->send(['hello' => $this->params->name]);
 })->run();
 ```
 
@@ -52,9 +39,26 @@ components are just classes attached to the $app instance, any class can used, `
 $app->register('mongo', '\zf\Mongo', $app->config->mongo);
 $app->register('redis', '\zf\Redis', $app->config->redis);
 
-// \zf\Mongo won't be initilazed unless $app->mongo is accessed
+# \zf\Mongo won't be initilazed unless $app->mongo is accessed
 $app->mongo->users->findOne();
 ```
+
+### param
+
+```php
+$app->delete('/users/:user_ids', function() {
+	$this->send(count($this->params->user_ids));
+});
+
+$app->param('user_ids', function($user_ids) {
+	$ids = explode('-', $user_ids);
+	if(count($ids) <= 10){
+		return $ids;
+	}
+	$this->send(400);
+});
+```
+the param handler won't be called, unless `$this->params->user_ids` is accessed
 
 ### helper
 
@@ -70,22 +74,6 @@ $app->get('/user/:id', function(){
 });
 ```
 
-### param
-
-```php
-$app->delete('/users/:user_ids', function() {
-	var_dump(is_array($this->params->user_ids));
-});
-
-$app->param('user_ids', function($user_ids) {
-	$ids = explode('-', $user_ids);
-	if(count($ids) <= 10){
-		return $ids;
-	}
-	$this->send(401);
-});
-```
-
 ### access inputs
 
 `$this->requestBody` is an array, parsed from raw request body according to content type (json|formdata)
@@ -93,6 +81,21 @@ $app->param('user_ids', function($user_ids) {
 `$this->getParam($key, $defaultValue)` gets value from requestBody
 
 `$this->getQuery($key, $defaultValue)` gets value from `$_GET`
+
+### response
+
+```php
+$this->send($statusCode);
+$this->send($statusCode,$body);
+$this->send($statusCode,$body,$contentType);
+$this->send($body);
+```
+
+json response
+```php
+$this->config('pretty', true); #  enable json pretty print
+$this->send($object);
+```
 
 ### jsonp
 
@@ -130,6 +133,20 @@ and in `views/index.php`
 
 to specify a different location other than `views`, use `$app->config('views','path/to/templates');`
 
+### configs
+
+`configs.php` will be loaded if exists
+
+set
+```php
+$app->config('key','value');
+```
+
+retrieve 
+```php
+$app->config->key;
+```
+
 ## cli
 
 ```php
@@ -137,15 +154,27 @@ $app->cmd('hello <name>', function(){
 	echo 'say hello to ', $this->params->name;
 });
 
+$app->config->('pretty', true);
+
 $app->cmd('ls user --skip <from> --limit <max> <pattern>', function(){
-	var_dump($this->params);
+	this->send($this->params);
 });
+```
+
+### chaining
+
+```php
+$app->get('/user/:id', function(){
+	# ...
+})->post('/user', function(){
+	# ...
+})->run();
 ```
 
 all params are required, unless default values are provided
 ```php
 $app->cmd('ls user --skip <from> --limit <max> <pattern>', function(){
-	var_dump($this->params);
+	# ...
 })->defaults(['max' => 20]);
 ```
 
@@ -176,7 +205,7 @@ $app->post('/user', 'create-user');
 here is `handlers/create-user.php`
 ```php
 return function() {
-	// ...
+	# ...
 };
 ```
 

@@ -24,7 +24,9 @@ trait Response
 
 		if(!is_string($body))
 		{
-			$body = json_encode($body);
+			$body = $this->config->pretty
+				? json_encode($body, JSON_PRETTY_PRINT)
+				: json_encode($body);
 			$type = 'application/json';
 		}
 
@@ -61,7 +63,9 @@ trait Response
 		if(isset($_GET['callback']))
 		{
 			$callback = $_GET['callback'];
-			$body = json_encode($body);
+			$body = $this->config->pretty
+				? json_encode($body, JSON_PRETTY_PRINT)
+				: json_encode($body);
 			$this->response([
 				'body' => "$callback && $callback($body)",
 				'code' => '200',

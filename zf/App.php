@@ -8,13 +8,13 @@ class App extends Laziness
 	use Response;
 
 	private $paramHandlers = [];
-	private $nsPrefix = '\\';
 	private $router;
-	private $components;
 	private $reflection;
+	public $name = 'App';
 
 	function __construct()
 	{
+		parent::__construct();
 		$this->register('config','\\'.__NAMESPACE__.'\\Config');
 		$this->router = $this->isCli() ? new CliRouter() : new Router();
 		$this->requestMethod = $this->isCli() ? 'CLI' : strtoupper($_SERVER['REQUEST_METHOD']);
@@ -26,6 +26,7 @@ class App extends Laziness
 		$this->config('params', 'params');
 		$this->config('views', 'views');
 		$this->config('viewext', '.php');
+		$this->config('pretty', false);
 		$this->config('rootdir', $this->isCli() ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT']);
 	}
 
@@ -33,14 +34,7 @@ class App extends Laziness
 	{
 		if (in_array($name, ['get', 'post', 'put', 'delete', 'patch', 'cmd'], true))
 		{
-			list($pattern, $callable) = $args;
-			if(is_array($callable))
-			{
-				list($classname, $method) = $callable;
-				$callable = [$this->nsPrefix . '\\' . $classname, $method];
-			}
-			$this->router->append($name, [$pattern, $callable]);
-			return $this;
+			$this->router->append($name, $args);
 		}
 		elseif ($this->isCli())
 		{
@@ -49,12 +43,11 @@ class App extends Laziness
 				$name = strtoupper($name);
 				if (defined($name))
 				{
-					list($handler) = $args;
-					pcntl_signal(constant($name), $handler->bindTo($this));
+					pcntl_signal(constant($name), $args[0]->bindTo($this));
 				}
 				else
 				{
-					throw new \Exception("method $name not found");
+					throw new \Exception("signal $name not found");
 				}
 			}
 		}
@@ -62,9 +55,10 @@ class App extends Laziness
 		{
 			throw new \Exception("method $name not found");
 		}
+		return $this;
 	}
 
-	function config($name,$value)
+	public function config($name,$value)
 	{
 		if(is_array($name))
 		{
@@ -94,29 +88,15 @@ class App extends Laziness
 		list($callable, $params) = $this->router->run();
 		if($callable)
 		{
-			$this->params = new Laziness($params);
+			$this->params = new Laziness($params, $this);
 			$this->processParams();
 			$this->isCli() or $this->processRequestParams();
-			if (is_array($callable))
-			{
-				list($classname, $method) = $callable;
-				$this->reflection->call($classname, $method, [$this->params, $this]);
-			}
-			else
-			{
-				$this->call('handlers', $callable);
-			}
+			$this->call('handlers', $callable);
 		}
 		else
 		{
 			$this->notFound();
 		}
-	}
-
-	public function ns($nsPrefix)
-	{
-		$this->nsPrefix = $nsPrefix;
-		return $this;
 	}
 
 	public function defaults($defaults)
@@ -143,7 +123,11 @@ class App extends Laziness
 		{
 			if (isset($this->paramHandlers[$name]))
 			{
-				$this->params->$name = $this->call('params', $this->paramHandlers[$name], [$value]);
+				$handler = $this->paramHandlers[$name];
+				$args = [$value];
+				$this->params->$name = function() use ($handler, $args){
+					return $this->call('params', $handler, $args);
+				};
 			}
 		}
 	}

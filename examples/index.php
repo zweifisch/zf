@@ -11,7 +11,7 @@
 // curl -i localhost:5000/users
 // curl -i -X DELETE localhost:5000/users/3
 // curl -i localhost:5000/users
-// curl -i localhost:5000/git/ls
+// curl -i localhost:5000/git/st
 // curl localhost:5000/time/Y-m-d
 // curl -i localhost:5000/
 
@@ -21,6 +21,8 @@ $app = new \zf\App();
 
 $app->register('helper','\zf\Helper', $app);
 $app->register('mongo','\zf\Mongo', $app->config->mongo);
+
+$app->config('pretty', true);
 
 $app->helper->register('getTime', function($format){
 	return date($format ,($_SERVER['REQUEST_TIME']));

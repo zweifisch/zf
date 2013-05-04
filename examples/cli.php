@@ -5,7 +5,7 @@
 // php cli.php ls users '*admin*' --skip 100 
 // php cli.php ls users '*admin*'
 // php cli.php cat < ~/.bashrc
-// php cli.php git ls
+// php cli.php git st
 // php cli.php incr counter --by 2
 // php cli.php incr counter
 // php cli.php forever
@@ -17,8 +17,14 @@ $app = new \zf\App();
 $app->register('helper','\zf\Helper', $app);
 $app->register('redis','\zf\Redis', $app->config->redis);
 
+$app->config('pretty',true);
+
 $app->helper->register('getTime', function($format){
 	return date($format ,($_SERVER['REQUEST_TIME']));
+});
+
+$app->param('max', function($value){
+	return intval($value);
 });
 
 $app->cmd('time <format>', function(){
@@ -26,7 +32,7 @@ $app->cmd('time <format>', function(){
 });
 
 $app->cmd('ls users --skip <from> --limit <max> <pattern>', function(){
-	var_dump($this->params);
+	$this->send($this->params);
 })->defaults(['max' => 20]);
 
 $app->cmd('cat', function(){

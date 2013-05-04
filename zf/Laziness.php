@@ -2,13 +2,15 @@
 
 namespace zf;
 
-class Laziness
+class Laziness implements \JsonSerializable
 {
 	protected $container;
+	protected $context;
 
-	public function __construct($array=null)
+	public function __construct($array=null, $context=null)
 	{
 		$this->container = $array ? $array : [];
+		$this->context = $context ? $context : $this;
 	}
 
 	public function __get($name)
@@ -17,7 +19,7 @@ class Laziness
 		{
 			if ($this->container[$name] instanceof \Closure)
 			{
-				$closure = $this->container[$name]->bindTo($this);
+				$closure = $this->container[$name]->bindTo($this->context);
 				$this->container[$name] = $closure();
 				return $this->container[$name];
 			}
@@ -44,6 +46,19 @@ class Laziness
 
 	public function getAll()
 	{
+		return $this->container;
+	}
+
+	public function jsonSerialize()
+	{
+		foreach($this->container as $key=>$value)
+		{
+			if($value instanceof \Closure)
+			{
+				$binded = $value->bindTo($this->context);
+				$this->container[$key] = $binded();
+			}
+		}
 		return $this->container;
 	}
 }
