@@ -25,6 +25,11 @@ class Config
 		}
 	}
 
+	public function __isset($name)
+	{
+		return isset($this->configs[$name]);
+	}
+
 	public function __set($name, $value)
 	{
 		$this->configs[$name] = $value;

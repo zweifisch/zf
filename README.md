@@ -5,6 +5,7 @@ a micro php web/cli framework/router
 * use closure as request handler
 * `param` handler (inspired by expressjs)
 * commandline routing
+* events
 * jsonp support
 * can be used with or without composer
 * ideal for building restful apis or commandline apps
@@ -34,7 +35,7 @@ $app->get('/hello/:name', function(){
 
 ### component
 
-components are just classes attached to the $app instance, any class can used, `\zf\Mongo`, `\zf\Redis` and `\zf\Helper` are available out of the box:
+components are just classes attached to the $app instance, any class can used, `\zf\Mongo` and `\zf\Redis` are available out of the box:
 ```php
 $app->register('mongo', '\zf\Mongo', $app->config->mongo);
 $app->register('redis', '\zf\Redis', $app->config->redis);
@@ -60,11 +61,28 @@ $app->param('user_ids', function($user_ids) {
 ```
 the param handler won't be called, unless `$this->params->user_ids` is accessed
 
+### events
+
+```php
+$app->on('user:hit', function($data){
+	# write to log
+});
+
+$app->on('user:hit', function($data){
+	$this->redis->users->zincrby('hotusers',1,$data['_id']);
+});
+
+$app->get('/user/:id', function($data){
+	$user = $this->mongo->user->findOne(['_id'=>$this->params->id]);
+	$app->dispatch('user:hit', $user);
+	$this->send($user);
+});
+```
+
 ### helper
 
 ```php
-$app->register('helper', '\zf\Helper');
-$app->helper->register('item', function($array, $key, $default=null){
+$app->helper('item', function($array, $key, $default=null){
 	return isset($array[$key]) ? $array[$key] : $default;
 });
 
@@ -147,6 +165,16 @@ retrieve
 $app->config->key;
 ```
 
+### chaining
+
+```php
+$app->get('/user/:id', function(){
+	# ...
+})->post('/user', function(){
+	# ...
+})->run();
+```
+
 ## cli
 
 ```php
@@ -161,17 +189,7 @@ $app->cmd('ls user --skip <from> --limit <max> <pattern>', function(){
 });
 ```
 
-### chaining
-
-```php
-$app->get('/user/:id', function(){
-	# ...
-})->post('/user', function(){
-	# ...
-})->run();
-```
-
-all params are required, unless default values are provided
+all options are required, unless default values are provided
 ```php
 $app->cmd('ls user --skip <from> --limit <max> <pattern>', function(){
 	# ...
@@ -184,7 +202,7 @@ if no command matched(404), a help message will be printed, and program will exi
 
 ### get piped input
 
-use `$this->getstdin`
+use `$this->getstdin();`
 
 ### handle signals
 
@@ -198,35 +216,37 @@ $app->sigint(function(){
 
 ## scalability
 
-single handler in it's own file
+### request/param/event handlers
+
+all can be put in it's own file
 ```php
 $app->post('/user', 'create-user');
 ```
-here is `handlers/create-user.php`
+return a closure in `handlers/create-user.php`
 ```php
 return function() {
 	# ...
 };
 ```
-
 request handlers should be located in `handlers` by default, this can be changed using `$app->config('handlers','path/to/handlers');`
+
+similarly, event handlers in `events`, param handlers in `params`
 
 ### helpers
 
+when calling a helper which is not registrated, `zf` will look for it under `helpers`
 ```php
-$app->register('helper', '\zf\Helper');
-
-$app->helper->register(require 'helpers.php');
-$app->helper->register(require 'more-helpers.php');
+$app->on('error', function($data){
+	# helpers/mail.php will be loaded
+	$this->helper->mail(['to'=>$this->config->admin,'body'=>$data->message]);
+});
 ```
 
-`helpers.php`
-```php
-$exports = [];
-$exports['item'] = function(){ ... };
-$exports['element'] = function(){ ... };
-return $exports;
-```
+## laziness
+
+* `$app->register` won't initilize class
+* `$app->attr = closure` closure won't be invoked unless `$app->attr` is accessed
+* param handler won't be called unless `$app->params->param` is accessed
 
 ## optional dependencies
 

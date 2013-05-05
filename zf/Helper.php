@@ -4,30 +4,44 @@ namespace zf;
 
 class Helper
 {
+	use Closure;
+
 	private $registered;
 	private $binded;
 	private $context;
+	private $path;
 
-	public function __construct($context)
+	public function __construct($context,$path)
 	{
 		$this->context = $context;
+		$this->path = $path;
 	}
 
 	public function __call($name, $args)
 	{
-		if (!isset($this->bineded[$name]))
+		$closure = $this->__get($name);
+		return $this->callClosure(null, $closure, null, $args);
+	}
+
+	public function __get($name)
+	{
+		if (!isset($this->binded[$name]))
 		{
 			if (isset($this->registered[$name]))
 			{
-				$this->bineded[$name] = $this->registered[$name]->bindTo($this->context);
+				$closure = $this->registered[$name];
 				unset($this->registered[$name]);
 			}
 			else
 			{
-				throw new \Exception("Helper $name not found");
+				if (!($closure = $this->getClosure($this->path, $name)))
+				{
+					throw new \Exception("Helper $name not found");
+				}
 			}
+			$this->binded[$name] = $closure->bindTo($this->context);
 		}
-		return call_user_func_array($this->bineded[$name], $args);
+		return $this->binded[$name];
 	}
 
 	public function register($name, $closure=null)

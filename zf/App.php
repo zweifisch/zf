@@ -6,6 +6,8 @@ class App extends Laziness
 {
 	use Request;
 	use Response;
+	use EventEmitter;
+	use Closure;
 
 	private $paramHandlers = [];
 	private $router;
@@ -17,17 +19,18 @@ class App extends Laziness
 		parent::__construct();
 		$this->register('config','\\'.__NAMESPACE__.'\\Config');
 		$this->router = $this->isCli() ? new CliRouter() : new Router();
-		$this->requestMethod = $this->isCli() ? 'CLI' : strtoupper($_SERVER['REQUEST_METHOD']);
 
 		$this->reflection = new Reflection();
 
-		$this->config('handlers', 'handlers');
-		$this->config('helpers', 'helpers');
-		$this->config('params', 'params');
-		$this->config('views', 'views');
-		$this->config('viewext', '.php');
-		$this->config('pretty', false);
-		$this->config('rootdir', $this->isCli() ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT']);
+		$this->config('handlers', 'handlers', false)
+			->config('helpers', 'helpers', false)
+			->config('params', 'params', false)
+			->config('views', 'views', false)
+			->config('viewext', '.php', false)
+			->config('pretty', false, false)
+			->config('rootdir', $this->isCli() ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT']);
+
+		$this->register('helper', '\\'.__NAMESPACE__.'\\Helper', $this, $this->config->helpers);
 	}
 
 	function __call($name, $args)
@@ -36,19 +39,16 @@ class App extends Laziness
 		{
 			$this->router->append($name, $args);
 		}
-		elseif ($this->isCli())
+		elseif ($this->isCli() && (0 == strncmp('sig', $name, 3)))
 		{
-			if (0 == strncmp('sig', $name, 3))
+			$name = strtoupper($name);
+			if (defined($name))
 			{
-				$name = strtoupper($name);
-				if (defined($name))
-				{
-					pcntl_signal(constant($name), $args[0]->bindTo($this));
-				}
-				else
-				{
-					throw new \Exception("signal $name not found");
-				}
+				pcntl_signal(constant($name), $args[0]->bindTo($this));
+			}
+			else
+			{
+				throw new \Exception("signal $name not found");
 			}
 		}
 		else
@@ -58,7 +58,7 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function config($name,$value)
+	public function config($name,$value,$overwrite=true)
 	{
 		if(is_array($name))
 		{
@@ -69,29 +69,39 @@ class App extends Laziness
 		}
 		else
 		{
-			$this->config->$name = $value;
+			if ($overwrite || !isset($this->config->$name))
+			{
+				$this->config->$name = $value;
+			}
 		}
+		return $this;
 	}
 
-	public function register($alias,$className,$constructArg=null)
+	public function helper($name, $closure)
 	{
-		$this->$alias = function() use ($className, $constructArg){
-			return is_null($constructArg)
-				? $this->reflection->getInstance($className)
-				: $this->reflection->getInstance($className, [$constructArg]);
+		$this->helper->register($name, $closure);
+		return $this;
+	}
+
+	public function register($alias, $className)
+	{
+		$constructArgs = array_slice(func_get_args(), 2);
+		$this->$alias = function() use ($className, $constructArgs){
+			return $this->reflection->getInstance($className, $constructArgs);
 		};
 		return $this;
 	}
 
 	public function run()
 	{
+		$this->requestMethod = $this->isCli() ? 'CLI' : strtoupper($_SERVER['REQUEST_METHOD']);
 		list($callable, $params) = $this->router->run();
 		if($callable)
 		{
 			$this->params = new Laziness($params, $this);
 			$this->processParams();
 			$this->isCli() or $this->processRequestParams();
-			$this->call('handlers', $callable);
+			$this->callClosure('handlers', $callable, $this);
 		}
 		else
 		{
@@ -105,17 +115,6 @@ class App extends Laziness
 		return $this;
 	}
 
-	private function call($type, $closure, $args = null)
-	{
-		if (is_string($closure))
-		{
-			$path = $this->config->$type . DIRECTORY_SEPARATOR . $closure. '.php';
-			if (!is_readable($path)) throw new \Exception("$closure($path) not found");
-			$closure = require_once $path;
-		}
-		$closure = $closure->bindTo($this);
-		return $args ? call_user_func_array($closure, $args) : $closure();
-	}
 
 	private function processParams()
 	{
@@ -126,7 +125,7 @@ class App extends Laziness
 				$handler = $this->paramHandlers[$name];
 				$args = [$value];
 				$this->params->$name = function() use ($handler, $args){
-					return $this->call('params', $handler, $args);
+					return $this->callClosure('params', $handler, $this, $args);
 				};
 			}
 		}

@@ -14,18 +14,14 @@ require '../zf/zf.php';
 
 $app = new \zf\App();
 
-$app->register('helper','\zf\Helper', $app);
-$app->register('redis','\zf\Redis', $app->config->redis);
-
 $app->config('pretty',true);
+$app->register('redis','\zf\Redis', $app->config->redis);
 
 $app->helper->register('getTime', function($format){
 	return date($format ,($_SERVER['REQUEST_TIME']));
 });
 
-$app->param('max', function($value){
-	return intval($value);
-});
+$app->param('max', 'int');
 
 $app->cmd('time <format>', function(){
 	echo $this->helper->getTime($this->params->format);
@@ -49,18 +45,21 @@ declare(ticks = 1);
 $app->cmd('forever', function(){
 	echo 'presss ctrl-c to quit', "\n";
 	$this->done = false;
-	while(true)
-	{
+	while(!$this->done){
 		echo 'running',"\n";
 		sleep(1);
-		if($this->done) break;
 	}
+	echo 'done',"\n";
 });
 
 $app->sigint(function(){
-	echo 'stopping';
-	sleep(1);
+	echo 'stopping',"\n";
+	$this->emit('interupted',['message' => 'interupted by user']);
 	$this->done = true;
+});
+
+$app->on('interupted', function($data){
+	echo $data['message'],"\n";
 });
 
 $app->run();

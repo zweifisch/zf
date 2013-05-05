@@ -19,14 +19,8 @@ require '../zf/zf.php';
 
 $app = new \zf\App();
 
-$app->register('helper','\zf\Helper', $app);
-$app->register('mongo','\zf\Mongo', $app->config->mongo);
-
 $app->config('pretty', true);
-
-$app->helper->register('getTime', function($format){
-	return date($format ,($_SERVER['REQUEST_TIME']));
-});
+$app->register('mongo','\zf\Mongo', $app->config->mongo);
 
 $app->param('ids', function($ids){
 	return explode(',', $ids);
