@@ -25,12 +25,13 @@ class Mongo
 				$config = $this->config[$name];
 				if(empty($this->cachedConnections[$config['url']]))
 				{
-					$this->cachedConnections[$name] = new \MongoClient($config['url']);
+					$options = isset($config['options']) ? $config['options'] : [];
+					$this->cachedConnections[$name] = new \MongoClient($config['url'], $options);
 				}
-				$conenction = $this->cachedConnections[$name];
-				$this->cachedClients[$name] = $conenction
-					->selectDB($config['database'])
-					->selectCollection($config['collection']);
+				$ret = $this->cachedConnections[$name];
+				if (isset($config['database'])) $ret = $ret->selectDB($config['database']);
+				if (isset($config['collection'])) $ret = $ret->selectCollection($config['collection']);
+				$this->cachedClients[$name] = $ret;
 			}
 		}
 		return $this->cachedClients[$name];
