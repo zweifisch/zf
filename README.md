@@ -48,7 +48,7 @@ $app->mongo->users->findOne();
 
 ```php
 $app->delete('/users/:user_ids', function() {
-	$this->send(count($this->params->user_ids));
+	$this->send(['deleted'=>count($this->params->user_ids)]);
 });
 
 $app->param('user_ids', function($user_ids) {
@@ -74,7 +74,7 @@ $app->on('user:hit', function($data){
 
 $app->get('/user/:id', function($data){
 	$user = $this->mongo->user->findOne(['_id'=>$this->params->id]);
-	$app->dispatch('user:hit', $user);
+	$app->emit('user:hit', $user);
 	$this->send($user);
 });
 ```
