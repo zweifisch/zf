@@ -34,7 +34,7 @@ class Helper
 			}
 			else
 			{
-				if (!($closure = $this->getClosure($this->path, $name)))
+				if (!($closure = $this->getClosure($this->path, $name, false)))
 				{
 					throw new \Exception("Helper $name not found");
 				}

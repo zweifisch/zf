@@ -8,6 +8,7 @@
 // php cli.php git st
 // php cli.php incr counter --by 2
 // php cli.php incr counter
+// php cli.php lazyparam 1 2 3
 // php cli.php forever
 
 require '../zf/zf.php';
@@ -17,11 +18,21 @@ $app = new \zf\App();
 $app->config('pretty',true);
 $app->register('redis','\zf\Redis', $app->config->redis);
 
-$app->helper->register('getTime', function($format){
+$app->helper('getTime', function($format){
 	return date($format ,($_SERVER['REQUEST_TIME']));
 });
 
 $app->param('max', 'int');
+$app->param('from', 'int');
+
+$show = function($value){
+	echo $value,"\n";
+	return $value;
+};
+
+$app->param('param1', $show);
+$app->param('param2', $show);
+$app->param('param3', $show, true); # eager to get processed
 
 $app->cmd('time <format>', function(){
 	echo $this->helper->getTime($this->params->format);
@@ -36,6 +47,10 @@ $app->cmd('cat', function(){
 });
 
 $app->cmd('git <cmd>', 'git');
+
+$app->cmd('lazyparam <param1> <param2> <param3>', function(){
+	echo $this->params->param2,"\n";
+});
 
 $app->cmd('incr <key> --by <by>', function(){
 	echo $this->redis->default->incr($this->params->key, $this->params->by);

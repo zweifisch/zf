@@ -1,19 +1,20 @@
 <?php
 
-// php -S localhost:5000
-// curl -d name=zf -d passwd=secret -d _id=1 localhost:5000/user
-// curl -d name=dos -d passwd=secret -d _id=2 localhost:5000/user
-// curl -d name=dres -d passwd=secret -d _id=3 localhost:5000/user
-// curl -i localhost:5000/users
-// curl -i localhost:5000/users/1,3
-// curl -i localhost:5000/users/1,2\?callback=my_cb
-// curl -i -X DELETE localhost:5000/users/1,2
-// curl -i localhost:5000/users
-// curl -i -X DELETE localhost:5000/users/3
-// curl -i localhost:5000/users
-// curl -i localhost:5000/git/st
-// curl localhost:5000/time/Y-m-d
-// curl -i localhost:5000/
+// port=5000
+// php -S localhost:$port
+// curl -d name=zf -d passwd=secret -d _id=1 localhost:$port/user
+// curl -d name=dos -d passwd=secret -d _id=2 localhost:$port/user
+// curl -d name=dres -d passwd=secret -d _id=3 localhost:$port/user
+// curl -i localhost:$port/users
+// curl -i localhost:$port/users/1,3
+// curl -i localhost:$port/users/1,2\?callback=my_cb
+// curl -i -X DELETE localhost:$port/users/1,2
+// curl -i localhost:$port/users
+// curl -i -X DELETE localhost:$port/users/3
+// curl -i localhost:$port/users
+// curl -i localhost:$port/git/st
+// curl localhost:$port/time/Y-m-d
+// curl -i localhost:$port/
 
 require '../zf/zf.php';
 

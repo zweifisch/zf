@@ -9,7 +9,7 @@ class App extends Laziness
 	use EventEmitter;
 	use Closure;
 
-	private $paramHandlers = [];
+	private $paramHandlers;
 	private $router;
 	private $reflection;
 	public $name = 'App';
@@ -55,6 +55,12 @@ class App extends Laziness
 		{
 			throw new \Exception("method $name not found");
 		}
+		return $this;
+	}
+
+	public function param($name, $callable, $eager=false)
+	{
+		$this->paramHandlers[$name] = [$callable,$eager];
 		return $this;
 	}
 
@@ -115,18 +121,24 @@ class App extends Laziness
 		return $this;
 	}
 
-
 	private function processParams()
 	{
 		foreach($this->params->getAll() as $name => $value)
 		{
 			if (isset($this->paramHandlers[$name]))
 			{
-				$handler = $this->paramHandlers[$name];
+				list($handler,$eager) = $this->paramHandlers[$name];
 				$args = [$value];
-				$this->params->$name = function() use ($handler, $args){
-					return $this->callClosure('params', $handler, $this, $args);
-				};
+				if ($eager)
+				{
+					$this->params->$name = $this->callClosure('params', $handler, $this, $args);
+				}
+				else
+				{
+					$this->params->$name = function() use ($handler, $args){
+						return $this->callClosure('params', $handler, $this, $args);
+					};
+				}
 			}
 		}
 	}

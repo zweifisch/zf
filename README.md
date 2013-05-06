@@ -1,9 +1,9 @@
 # zf
 
-a micro php web/cli framework/router
+a micro php framework/router for both web and cli
 
 * use closure as request handler
-* `param` handler (inspired by expressjs)
+* `param` handler(inspired by expressjs)
 * commandline routing
 * events
 * jsonp support
@@ -74,7 +74,7 @@ $app->on('user:hit', function($data){
 
 $app->get('/user/:id', function($data){
 	$user = $this->mongo->user->findOne(['_id'=>$this->params->id]);
-	$app->emit('user:hit', $user);
+	$this->emit('user:hit', $user);
 	$this->send($user);
 });
 ```
@@ -246,7 +246,7 @@ $app->on('error', function($data){
 
 * `$app->register` won't initilize class
 * `$app->attr = closure` closure won't be invoked unless `$app->attr` is accessed
-* param handler won't be called unless `$app->params->param` is accessed
+* param handler won't be called unless `$app->params->param` is accessed, to make the handler get called as soon as possible, supply a extra parameter like this `$app->param('param','handler',true);`
 
 ## optional dependencies
 

@@ -24,12 +24,6 @@ trait Request
 		return 'cli' == PHP_SAPI;
 	}
 
-	public function param($name, $callable)
-	{
-		$this->paramHandlers[$name] = $callable;
-		return $this;
-	}
-
 	public function getQuery($name,$default=null)
 	{
 		return isset($this->queryVars[$name]) ? $this->queryVars[$name] : $default;
