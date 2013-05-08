@@ -60,6 +60,10 @@ class Router
 		{
 			$path = substr($path,0,$pos);
 		}
+		if (strtolower(substr($path, -9)) == 'index.php')
+		{
+			$path = '/';
+		}
 		return $this->dispatch(strtoupper($_SERVER['REQUEST_METHOD']), $path);
 	}
 }
