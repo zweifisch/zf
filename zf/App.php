@@ -12,24 +12,21 @@ class App extends Laziness
 	private $paramHandlers;
 	private $router;
 	private $reflection;
-	public $name = 'App';
 
 	function __construct()
 	{
 		parent::__construct();
-		$this->register('config','\\'.__NAMESPACE__.'\\Config');
-		$this->router = $this->isCli() ? new CliRouter() : new Router();
-
 		$this->reflection = new Reflection();
-
-		$this->config('handlers', 'handlers', false)
-			->config('helpers', 'helpers', false)
-			->config('params', 'params', false)
-			->config('views', 'views', false)
-			->config('viewext', '.php', false)
-			->config('pretty', false, false)
-			->config('rootdir', $this->isCli() ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT']);
-
+		$this->register('config','\\'.__NAMESPACE__.'\\Config');
+		$this->config('handlers', 'handlers')
+			->config('helpers', 'helpers')
+			->config('params', 'params')
+			->config('views', 'views')
+			->config('viewext', '.php')
+			->config('nopretty')
+			->config('fancy');
+		$this->config->load('configs.php');
+		$this->router = $this->isCli() ? new CliRouter() : new Router();
 		$this->register('helper', '\\'.__NAMESPACE__.'\\Helper', $this, $this->config->helpers);
 	}
 
@@ -64,13 +61,28 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function config($name,$value,$overwrite=true)
+	public function config($name,$value=null,$overwrite=true)
 	{
-		if(is_array($name))
+		if(1 == func_num_args())
 		{
-			foreach($name as $key=>$value)
+			if(is_array($name))
 			{
-				$this->config->$key = $value;
+				foreach($name as $key=>$value)
+				{
+					$this->config->$key = $value;
+				}
+			}
+			else
+			{
+				if(0 == strncmp('no', $name, 2))
+				{
+					$name = substr($name, 2);
+					$this->config->$name = false;
+				}
+				else
+				{
+					$this->config->$name = true;
+				}
 			}
 		}
 		else

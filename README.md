@@ -158,6 +158,9 @@ to specify a different location other than `views`, use `$app->config('views','p
 set
 ```php
 $app->config('key','value');
+
+$app->config('fancy');  # equivelant to $app->config('fancy', true);
+$app->config('nofancy');  # equivelant to $app->config('fancy', false);
 ```
 
 retrieve 

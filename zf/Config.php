@@ -6,12 +6,6 @@ class Config
 {
 	private $configs;
 
-	public function __construct()
-	{
-		$this->configs = [];
-		$this->load('configs.php');
-	}
-
 	public function __get($name)
 	{
 		return $this->configs[$name];
@@ -21,7 +15,7 @@ class Config
 	{
 		if (is_readable($path))
 		{
-			$this->configs = array_merge($this->configs, require_once $path);
+			$this->configs = is_array($this->configs)? array_merge($this->configs, require $path) : require $path;
 		}
 	}
 

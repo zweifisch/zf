@@ -43,11 +43,11 @@ trait Request
 			return;
 		}
 
-		$contentType = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : 'application/x-www-form-urlencoded';
+		$contentType = isset($_SERVER['HTTP_CONTENT_TYPE']) ? $_SERVER['HTTP_CONTENT_TYPE'] : 'application/x-www-form-urlencoded';
 
 		if($contentType == "application/json")
 		{
-			$this->requestBody = json_decode(file_get_contents('php://input'));
+			$this->requestBody = json_decode(file_get_contents('php://input'),true);
 		}
 		else if( $contentType == "application/x-www-form-urlencoded")
 		{
