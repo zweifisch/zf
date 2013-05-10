@@ -17,11 +17,19 @@ trait Closure
 		$filename = $key.'.php';
 		$closure = is_readable($filename) ? require $filename: null;
 
+		if (!$closure)
+		{
+			throw new \Exception("closure $closureName not found");
+		}
+		elseif (1 === $closure)
+		{
+			throw new \Exception("invalid closure in $path/$closureName.php, forgot to return the closure?");
+		}
+
 		if ($useCache)
 		{
 			$cachedClosures[$key] = $closure;
 		}
-
 		return $closure;
 	}
 
@@ -31,14 +39,6 @@ trait Closure
 		{
 			$closureName = $closure;
 			$closure = $this->getClosure($path, $closureName);
-			if (!$closure)
-			{
-				throw new \Exception("closure $closureName not found");
-			}
-			elseif (1 === $closure)
-			{
-				throw new \Exception("invalid closure in $path/$closureName.php, forgot to return the closure?");
-			}
 		}
 		if (!$closure instanceof \Closure)
 		{
