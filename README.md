@@ -94,11 +94,24 @@ $app->get('/user/:id', function(){
 
 ### access inputs
 
-`$this->requestBody` is an array, parsed from raw request body according to content type (json|formdata)
+#### request body
 
-`$this->getParam($key, $defaultValue)` gets value from requestBody
+`$this->body` is parsed from raw request body according to content type (json|formdata)
+and wraped as a `FancyObject`, `$app->config('nofancy');` will keep it as an array.
+```php
+$action = $this->body->action->in('login','register')->asString();
+$name = $this->body->user->name->minlen(3)->maxlen(20)->asString();
+$password = $this->body->user->password->minlen(8)->asString();
+```
 
-`$this->getQuery($key, $defaultValue)` gets value from `$_GET`
+
+#### query string
+
+`$_GET['page']` and `$_GET['size']`
+```php
+$page = $this->query->page->default(1)->asInt();
+$size = $this->query->size->between(10,20)->asInt() or $this->send(400);
+```
 
 ### response
 

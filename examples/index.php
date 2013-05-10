@@ -44,7 +44,7 @@ $app->get('/users/:ids?', function(){
 });
 
 $app->post('/user', function(){
-	$this->mongo->users->save($this->requestBody);
+	$this->mongo->users->save($this->body->unwrap());
 	$this->send(['ok' => true]);
 });
 
@@ -64,11 +64,11 @@ $app->get('/', function(){
 });
 
 $app->post('/dump', function(){
-	$this->send($this->requestBody);
+	$this->send($this->body->unwrap());
 });
 
 $app->put('/dump', function(){
-	$this->send($this->requestBody);
+	$this->send($this->body->unwrap());
 });
 
 $app->run();

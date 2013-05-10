@@ -10,6 +10,7 @@ class App extends Laziness
 	use Closure;
 
 	private $paramHandlers;
+	private $requestHandlers;
 	private $router;
 	private $reflection;
 
@@ -55,12 +56,6 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function param($name, $callable, $eager=false)
-	{
-		$this->paramHandlers[$name] = [$callable,$eager];
-		return $this;
-	}
-
 	public function config($name,$value=null,$overwrite=true)
 	{
 		if(1 == func_num_args())
@@ -95,9 +90,21 @@ class App extends Laziness
 		return $this;
 	}
 
+	public function param($name, $callable, $eager=false)
+	{
+		$this->paramHandlers[$name] = [$callable,$eager];
+		return $this;
+	}
+
 	public function helper($name, $closure)
 	{
 		$this->helper->register($name, $closure);
+		return $this;
+	}
+
+	public function handler($name, $closure)
+	{
+		$this->requestHandlers[$name] = $closure;
 		return $this;
 	}
 
@@ -110,6 +117,12 @@ class App extends Laziness
 		return $this;
 	}
 
+	public function pass($handlerName)
+	{
+		$handler = isset($this->requestHandlers[$handlerName])? $this->requestHandlers[$handlerName] : $handlerName;
+		$this->callClosure('handlers', $handler, $this);
+	}
+
 	public function run()
 	{
 		$this->requestMethod = $this->isCli() ? 'CLI' : strtoupper($_SERVER['REQUEST_METHOD']);
@@ -118,7 +131,7 @@ class App extends Laziness
 		{
 			$this->params = new Laziness($params, $this);
 			$this->processParams();
-			$this->isCli() or $this->processRequestParams();
+			$this->isCli() or $this->processRequestParams($this->config->fancy);
 			$this->callClosure('handlers', $callable, $this);
 		}
 		else

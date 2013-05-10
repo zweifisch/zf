@@ -5,9 +5,7 @@ namespace zf;
 trait Request
 {
 	public $params;
-	public $queryVars;
 	public $requestMethod;
-	public $requestBody;
 
 	public function getstdin()
 	{
@@ -24,42 +22,29 @@ trait Request
 		return 'cli' == PHP_SAPI;
 	}
 
-	public function getQuery($name,$default=null)
+	private function processRequestParams($fancy)
 	{
-		return isset($this->queryVars[$name]) ? $this->queryVars[$name] : $default;
-	}
+		$this->query = function() use ($fancy) {
+			return $fancy ? new \zf\FancyObject($_GET) : $_GET;
+		};
 
-	public function getParam($name,$default=null)
-	{
-		return isset($this->requestBody[$name]) ? $this->requestBody[$name] : $default;
-	}
+		if ('GET' == $this->requestMethod) return;
 
-	private function processRequestParams()
-	{
-		$this->queryVars= $_GET;
+		$contentType = isset($_SERVER['HTTP_CONTENT_TYPE']) ? $_SERVER['HTTP_CONTENT_TYPE'] : '';
 
-		if('GET' == $this->requestMethod)
-		{
-			return;
-		}
-
-		$contentType = isset($_SERVER['HTTP_CONTENT_TYPE']) ? $_SERVER['HTTP_CONTENT_TYPE'] : 'application/x-www-form-urlencoded';
-
-		if($contentType == "application/json")
-		{
-			$this->requestBody = json_decode(file_get_contents('php://input'),true);
-		}
-		else if( $contentType == "application/x-www-form-urlencoded")
-		{
-			if ($this->requestMethod == 'POST')
+		$this->body = function() use ($contentType, $fancy){
+			$ret = '';
+			if ($contentType == "application/json")
 			{
-				$this->requestBody = $_POST;
+				$ret = json_decode(file_get_contents('php://input'), true);
 			}
-			else
+			elseif ($contentType == "application/x-www-form-urlencoded")
 			{
-				parse_str(file_get_contents('php://input'), $this->requestBody);
+				'POST' == $this->requestMethod ? $ret = $_POST : parse_str(file_get_contents('php://input'), $ret);
 			}
-		}
+			return $fancy ? new \zf\FancyObject($ret) : $ret;
+		};
+		return $this;
 	}
 
 }
