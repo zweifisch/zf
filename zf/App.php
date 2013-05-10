@@ -19,13 +19,13 @@ class App extends Laziness
 		parent::__construct();
 		$this->reflection = new Reflection();
 		$this->register('config','\\'.__NAMESPACE__.'\\Config');
-		$this->config('handlers', 'handlers')
-			->config('helpers', 'helpers')
-			->config('params', 'params')
-			->config('views', 'views')
-			->config('viewext', '.php')
-			->config('nopretty')
-			->config('fancy');
+		$this->set('handlers', 'handlers')
+			->set('helpers', 'helpers')
+			->set('params', 'params')
+			->set('views', 'views')
+			->set('viewext', '.php')
+			->set('nopretty')
+			->set('fancy');
 		$this->config->load('configs.php');
 		$this->router = $this->isCli() ? new CliRouter() : new Router();
 		$this->register('helper', '\\'.__NAMESPACE__.'\\Helper', $this, $this->config->helpers);
@@ -56,7 +56,7 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function config($name,$value=null,$overwrite=true)
+	public function set($name,$value=null,$overwrite=true)
 	{
 		if(1 == func_num_args())
 		{
