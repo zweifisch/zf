@@ -2,67 +2,14 @@
 
 namespace zf;
 
-trait Validater
+class FancyObject implements \JsonSerializable
 {
-	private $validaters;
-
-	function minlen($len)
-	{
-		$this->validaters[] = function($value) use ($len) { return strlen($value) >= $len; };
-		return $this;
-	}
-
-	function maxlen($len)
-	{
-		$this->validaters[] = function($value) use ($len) { return strlen($value) <= $len; };
-		return $this;
-	}
-
-	function min($min)
-	{
-		$this->validaters[] = function($value) use ($len) { return $value >= $min; };
-		return $this;
-	}
-
-	function max($max)
-	{
-		$this->validaters[] = function($value) use ($len) { return $value <= $max; };
-		return $this;
-	}
-
-	function between($min,$max)
-	{
-		$this->validaters[] = function($value) use ($len) { return $value <= $max; };
-		return $this;
-	}
-
-	function in($values)
-	{
-		is_array($values) or $values = func_get_args();
-		$this->validaters[] = function($value) use ($values) { return in_array($value, $values, true); };
-		return $this;
-	}
-
-	private function validate($value,$preserveRules=false)
-	{
-		foreach($this->validaters as $validater)
-		{
-			if(!$validater($value))
-			{
-				$preserveRules or $this->validaters = [];
-				return false;
-			}
-		}
-		$preserveRules or $this->validaters = [];
-		return true;
-	}
-}
-
-class FancyObject
-{
-	use Validater;
+	use Closure;
+	use EventEmitter;
 	private $root;
 	private $cursor;
+	private $validators;
+	private static $_validators;
 
 	function __construct($root)
 	{
@@ -78,33 +25,44 @@ class FancyObject
 
 	function __call($name,$args)
 	{
-		$default = isset($args[0])? $args[0] : null;
-		return $this->__get($name)->get($default);
+		isset(self::$_validators[$name]) or self::$_validators[$name] = $this->getClosure('validators', $name, false);
+		$this->validators[$name] = $this->callClosure('validators', self::$_validators[$name], null, $args);
+		return $this;
 	}
 
-	function asInt()
+	function asInt($default=null)
 	{
-		$value = intval($this->get(0));
+		$value = intval($this->get($default));
 		return $this->validate($value) ? $value: null;
 	}
 
-	function asNum()
+	function asNum($default=null)
 	{
-		$value = floatval($this->get(0));
+		$value = floatval($this->get($default));
 		return $this->validate($value) ? $value: null;
 	}
 
-	function asArray()
+	function asArray($default=null)
 	{
-		$value = $this->get();
+		$value = $this->get($default);
 		$value = is_array($value) ? $value: [];
 		return $this->validate($value) ? $value: null;
 	}
 
-	function asStr()
+	function asStr($default=null)
 	{
-		$value = $this->get('');
+		$value = $this->get($default);
 		return $this->validate($value) ? $value: null;
+	}
+
+	public function jsonSerialize()
+	{
+		return $this->root;
+	}
+
+	function unwrap()
+	{
+		return $this->root;
 	}
 
 	private function get($default)
@@ -114,8 +72,23 @@ class FancyObject
 		return $ret;
 	}
 
-	public function unwrap()
+	private function validate($value, $preserveRules=false)
 	{
-		return $this->root;
+		foreach($this->validators as $name => $validator)
+		{
+			if(!$validator($value))
+			{
+				$preserveRules or $this->validators = [];
+				$this->emit('validation:failed', ['validator'=> $name, 'input'=> $value]);
+				return false;
+			}
+		}
+		$preserveRules or $this->validators = [];
+		return true;
 	}
+
+	public static function setValidators($validators) {
+		self::$_validators = $validators;
+	}
+
 }

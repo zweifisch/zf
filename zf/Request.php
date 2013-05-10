@@ -24,10 +24,11 @@ trait Request
 
 	private function processRequestParams($fancy)
 	{
-		$this->query = function() use ($fancy) {
-			return $fancy ? new \zf\FancyObject($_GET) : $_GET;
-		};
+		if ($fancy) \zf\FancyObject::setValidators($this->validators);
 
+		$this->query = function() use ($fancy) {
+			return $fancy ? (new \zf\FancyObject($_GET))->setParent($this) : $_GET;
+		};
 		if ('GET' == $this->requestMethod) return;
 
 		$contentType = isset($_SERVER['HTTP_CONTENT_TYPE']) ? $_SERVER['HTTP_CONTENT_TYPE'] : '';
@@ -42,7 +43,7 @@ trait Request
 			{
 				'POST' == $this->requestMethod ? $ret = $_POST : parse_str(file_get_contents('php://input'), $ret);
 			}
-			return $fancy ? new \zf\FancyObject($ret) : $ret;
+			return $fancy ? (new \zf\FancyObject($ret))->setParent($this) : $ret;
 		};
 		return $this;
 	}

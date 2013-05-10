@@ -11,6 +11,7 @@ class App extends Laziness
 
 	private $paramHandlers;
 	private $requestHandlers;
+	private $validators;
 	private $router;
 	private $reflection;
 
@@ -23,6 +24,7 @@ class App extends Laziness
 			->set('helpers', 'helpers')
 			->set('params', 'params')
 			->set('views', 'views')
+			->set('validators', 'validators')
 			->set('viewext', '.php')
 			->set('nopretty')
 			->set('fancy');
@@ -108,6 +110,12 @@ class App extends Laziness
 		return $this;
 	}
 
+	public function validator($name, $closure)
+	{
+		$this->validators[$name] = $closure;
+		return $this;
+	}
+
 	public function register($alias, $className)
 	{
 		$constructArgs = array_slice(func_get_args(), 2);
@@ -131,6 +139,13 @@ class App extends Laziness
 		{
 			$this->params = new Laziness($params, $this);
 			$this->processParams();
+			if ($this->config->fancy)
+			{
+				$validators = require __DIR__ . DIRECTORY_SEPARATOR . 'validators.php';
+				$this->validators = is_array($this->validators)
+					? array_merge($validators, $this->validators)
+					: $validators;
+			}
 			$this->isCli() or $this->processRequestParams($this->config->fancy);
 			$this->callClosure('handlers', $callable, $this);
 		}
