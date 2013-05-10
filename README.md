@@ -7,6 +7,8 @@ a micro php framework/router for both web and cli
 * commandline routing
 * events
 * jsonp support
+* lazy
+* scalable
 * can be used with or without composer
 * ideal for building restful apis or commandline apps
 
@@ -97,20 +99,57 @@ $app->get('/user/:id', function(){
 #### request body
 
 `$this->body` is parsed from raw request body according to content type (json|formdata)
-and wraped as a `FancyObject`, `$app->config('nofancy');` will keep it as an array.
-```php
-$action = $this->body->action->in('login','register')->asString();
-$name = $this->body->user->name->minlen(3)->maxlen(20)->asString();
-$password = $this->body->user->password->minlen(8)->asString();
+and wraped as a `FancyObject`, `$app->set('nofancy');` will keep it as an array.
+
+request body:
+```json
+{
+	"action": "login",
+	"user": {
+		"name" : "admin",
+		"password": "secret"
+	}
+}
 ```
 
+access them:
+```php
+$action = $this->body->action->in('login','register')->asStr();
+$name = $this->body->user->name->minlen(3)->maxlen(20)->asStr();
+$password = $this->body->user->password->minlen(8)->asStr();
+```
 
 #### query string
 
-`$_GET['page']` and `$_GET['size']`
+access `$_GET['page']` and `$_GET['size']`
 ```php
 $page = $this->query->page->default(1)->asInt();
-$size = $this->query->size->between(10,20)->asInt() or $this->send(400);
+$size = $this->query->size->between(10,20)->asInt();
+```
+
+### validation
+
+when validation fails, `false` will be returned and `validation:failed` will be emmitted.
+```
+$password = $this->body->user->password->minlen(8)->asStr();
+
+$app->on('validation:failed', function($message){
+	$this->send(400, $message);
+});
+```
+
+available validators `between`, `min`, `max`, `in`, `minlen`, `maxlen`
+
+add validator
+```php
+$app->validator('startWith', function($str) {
+	return function($value) use ($str) {
+		return 0 == strncmp($value, $str, strlen($str));
+	};
+});
+
+# use it
+$this->body->some->key->startWith(':')->asString();
 ```
 
 ### response
@@ -124,7 +163,7 @@ $this->send($body);
 
 json response
 ```php
-$this->config('pretty', true); #  enable json pretty print
+$this->set('pretty'); #  enable json pretty print
 $this->send($object);
 ```
 
@@ -162,7 +201,7 @@ and in `views/index.php`
 </html>
 ```
 
-to specify a different location other than `views`, use `$app->config('views','path/to/templates');`
+to specify a different location other than `views`, use `$app->set('views','path/to/templates');`
 
 ### configs
 
@@ -170,10 +209,10 @@ to specify a different location other than `views`, use `$app->config('views','p
 
 set
 ```php
-$app->config('key','value');
+$app->set('key','value');
 
-$app->config('fancy');  # equivelant to $app->config('fancy', true);
-$app->config('nofancy');  # equivelant to $app->config('fancy', false);
+$app->set('fancy');  # equivelant to $app->set('fancy', true);
+$app->set('nofancy');  # equivelant to $app->set('fancy', false);
 ```
 
 retrieve 
@@ -198,7 +237,7 @@ $app->cmd('hello <name>', function(){
 	echo 'say hello to ', $this->params->name;
 });
 
-$app->config->('pretty', true);
+$app->set('pretty');
 
 $app->cmd('ls user --skip <from> --limit <max> <pattern>', function(){
 	this->send($this->params);
@@ -232,7 +271,7 @@ $app->sigint(function(){
 
 ## scalability
 
-### request/param/event handlers
+### request/param/event handlers and validators
 
 all can be put in it's own file
 ```php
@@ -244,9 +283,9 @@ return function() {
 	# ...
 };
 ```
-request handlers should be located in `handlers` by default, this can be changed using `$app->config('handlers','path/to/handlers');`
+request handlers should be located in `handlers` by default, this can be changed using `$app->set('handlers','path/to/handlers');`
 
-similarly, event handlers in `events`, param handlers in `params`
+similarly, event handlers in `events`, param handlers in `params` and validators in `validators`
 
 ### helpers
 
@@ -263,6 +302,7 @@ $app->on('error', function($data){
 * `$app->register` won't initilize class
 * `$app->attr = closure` closure won't be invoked unless `$app->attr` is accessed
 * param handler won't be called unless `$app->params->param` is accessed, to make the handler get called as soon as possible, supply a extra parameter like this `$app->param('param','handler',true);`
+* request body won't be parsed unless `$app->body` is accessed
 
 ## optional dependencies
 

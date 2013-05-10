@@ -20,14 +20,14 @@
 // {"a":{"b":"c"}}
 // EOF
 // curl -H "Content-Type: application/json" -d @request.json $host:$port/dump
-// curl -X PUT -d a=b $host:$port/dump
+// curl -X PUT -d a=b -d b\[\]=c $host:$port/dump
 // curl -d a=b $host:$port/dump
 
 require '../zf/zf.php';
 
 $app = new \zf\App();
 
-$app->config('pretty');
+$app->set('pretty');
 $app->register('mongo','\zf\Mongo', $app->config->mongo);
 
 $app->param('ids', function($ids){
@@ -44,7 +44,7 @@ $app->get('/users/:ids?', function(){
 });
 
 $app->post('/user', function(){
-	$this->mongo->users->save($this->body->unwrap());
+	$this->mongo->users->save($this->body->asArray());
 	$this->send(['ok' => true]);
 });
 
@@ -64,11 +64,11 @@ $app->get('/', function(){
 });
 
 $app->post('/dump', function(){
-	$this->send($this->body->unwrap());
+	$this->send($this->body);
 });
 
 $app->put('/dump', function(){
-	$this->send($this->body->unwrap());
+	$this->send($this->body);
 });
 
 $app->run();
