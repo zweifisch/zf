@@ -7,52 +7,35 @@ class FancyObject implements \JsonSerializable
 	use Closure;
 	use EventEmitter;
 	private $root;
-	private $cursor;
+	private $path;
 	private $validators;
 	private static $_validators;
 
 	function __construct($root)
 	{
-		$this->root = $root;
-		$this->cursor = $this->root;
+		$this->root = is_array($root) ? $root : [];
+		$this->validators = [];
+		$this->path = [];
 	}
 
 	function __get($name)
 	{
-		$this->cursor = isset($this->cursor[$name]) ? $this->cursor[$name] : null;
+		$this->path[] = $name;
 		return $this;
 	}
 
-	function __call($name,$args)
+	function __call($name, $args)
 	{
-		isset(self::$_validators[$name]) or self::$_validators[$name] = $this->getClosure('validators', $name, false);
+		if (in_array($name, ['asInt', 'asNum', 'asStr', 'asArray'], true))
+		{
+			return $this->getAs($name, $args);
+		}
+		if (empty(self::$_validators[$name]))
+		{
+			self::$_validators[$name] = $this->getClosure('validators', $name, false);
+		}
 		$this->validators[$name] = $this->callClosure('validators', self::$_validators[$name], null, $args);
 		return $this;
-	}
-
-	function asInt($default=null)
-	{
-		$value = intval($this->get($default));
-		return $this->validate($value) ? $value: null;
-	}
-
-	function asNum($default=null)
-	{
-		$value = floatval($this->get($default));
-		return $this->validate($value) ? $value: null;
-	}
-
-	function asArray($default=null)
-	{
-		$value = $this->get($default);
-		$value = is_array($value) ? $value: [];
-		return $this->validate($value) ? $value: null;
-	}
-
-	function asStr($default=null)
-	{
-		$value = $this->get($default);
-		return $this->validate($value) ? $value: null;
 	}
 
 	public function jsonSerialize()
@@ -60,16 +43,50 @@ class FancyObject implements \JsonSerializable
 		return $this->root;
 	}
 
-	function unwrap()
+	public function unwrap()
 	{
 		return $this->root;
 	}
 
-	private function get($default)
+	private function getAs($type,$default)
 	{
-		$ret = is_null($this->cursor) ? $default : $this->cursor;
-		$this->cursor = $this->root;
-		return $ret;
+		$required = empty($default);
+		list($isset, $value) = $this->get($required);
+		if (!$isset)
+		{
+			if ($required){
+				$this->validators = [];
+				return null;
+			}
+			else
+			{
+				$value = $default[0];
+			}
+		}
+		return $this->validate($value) ? $value: null;
+	}
+
+	private function get($required)
+	{
+		$cursor = $this->root;
+		foreach ($this->path as $path)
+		{
+			if(isset($cursor[$path]))
+			{
+				$cursor = $cursor[$path];
+			}
+			else
+			{
+				if ($required)
+				{
+					$this->emit('validation:failed', ['validator'=> 'required', 'input'=> implode('.', $this->path)]);
+				}
+				$this->path = [];
+				return [false, null];
+			}
+		}
+		$this->path = [];
+		return [true, $cursor];
 	}
 
 	private function validate($value, $preserveRules=false)
@@ -87,7 +104,8 @@ class FancyObject implements \JsonSerializable
 		return true;
 	}
 
-	public static function setValidators($validators) {
+	public static function setValidators($validators)
+	{
 		self::$_validators = $validators;
 	}
 

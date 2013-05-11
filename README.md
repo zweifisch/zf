@@ -129,9 +129,11 @@ $size = $this->query->size->between(10,20)->asInt();
 
 ### validation
 
-when validation fails, `false` will be returned and `validation:failed` will be emmitted.
+when validation fails, `null` will be returned and `validation:failed` will be emmitted.
 ```
 $password = $this->body->user->password->minlen(8)->asStr();
+# all keys are required, unless a default value is supplied:
+$gender = $this->body->user->gender->in(0,1)->asInt(0);
 
 $app->on('validation:failed', function($message){
 	$this->send(400, $message);
