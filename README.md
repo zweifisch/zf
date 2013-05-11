@@ -9,7 +9,7 @@ a micro php framework/router for both web and cli
 * jsonp support
 * lazy
 * scalable
-* can be used with or without composer
+* requires php 5.4
 * ideal for building restful apis or commandline apps
 
 ## synopsis
@@ -152,7 +152,7 @@ $this->body->asUser()->save();
 ### validation
 
 when validation fails, `null` will be returned and `validation:failed` will be emmitted.
-```
+```php
 $password = $this->body->user->password->minlen(8)->asStr();
 # all keys are required, unless a default value is supplied:
 $gender = $this->body->user->gender->in(0,1)->asInt(0);
@@ -164,16 +164,16 @@ $app->on('validation:failed', function($message){
 
 available validators `between`, `min`, `max`, `in`, `minlen`, `maxlen`
 
-add validator
+add a new validator:
 ```php
 $app->validator('startWith', function($str) {
 	return function($value) use ($str) {
-		return 0 == strncmp($value, $str, strlen($str));
+		return 0 == strncmp($value, $value, strlen($str));
 	};
 });
 
 # use it
-$this->body->some->key->startWith(':')->asString();
+$this->body->some->key->startWith(':')->asStr();
 ```
 
 ### response
