@@ -4,6 +4,7 @@
 	colors="true"
 	processIsolation="false"
 	stopOnFailure="false"
+	bootstrap="bootstrap.php"
 	syntaxCheck="true" >
 	<testsuites>
 		<testsuite name="zweifisch/zf">
