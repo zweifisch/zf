@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit backupGlobals="false"
+	backupStaticAttributes="false"
+	colors="true"
+	processIsolation="false"
+	stopOnFailure="false"
+	syntaxCheck="true" >
+	<testsuites>
+		<testsuite name="zweifisch/zf">
+			<directory>./</directory>
+		</testsuite>
+	</testsuites>
+</phpunit>

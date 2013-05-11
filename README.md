@@ -316,3 +316,11 @@ there is an exmaple demostrating how to add/list/delte users, to run it using ph
 cd examples && php -S localhost:5000
 ```
 a cli example is also included.
+
+## tests
+
+run tests
+```sh
+composer.phar install --dev
+vendor/bin/phpunit -c tests
+```
