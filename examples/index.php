@@ -25,6 +25,8 @@
 // curl $host:$port/search\?keyword=nil\&page=1
 // curl $host:$port/search\?keyword=nil\&page=1\&size=100
 // curl -i $host:$port/search\?query=nil
+// curl -H "Content-Type: application/json" -d '{"thing":{"key":"value"}}' $host:$port/thing
+// curl -H "Content-Type: application/json" -d '{"thin":{"key":"value"}}' $host:$port/thing
 
 require '../zf/zf.php';
 
@@ -87,6 +89,27 @@ $app->get('/search', function(){
 
 $app->on('validation:failed', function($message){
 	$this->send(400, $message);
+});
+
+class Thing
+{
+	private $value;
+	function __construct($value) {
+		$this->value = $value;
+	}
+
+	function mutate()
+	{
+		return array_combine(array_values($this->value), array_keys($this->value));
+	}
+}
+
+$app->map('Thing', function($value){
+	return new Thing($value);
+});
+
+$app->post('/thing', function(){
+	$this->send($this->body->thing->asThing()->mutate());
 });
 
 $app->run();

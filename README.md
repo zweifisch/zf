@@ -138,6 +138,16 @@ access `$_GET['page']` and `$_GET['size']`
 $page = $this->query->page->asInt(1);
 $size = $this->query->size->between(10,20)->asInt();
 ```
+#### asX
+
+available types are `asStr`, `asInt`, `asNum`, `asArray`, it's possible to add new types:
+```php
+$app->map('User', function($value){
+	return new User($value);
+});
+
+$this->body->asUser()->save();
+```
 
 ### validation
 
@@ -285,7 +295,7 @@ $app->sigint(function(){
 
 ## scalability
 
-### request/param/event handlers and validators
+### request/param/event handlers, validators and mappers
 
 all can be put in it's own file
 ```php
@@ -299,7 +309,7 @@ return function() {
 ```
 request handlers should be located in `handlers` by default, this can be changed using `$app->set('handlers','path/to/handlers');`
 
-similarly, event handlers in `events`, param handlers in `params` and validators in `validators`
+similarly, event handlers in `events`, param handlers in `params` ...
 
 ### helpers
 
