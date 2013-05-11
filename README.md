@@ -1,4 +1,4 @@
-# zf
+# zf [![Build Status](https://travis-ci.org/zweifisch/zf.png?branch=master)](https://travis-ci.org/zweifisch/zf)
 
 a micro php framework/router for both web and cli
 

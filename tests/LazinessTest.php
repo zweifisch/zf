@@ -1,4 +1,4 @@
-<?
+<?php
 
 use \zf\Laziness;
 
