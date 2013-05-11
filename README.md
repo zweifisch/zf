@@ -96,7 +96,7 @@ $app->get('/user/:id', function(){
 
 ### call other request handler
 
-```
+```php
 $app->handler('index', function(){
 	$this->render('index');
 });

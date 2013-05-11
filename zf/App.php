@@ -12,6 +12,7 @@ class App extends Laziness
 	private $paramHandlers;
 	private $requestHandlers;
 	private $validators;
+	private $mappers;
 	private $router;
 	private $reflection;
 
@@ -25,6 +26,7 @@ class App extends Laziness
 			->set('params', 'params')
 			->set('views', 'views')
 			->set('validators', 'validators')
+			->set('mappers', 'mappers')
 			->set('viewext', '.php')
 			->set('nopretty')
 			->set('fancy');
@@ -116,6 +118,12 @@ class App extends Laziness
 		return $this;
 	}
 
+	public function map($type, $closure)
+	{
+		$this->mappers[$type] = $closure;
+		return $this;
+	}
+
 	public function register($alias, $className)
 	{
 		$constructArgs = array_slice(func_get_args(), 2);
@@ -145,6 +153,10 @@ class App extends Laziness
 				$this->validators = is_array($this->validators)
 					? array_merge($validators, $this->validators)
 					: $validators;
+				$mappers = require __DIR__ . DIRECTORY_SEPARATOR . 'mappers.php';
+				$this->mappers = is_array($this->mappers)
+					? array_merge($mappers, $this->mappers)
+					: $mappers;
 			}
 			$this->isCli() or $this->processRequestParams($this->config->fancy);
 			$this->callClosure('handlers', $callable, $this);

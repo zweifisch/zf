@@ -19,7 +19,7 @@ trait Closure
 
 		if (!$closure)
 		{
-			throw new \Exception("closure $closureName not found");
+			throw new \Exception("closure $path/$closureName not found");
 		}
 		elseif (1 === $closure)
 		{

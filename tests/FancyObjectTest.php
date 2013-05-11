@@ -18,19 +18,22 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testFancy($fancy, $source)
 	{
-		$this->assertEquals($fancy->key->asStr(), 'str');
-		$this->assertEquals($fancy->key2->key3->key4->asInt(), 2);
-		$this->assertEquals($fancy->key2->key5->asNum(), 1.2);
-		$this->assertEquals($fancy->asArray(), $source);
+		$this->assertSame($fancy->key->asStr(), 'str');
+		$this->assertSame($fancy->key2->key3->key4->asInt(), 2);
+		$this->assertSame($fancy->key2->key5->asNum(), 1.2);
+		$this->assertSame($fancy->asArray(), $source);
 	}
 
-	public function testDefault()
+	/**
+	 * @dataProvider provider
+	 */
+	public function testDefault($fancy)
 	{
-		$fancy = new FancyObject([]);
-		$this->assertEquals($fancy->key0->asStr('default'), 'default');
-		$this->assertEquals($fancy->key1->key2->asInt(2), 2);
-		$this->assertEquals($fancy->key3->key4->asNum(1.1), 1.1);
-		$this->assertEquals($fancy->key5->asArray([1,2]), [1,2]);
+		$this->assertSame($fancy->key0->asStr('default'), 'default');
+		$this->assertSame($fancy->key1->key2->asInt(2), 2);
+		$this->assertSame($fancy->key3->key4->asNum(1.1), 1.1);
+		$this->assertSame($fancy->key5->asArray([1,2]), [1,2]);
+		$this->assertSame($fancy->key->asStr('rts'), 'str');
 	}
 
 	public function testRequired()

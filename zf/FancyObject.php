@@ -8,13 +8,14 @@ class FancyObject implements \JsonSerializable
 	use EventEmitter;
 	private $root;
 	private $path;
-	private $validators;
-	private static $_validators;
+	private $usedValidators;
+	private static $validators;
+	private static $mappers;
 
 	function __construct($root)
 	{
 		$this->root = is_array($root) ? $root : [];
-		$this->validators = [];
+		$this->usedValidators = [];
 		$this->path = [];
 	}
 
@@ -26,15 +27,15 @@ class FancyObject implements \JsonSerializable
 
 	function __call($name, $args)
 	{
-		if (in_array($name, ['asInt', 'asNum', 'asStr', 'asArray'], true))
+		if (0 == strncmp('as', $name, 2))
 		{
-			return $this->getAs($name, $args);
+			return $this->getAs(substr($name, 2), $args);
 		}
-		if (empty(self::$_validators[$name]))
+		if (empty(self::$validators[$name]))
 		{
-			self::$_validators[$name] = $this->getClosure('validators', $name, false);
+			self::$validators[$name] = $this->getClosure('validators', $name, false);
 		}
-		$this->validators[$name] = $this->callClosure('validators', self::$_validators[$name], null, $args);
+		$this->usedValidators[$name] = $this->callClosure('validators', self::$validators[$name], null, $args);
 		return $this;
 	}
 
@@ -43,19 +44,14 @@ class FancyObject implements \JsonSerializable
 		return $this->root;
 	}
 
-	public function unwrap()
-	{
-		return $this->root;
-	}
-
-	private function getAs($type,$default)
+	private function getAs($type, $default)
 	{
 		$required = empty($default);
 		list($isset, $value) = $this->get($required);
-		if (!$isset)
+		if(!$isset)
 		{
-			if ($required){
-				$this->validators = [];
+			if($required){
+				$this->usedValidators = [];
 				return null;
 			}
 			else
@@ -63,7 +59,18 @@ class FancyObject implements \JsonSerializable
 				$value = $default[0];
 			}
 		}
+		$value = $this->map($type, $value);
 		return $this->validate($value) ? $value: null;
+	}
+
+	private function map($type, $value)
+	{
+		if(empty(self::$mappers[$type]))
+		{
+			self::$mappers[$type] = $this->getClosure('mappers', $type, false);
+		}
+		$mapper = self::$mappers[$type];
+		return $mapper($value);
 	}
 
 	private function get($required)
@@ -91,22 +98,27 @@ class FancyObject implements \JsonSerializable
 
 	private function validate($value, $preserveRules=false)
 	{
-		foreach($this->validators as $name => $validator)
+		foreach($this->usedValidators as $name => $validator)
 		{
 			if(!$validator($value))
 			{
-				$preserveRules or $this->validators = [];
+				$preserveRules or $this->usedValidators = [];
 				$this->emit('validation:failed', ['validator'=> $name, 'input'=> $value]);
 				return false;
 			}
 		}
-		$preserveRules or $this->validators = [];
+		$preserveRules or $this->usedValidators = [];
 		return true;
 	}
 
 	public static function setValidators($validators)
 	{
-		self::$_validators = $validators;
+		self::$validators = $validators;
+	}
+
+	public static function setMappers($mappers)
+	{
+		self::$mappers = $mappers;
 	}
 
 }

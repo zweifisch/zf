@@ -24,7 +24,11 @@ trait Request
 
 	private function processRequestParams($fancy)
 	{
-		if ($fancy) \zf\FancyObject::setValidators($this->validators);
+		if ($fancy)
+		{
+			FancyObject::setValidators($this->validators);
+			FancyObject::setMappers($this->mappers);
+		}
 
 		$this->query = function() use ($fancy) {
 			return $fancy ? (new \zf\FancyObject($_GET))->setParent($this) : $_GET;
