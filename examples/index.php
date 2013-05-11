@@ -22,6 +22,9 @@
 // curl -H "Content-Type: application/json" -d @request.json $host:$port/dump
 // curl -X PUT -d a=b -d b\[\]=c $host:$port/dump
 // curl -d a=b $host:$port/dump
+// curl $host:$port/search\?keyword=nil\&page=1
+// curl $host:$port/search\?keyword=nil\&page=1\&size=100
+// curl -i $host:$port/search\?query=nil
 
 require '../zf/zf.php';
 
@@ -63,12 +66,27 @@ $app->get('/', function(){
 	$this->render('index',['now'=> date('H:i:s')]);
 });
 
-$app->post('/dump', function(){
+$app->handler('dump', function(){
 	$this->send($this->body);
 });
 
+$app->post('/dump', function(){
+	$this->pass('dump');
+});
+
 $app->put('/dump', function(){
-	$this->send($this->body);
+	$this->pass('dump');
+});
+
+$app->get('/search', function(){
+	$keyword = $this->query->keyword->asStr();
+	$page = $this->query->page->min(1)->asInt();
+	$size = $this->query->size->between(5,20)->asInt(10);
+	$this->send(['query'=>$this->query, 'result'=> []]);
+});
+
+$app->on('validation:failed', function($message){
+	$this->send(400, $message);
 });
 
 $app->run();

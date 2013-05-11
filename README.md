@@ -94,6 +94,18 @@ $app->get('/user/:id', function(){
 });
 ```
 
+### call other request handler
+
+```
+$app->handler('index', function(){
+	$this->render('index');
+});
+
+$app->handler('/index.php', function(){
+	$this->pass('index');
+});
+```
+
 ### access inputs
 
 #### request body
@@ -123,7 +135,7 @@ $password = $this->body->user->password->minlen(8)->asStr();
 
 access `$_GET['page']` and `$_GET['size']`
 ```php
-$page = $this->query->page->default(1)->asInt();
+$page = $this->query->page->asInt(1);
 $size = $this->query->size->between(10,20)->asInt();
 ```
 
