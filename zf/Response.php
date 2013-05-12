@@ -6,12 +6,12 @@ trait Response
 {
 	public function lastModified($time)
 	{
+		header('Last-Modified: '. gmdate(DATE_RFC2822, $time));
 		if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $time)
 		{
 			 header('HTTP/1.0 304 Not Modified');
 			 exit;
 		}
-		header('Last-Modified: '. gmdate(DATE_RFC2822, $time));
 	}
 
 	public function send($code, $body='', $type='text/html')

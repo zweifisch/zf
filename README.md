@@ -191,6 +191,12 @@ $this->set('pretty'); #  enable json pretty print
 $this->send($object);
 ```
 
+#### lastModified
+
+```php
+$this->lastModified($timestamp);
+```
+
 ### jsonp
 
 ```php
