@@ -45,4 +45,11 @@ class LazinessTest extends PHPUnit_Framework_TestCase
 		$object->attr = false;
 		$this->assertTrue(isset($object->attr));
 	}
+
+	public function testNull()
+	{
+		$object = new Laziness;
+		$object->attr = null;
+		$this->assertNull($object->attr);
+	}
 }

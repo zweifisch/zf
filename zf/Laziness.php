@@ -15,7 +15,7 @@ class Laziness implements \JsonSerializable
 
 	public function __get($name)
 	{
-		if (isset($this->container[$name]))
+		if (array_key_exists($name, $this->container))
 		{
 			if ($this->container[$name] instanceof \Closure)
 			{
