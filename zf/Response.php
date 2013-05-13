@@ -79,17 +79,27 @@ trait Response
 	}
 
 	public function render($template, $context)
+	{	
+		$this->renderWithContext($template, $context, function($path){ include $path; });
+		$this->send(200);
+	}
+
+	public function renderAsString($template, $context)
+	{
+		return $this->renderWithContext($template, $context, function($path){
+			ob_start();
+			include $path;
+			$ret = ob_get_contents();
+			ob_end_clean();
+			return $ret;
+		});
+	}
+
+	private function renderWithContext($template, $context, $renderer)
 	{
 		$path = $this->config->views . DIRECTORY_SEPARATOR . $template . $this->config->viewext;
-
-		if (!is_readable($path)) throw \Exception("template $template($path) not found");
-
-		$render = function($path){
-			include $path;
-		};
-
-		$render = $render->bindTo((object)$context);
-		$render($path);
-		$this->send(200);
+		if (!is_readable($path)) throw new \Exception("template $template($path) not found");
+		$renderer = $renderer->bindTo((object)$context);
+		return $renderer($path);
 	}
 }
