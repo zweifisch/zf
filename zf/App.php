@@ -60,36 +60,15 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function set($name,$value=null,$overwrite=true)
+	public function set($name, $value=null)
 	{
 		if(1 == func_num_args())
 		{
-			if(is_array($name))
-			{
-				foreach($name as $key=>$value)
-				{
-					$this->config->$key = $value;
-				}
-			}
-			else
-			{
-				if(0 == strncmp('no', $name, 2))
-				{
-					$name = substr($name, 2);
-					$this->config->$name = false;
-				}
-				else
-				{
-					$this->config->$name = true;
-				}
-			}
+			$this->config->set($name);
 		}
 		else
 		{
-			if ($overwrite || !isset($this->config->$name))
-			{
-				$this->config->$name = $value;
-			}
+			$this->config->set($name, $value);
 		}
 		return $this;
 	}
