@@ -30,7 +30,7 @@ class Helper
 			if (isset($this->registered[$name]))
 			{
 				$closure = $this->registered[$name];
-				unset($this->registered[$name]);
+				$this->registered[$name] = null; #  keep the key in $registered array
 			}
 			else
 			{
