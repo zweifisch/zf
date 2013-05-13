@@ -7,14 +7,16 @@ class FancyObject implements \JsonSerializable
 	use Closure;
 	use EventEmitter;
 	private $root;
+	private $context;
 	private $path;
 	private $usedValidators;
 	private static $validators;
 	private static $mappers;
 
-	function __construct($root)
+	function __construct($root, $context=null)
 	{
 		$this->root = is_array($root) ? $root : [];
+		$this->context = $context;
 		$this->usedValidators = [];
 		$this->path = [];
 	}
@@ -51,16 +53,27 @@ class FancyObject implements \JsonSerializable
 		if(!$isset)
 		{
 			if($required){
-				$this->usedValidators = [];
-				return null;
+				return $this->done(null);
 			}
 			else
 			{
 				$value = $default[0];
 			}
 		}
-		$value = $this->map($type, $value);
-		return $this->validate($value) ? $value: null;
+		$mappedValue = $this->map($type, $value);
+		if(is_null($mappedValue))
+		{
+			$this->emit('validation:failed', ['validator'=> $type, 'input'=> $value, 'key'=> implode('.', $this->path)]);
+			return $this->done(null);
+		}
+		return $this->validate($mappedValue) ? $this->done($mappedValue): $this->done(null);
+	}
+
+	private function done($ret)
+	{
+		$this->path = [];
+		$this->usedValidators = [];
+		return $ret;
 	}
 
 	private function map($type, $value)
@@ -69,8 +82,7 @@ class FancyObject implements \JsonSerializable
 		{
 			self::$mappers[$type] = $this->getClosure('mappers', $type, false);
 		}
-		$mapper = self::$mappers[$type];
-		return $mapper($value);
+		return $this->callClosure('mappers', self::$mappers[$type], $this->context, [$value]);
 	}
 
 	private function get($required)
@@ -86,13 +98,12 @@ class FancyObject implements \JsonSerializable
 			{
 				if ($required)
 				{
-					$this->emit('validation:failed', ['validator'=> 'required', 'input'=> implode('.', $this->path)]);
+					$this->emit('validation:failed', ['validator'=> 'required', 'input'=>null, 'key'=> implode('.', $this->path)]);
 				}
 				$this->path = [];
 				return [false, null];
 			}
 		}
-		$this->path = [];
 		return [true, $cursor];
 	}
 
@@ -103,7 +114,7 @@ class FancyObject implements \JsonSerializable
 			if(!$validator($value))
 			{
 				$preserveRules or $this->usedValidators = [];
-				$this->emit('validation:failed', ['validator'=> $name, 'input'=> $value]);
+				$this->emit('validation:failed', ['validator'=> $name, 'input'=> $value, 'key'=> implode('.', $this->path)]);
 				return false;
 			}
 		}

@@ -43,7 +43,7 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 		$that = $this;
 		$fancy->on('validation:failed', function($message) use (&$failed, $that){
 			$failed = true;
-			$that->assertEquals($message, ['validator'=>'required', 'input'=>'key0.key1']);
+			$that->assertSame(json_encode($message), json_encode(['validator'=>'required', 'input'=>null, 'key'=>'key0.key1']));
 		});
 		$this->assertNull($fancy->key0->key1->asInt());
 		$this->assertTrue($failed);

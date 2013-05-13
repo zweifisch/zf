@@ -31,7 +31,7 @@ trait Request
 		}
 
 		$this->query = function() use ($fancy) {
-			return $fancy ? (new \zf\FancyObject($_GET))->setParent($this) : $_GET;
+			return $fancy ? (new \zf\FancyObject($_GET, $this))->setParent($this) : $_GET;
 		};
 		if ('GET' == $this->requestMethod) return;
 
@@ -47,7 +47,7 @@ trait Request
 			{
 				'POST' == $this->requestMethod ? $ret = $_POST : parse_str(file_get_contents('php://input'), $ret);
 			}
-			return $fancy ? (new \zf\FancyObject($ret))->setParent($this) : $ret;
+			return $fancy ? (new \zf\FancyObject($ret, $this))->setParent($this) : $ret;
 		};
 		return $this;
 	}
