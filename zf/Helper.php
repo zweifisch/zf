@@ -45,19 +45,26 @@ class Helper
 	{
 		if(is_array($name))
 		{
-			$helpers = $name;
-			if(isset($this->registered))
+			foreach($name as $name=>$closure)
 			{
-				$this->registered = array_merge($this->registered, $helpers);
-			}
-			else
-			{
-				$this->registered = $helpers;
+				if(is_int($name))
+				{
+					$this->registered[$closure] = null;
+				}
+				else
+				{
+					$this->registered[$name] = $closure;
+				}
 			}
 		}
 		else
 		{
 			$this->registered[$name] = $closure;
 		}
+	}
+
+	public function registered($name)
+	{
+		return array_key_exists($name, $this->registered);
 	}
 }

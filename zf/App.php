@@ -41,6 +41,10 @@ class App extends Laziness
 		{
 			$this->router->append($name, $args);
 		}
+		elseif ($this->helper->registered($name))
+		{
+			$this->callClosure($this->config->helpers, $this->helper->$name, null, $args);
+		}
 		elseif ($this->isCli() && (0 == strncmp('sig', $name, 3)))
 		{
 			$name = strtoupper($name);
@@ -79,7 +83,7 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function helper($name, $closure)
+	public function helper($name, $closure=null)
 	{
 		$this->helper->register($name, $closure);
 		return $this;
