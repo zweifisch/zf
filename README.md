@@ -94,6 +94,8 @@ $app->get('/user/:id', function(){
 });
 ```
 
+registrated helpers can also be accessed using `$this->myhelper();`
+
 ### call other request handler
 
 ```php
@@ -325,6 +327,14 @@ $app->on('error', function($data){
 	# helpers/mail.php will be loaded
 	$this->helper->mail(['to'=>$this->config->admin,'body'=>$data->message]);
 });
+```
+
+helpers can also be registrated in this way:
+```php
+$app->helper(['helper','helper2','helper3']);
+
+# so they can be accessed as
+$app->helper3(); #  ommit the 'helper'
 ```
 
 ## laziness
