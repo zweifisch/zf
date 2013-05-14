@@ -42,7 +42,7 @@ components are just classes attached to the $app instance, any class can used, `
 $app->register('mongo', '\zf\Mongo', $app->config->mongo);
 $app->register('redis', '\zf\Redis', $app->config->redis);
 
-# \zf\Mongo won't be initilazed unless $app->mongo is accessed
+// \zf\Mongo won't be initilazed unless $app->mongo is accessed
 $app->mongo->users->findOne();
 ```
 
@@ -142,7 +142,16 @@ $size = $this->query->size->between(10,20)->asInt();
 ```
 #### asX
 
-available types are `asStr`, `asInt`, `asNum`, `asArray`, it's possible to add new types:
+available types are `asStr`, `asInt`, `asNum`, `asArray`, `asFile`
+```php
+$app->post('/upload',function(){
+	$file = $this->body->image->asFile();
+	$file->extension;
+	new \MongoBinData($file->content); //  content won't be read unless accessed
+});
+```
+
+it's possible to add new types:
 ```php
 $app->map('User', function($value){
 	return new User($value);
@@ -156,7 +165,7 @@ $this->body->asUser()->save();
 when validation fails, `null` will be returned and `validation:failed` will be emmitted.
 ```php
 $password = $this->body->user->password->minlen(8)->asStr();
-# all keys are required, unless a default value is supplied:
+// all keys are required, unless a default value is supplied:
 $gender = $this->body->user->gender->in(0,1)->asInt(0);
 
 $app->on('validation:failed', function($message){
@@ -174,7 +183,7 @@ $app->validator('startWith', function($str) {
 	};
 });
 
-# use it
+// use it
 $this->body->some->key->startWith(':')->asStr();
 ```
 
@@ -333,7 +342,7 @@ helpers can also be registrated in this way:
 ```php
 $app->helper(['helper','helper2','helper3']);
 
-# so they can be accessed as
+// so they can be accessed as
 $app->helper3(); #  ommit the 'helper'
 ```
 
