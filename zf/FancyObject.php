@@ -60,7 +60,7 @@ class FancyObject implements \JsonSerializable
 				$value = $default[0];
 			}
 		}
-		$mappedValue = $this->map($type, $value);
+		$mappedValue = $this->map($type, $value, implode('.', $this->path));
 		if(is_null($mappedValue))
 		{
 			$this->emit('validation:failed', ['validator'=> $type, 'input'=> $value, 'key'=> implode('.', $this->path)]);
@@ -76,13 +76,13 @@ class FancyObject implements \JsonSerializable
 		return $ret;
 	}
 
-	private function map($type, $value)
+	private function map($type, $value, $path)
 	{
 		if(empty(self::$mappers[$type]))
 		{
 			self::$mappers[$type] = $this->getClosure('mappers', $type, false);
 		}
-		return $this->callClosure('mappers', self::$mappers[$type], $this->context, [$value]);
+		return $this->callClosure('mappers', self::$mappers[$type], $this->context, [$value, $path]);
 	}
 
 	private function get($required)
