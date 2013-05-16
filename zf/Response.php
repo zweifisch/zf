@@ -14,6 +14,20 @@ trait Response
 		}
 	}
 
+	public function cacheControl()
+	{
+		$args = func_get_args();
+		if(is_array(end($args)))
+		{
+			$options = array_pop($args);
+			foreach($options as $key=>$value)
+			{
+				$args[] = $key.'='.$value;
+			}
+		}
+		header('Cache-Control '. implode(', ', $args));
+	}
+
 	public function send($code, $body='', $type='text/html')
 	{
 		if(!is_int($code))

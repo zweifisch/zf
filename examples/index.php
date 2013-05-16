@@ -27,6 +27,7 @@
 // curl -i $host:$port/search\?query=nil
 // curl -H "Content-Type: application/json" -d '{"thing":{"key":"value"}}' $host:$port/thing
 // curl -H "Content-Type: application/json" -d '{"thin":{"key":"value"}}' $host:$port/thing
+// curl -I $host:$port/cache-control
 
 require '../zf/zf.php';
 
@@ -110,6 +111,10 @@ $app->map('Thing', function($value){
 
 $app->post('/thing', function(){
 	$this->send($this->body->thing->asThing()->mutate());
+});
+
+$app->head('/cache-control', function(){
+	$this->cacheControl('public', ['max-age'=>120]);
 });
 
 $app->run();

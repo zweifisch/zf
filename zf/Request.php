@@ -22,7 +22,7 @@ trait Request
 		return 'cli' == PHP_SAPI;
 	}
 
-	private function processRequestParams($fancy)
+	private function processRequestBody($fancy)
 	{
 		if ($fancy)
 		{

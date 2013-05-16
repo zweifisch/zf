@@ -37,7 +37,7 @@ class App extends Laziness
 
 	function __call($name, $args)
 	{
-		if (in_array($name, ['get', 'post', 'put', 'delete', 'patch', 'cmd'], true))
+		if (in_array($name, ['get', 'post', 'put', 'delete', 'patch', 'head', 'cmd'], true))
 		{
 			$this->router->append($name, $args);
 		}
@@ -128,8 +128,6 @@ class App extends Laziness
 		list($callable, $params) = $this->router->run();
 		if($callable)
 		{
-			$this->params = new Laziness($params, $this);
-			$this->processParams();
 			if ($this->config->fancy)
 			{
 				$validators = require __DIR__ . DIRECTORY_SEPARATOR . 'validators.php';
@@ -141,7 +139,13 @@ class App extends Laziness
 					? array_merge($mappers, $this->mappers)
 					: $mappers;
 			}
-			$this->isCli() or $this->processRequestParams($this->config->fancy);
+			$this->params = new Laziness($params, $this);
+			$this->processParamsHandlers($params);
+			if (!$this->isCli())
+			{
+				$this->processParamsHandlers($_GET);
+				$this->processRequestBody($this->config->fancy);
+			}
 			$this->callClosure('handlers', $callable, $this);
 		}
 		else
@@ -156,24 +160,19 @@ class App extends Laziness
 		return $this;
 	}
 
-	private function processParams()
+	private function processParamsHandlers($input)
 	{
-		foreach($this->params->getAll() as $name => $value)
+		foreach($input as $name => $value)
 		{
 			if (isset($this->paramHandlers[$name]))
 			{
 				list($handler,$eager) = $this->paramHandlers[$name];
 				$args = [$value];
-				if ($eager)
-				{
-					$this->params->$name = $this->callClosure('params', $handler, $this, $args);
-				}
-				else
-				{
-					$this->params->$name = function() use ($handler, $args){
+				$this->params->$name = $eager
+					? $this->callClosure('params', $handler, $this, $args)
+					: function() use ($handler, $args){
 						return $this->callClosure('params', $handler, $this, $args);
 					};
-				}
 			}
 		}
 	}
