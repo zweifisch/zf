@@ -208,6 +208,12 @@ $this->send($object);
 $this->lastModified($timestamp);
 ```
 
+#### cacheControl
+
+```php
+$this->cacheControl('public', 'must-revalidate', ['max-age'=> 60]);
+```
+
 ### jsonp
 
 ```php
@@ -269,6 +275,15 @@ $app->get('/user/:id', function(){
 })->post('/user', function(){
 	# ...
 })->run();
+```
+
+### debug
+
+dump object in header
+
+```php
+$app->set('debug');
+$app->debug($msg, $object);
 ```
 
 ## cli
