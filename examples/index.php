@@ -28,6 +28,8 @@
 // curl -H "Content-Type: application/json" -d '{"thing":{"key":"value"}}' $host:$port/thing
 // curl -H "Content-Type: application/json" -d '{"thin":{"key":"value"}}' $host:$port/thing
 // curl -I $host:$port/cache-control
+// curl -i -d a=b $host:$port/debug
+// curl -is -d a=b $host:$port/debug | sed -n '/X-ZF-Debug/ s/.* // p' | json
 
 require '../zf/zf.php';
 
@@ -115,6 +117,12 @@ $app->post('/thing', function(){
 
 $app->head('/cache-control', function(){
 	$this->cacheControl('public', ['max-age'=>120]);
+});
+
+$app->post('/debug', function(){
+	$this->set('debug');
+	$this->debug('input', $this->body);
+	$this->send(200);
 });
 
 $app->run();

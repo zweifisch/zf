@@ -3,7 +3,8 @@
 namespace zf;
 
 trait Response
-{
+{ 
+	private $debug;
 	public function lastModified($time)
 	{
 		header('Last-Modified: '. gmdate(DATE_RFC2822, $time));
@@ -25,7 +26,7 @@ trait Response
 				$args[] = $key.'='.$value;
 			}
 		}
-		header('Cache-Control '. implode(', ', $args));
+		header('Cache-Control: '. implode(', ', $args));
 	}
 
 	public function send($code, $body='', $type='text/html')
@@ -52,6 +53,13 @@ trait Response
 		header('HTTP/1.1: '. $response['code']);
 		header('Status: '. $response['code']);
 		header('Content-Type: '. $response['type']);
+		if($this->config->debug)
+		{
+			if(is_array($this->debug))
+			{
+				header('X-ZF-Debug: '.json_encode($this->debug));
+			}
+		}
 		exit($response['body']);
 	}
 
@@ -115,5 +123,19 @@ trait Response
 		if (!is_readable($path)) throw new \Exception("template $template($path) not found");
 		$renderer = $renderer->bindTo((object)$context);
 		return $renderer($path);
+	}
+
+	public function debug($msg, $object)
+	{
+		if($this->config->debug){
+			list($bt) = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,1);
+			$this->debug[] = [
+				$msg,
+				$object,
+				basename($bt['file']),
+				$bt['line'],
+			];
+		}
+		return $this;
 	}
 }

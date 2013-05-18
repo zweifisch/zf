@@ -28,6 +28,7 @@ class App extends Laziness
 			->set('validators', 'validators')
 			->set('mappers', 'mappers')
 			->set('viewext', '.php')
+			->set('nodebug')
 			->set('nopretty')
 			->set('fancy');
 		$this->config->load('configs.php');
