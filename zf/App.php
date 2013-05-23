@@ -29,6 +29,7 @@ class App extends Laziness
 			->set('mappers', 'mappers')
 			->set('viewext', '.php')
 			->set('nodebug')
+			->set('charset', 'utf-8')
 			->set('nopretty')
 			->set('fancy');
 		$this->config->load('configs.php');

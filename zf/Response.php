@@ -5,7 +5,7 @@ namespace zf;
 trait Response
 { 
 	private $debug;
-	private $statusCodes = [
+	private $statuses = [
 		200 => 'OK',
 		201 => 'Created',
 		202 => 'Accepted',
@@ -68,37 +68,44 @@ trait Response
 		header('Cache-Control: '. implode(', ', $args));
 	}
 
-	public function send($code, $body='', $type='text/html')
+	public function send($code, $body='', $options=null)
 	{
-		if(!is_int($code))
-		{
-			$body = $code;
-			$code = 200;
-		}
+		is_int($code) or list($code, $body, $options) = [200, $code, $body];
+
+		$options or $options = [];
 
 		if(!is_string($body))
 		{
 			$body = $this->config->pretty
 				? json_encode($body, JSON_PRETTY_PRINT)
 				: json_encode($body);
-			$type = 'application/json';
+			$options['type'] = 'application/json';
+			$options['charset'] = $this->config->charset;
 		}
 
-		$this->response([ 'body' => $body, 'code' => $code, 'type' => $type ]);
+		if(empty($options['type']))
+		{
+			$options['type'] = 'text/html';
+			$options['charset'] = $this->config->charset;
+		}
+
+		$options['body'] = $body;
+		$options['code'] = $code;
+
+		$this->response($options);
 	}
 
 	public function response($response)
 	{
-		global $statusCodes;
-		header('HTTP/1.1 '. $response['code'] . ' ' . $this->statusCodes[$response['code']]);
-		header('Status: '. $response['code']);
-		header('Content-Type: '. $response['type']);
-		if($this->config->debug)
+		$code = $response['code'];
+		header("HTTP/1.1 $code $this->statuses[$code]");
+		header("Status: $code");
+		empty($response['charset'])
+			? header("Content-Type: ${response['type']}")
+			: header("Content-Type: ${response['type']}; charset=${response['charset']}");
+		if($this->config->debug && is_array($this->debug))
 		{
-			if(is_array($this->debug))
-			{
-				header('X-ZF-Debug: '.json_encode($this->debug));
-			}
+			header('X-ZF-Debug: '.json_encode($this->debug));
 		}
 		exit($response['body']);
 	}
@@ -128,10 +135,9 @@ trait Response
 			$body = $this->config->pretty
 				? json_encode($body, JSON_PRETTY_PRINT)
 				: json_encode($body);
-			$this->response([
-				'body' => "$callback && $callback($body)",
-				'code' => '200',
-				'type' => 'text/javascript',
+			$this->send("$callback && $callback($body)",[
+				'type'    => 'text/javascript',
+				'charset' => $this->config->charset,
 			]);
 		}
 		else
