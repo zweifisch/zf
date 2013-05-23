@@ -14,12 +14,9 @@
 // curl -i -X DELETE $host:$port/users/3
 // curl -i $host:$port/users
 // curl -i $host:$port/git/st
-// curl $host:$port/time/Y-m-d
+// curl -i $host:$port/time/Y-m-d
 // curl -i $host:$port/
-// cat >! request.json << EOF
-// {"a":{"b":"c"}}
-// EOF
-// curl -H "Content-Type: application/json" -d @request.json $host:$port/dump
+// curl -iH "Content-Type: application/json" -d '{"a":{"b":"c"}}' $host:$port/dump
 // curl -X PUT -d a=b -d b\[\]=c $host:$port/dump
 // curl -d a=b $host:$port/dump
 // curl $host:$port/search\?keyword=nil\&page=1

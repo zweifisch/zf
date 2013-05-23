@@ -191,9 +191,10 @@ $this->body->some->key->startWith(':')->asStr();
 
 ```php
 $this->send($statusCode);
-$this->send($statusCode,$body);
-$this->send($statusCode,$body,$contentType);
+$this->send($statusCode, $body);
+$this->send($statusCode, $body, ['type'=>$contentType]);
 $this->send($body);
+$this->send($body, ['type'=>$contentType, 'charset'=>$charset]);
 ```
 
 json response
