@@ -297,7 +297,7 @@ $app->cmd('hello <name>', function(){
 $app->set('pretty');
 
 $app->cmd('ls user --skip <from> --limit <max> <pattern>', function(){
-	this->send($this->params);
+	$this->send($this->params);
 });
 ```
 
