@@ -98,7 +98,7 @@ trait Response
 	public function response($response)
 	{
 		$code = $response['code'];
-		header("HTTP/1.1 $code $this->statuses[$code]");
+		header("HTTP/1.1 $code {$this->statuses[$code]}");
 		header("Status: $code");
 		empty($response['charset'])
 			? header("Content-Type: ${response['type']}")
