@@ -30,7 +30,7 @@ class Laziness implements \JsonSerializable
 		}
 		else
 		{
-			throw new \Exception("attribute $name not found");
+			throw new \Exception("attribute \"$name\" not found");
 		}
 	}
 

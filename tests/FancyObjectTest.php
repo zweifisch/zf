@@ -38,8 +38,10 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 
 	public function testRequired()
 	{
-		$validators = \zf\Closure::getInstance(null, '');
-		$mappers = \zf\Closure::getInstance(null, '');
+		$validators = new \zf\ClosureSet(null,'');
+		$validators->register(require __DIR__.'/../zf/validators.php');
+		$mappers = new \zf\ClosureSet(null, '');
+		$mappers->register(require __DIR__.'/../zf/mappers.php');
 		$fancy = new FancyObject([], $validators, $mappers);
 		$failed = false;
 		$that = $this;
@@ -63,8 +65,10 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 	public function provider()
 	{
 		$source = ['key'=>'str','key2'=>['key3'=>['key4'=>'2'], 'key5'=>'1.2']];
-		$validators = \zf\Closure::getInstance(null, '');
-		$mappers = \zf\Closure::getInstance(null, '');
+		$validators = new \zf\ClosureSet(null,'');
+		$validators->register(require __DIR__.'/../zf/validators.php');
+		$mappers = new \zf\ClosureSet(null, '');
+		$mappers->register(require __DIR__.'/../zf/mappers.php');
 		return [[new FancyObject($source, $validators, $mappers), $source]];
 	}
 

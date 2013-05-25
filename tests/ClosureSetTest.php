@@ -1,8 +1,8 @@
 <?php
 
-use \zf\Helper;
+use \zf\ClosureSet;
 
-class HelperTest extends PHPUnit_Framework_TestCase
+class ClosureSetTest extends PHPUnit_Framework_TestCase
 {
 	public function testRegistered()
 	{
@@ -28,7 +28,6 @@ class HelperTest extends PHPUnit_Framework_TestCase
 
 	public function setup()
 	{
-		$helpers = \zf\Closure::getInstance(null, __DIR__ . DIRECTORY_SEPARATOR . '/closures');
-		$this->helper = new Helper(null, $helpers);
+		$this->helper = new ClosureSet(null, __DIR__ . DIRECTORY_SEPARATOR . '/closures');
 	}
 }

@@ -8,12 +8,9 @@ class App extends Laziness
 	use Response;
 	use EventEmitter;
 
-	private $paramHandlers;
-	private $requestHandlers;
-	private $validators;
-	private $mappers;
 	private $router;
 	private $reflection;
+	private $eagerParams = [];
 
 	function __construct()
 	{
@@ -34,7 +31,19 @@ class App extends Laziness
 		$this->config->load('configs.php');
 		$this->router = $this->isCli() ? new CliRouter() : new Router();
 		$this->helper = function(){
-			return new Helper($this, Closure::getInstance($this, $this->config->helpers));
+			return new ClosureSet($this, $this->config->helpers);
+		};
+		$this->requestHandlers = function(){
+			return new ClosureSet($this, $this->config->handlers);
+		};
+		$this->paramHandlers = function(){
+			return new ClosureSet($this, $this->config->params);
+		};
+		$this->validators = function(){
+			return new ClosureSet($this, $this->config->validators);
+		};
+		$this->mappers = function(){
+			return new ClosureSet($this, $this->config->mappers);
 		};
 	}
 
@@ -57,12 +66,12 @@ class App extends Laziness
 			}
 			else
 			{
-				throw new \Exception("signal $name not found");
+				throw new \Exception("signal \"$name\" not found");
 			}
 		}
 		else
 		{
-			throw new \Exception("method $name not found");
+			throw new \Exception("method \"$name\" not found");
 		}
 		return $this;
 	}
@@ -80,9 +89,13 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function param($name, $callable, $eager=false)
+	public function param($name, $handler, $eager=false)
 	{
-		$this->paramHandlers[$name] = [$callable, $eager];
+		$this->paramHandlers->register($name, $handler);
+		if($eager)
+		{
+			$this->eagerParams[] = $name;
+		}
 		return $this;
 	}
 
@@ -94,19 +107,19 @@ class App extends Laziness
 
 	public function handler($name, $closure)
 	{
-		$this->requestHandlers[$name] = $closure;
+		$this->requestHandlers->register($name, $closure);
 		return $this;
 	}
 
 	public function validator($name, $closure)
 	{
-		$this->validators[$name] = $closure;
+		$this->validators->register($name, $closure);
 		return $this;
 	}
 
 	public function map($type, $closure)
 	{
-		$this->mappers[$type] = $closure;
+		$this->mappers->register($type, $closure);
 		return $this;
 	}
 
@@ -121,35 +134,36 @@ class App extends Laziness
 
 	public function pass($handlerName)
 	{
-		$handler = isset($this->requestHandlers[$handlerName])? $this->requestHandlers[$handlerName] : $handlerName;
-		Closure::callWithContext($handler, $this, $this->config->handlers);
+		$this->requestHandlers->__call($handlerName);
 	}
 
 	public function run()
 	{
 		$this->requestMethod = $this->isCli() ? 'CLI' : strtoupper($_SERVER['REQUEST_METHOD']);
-		list($callable, $params) = $this->router->run();
-		if($callable)
+		list($handler, $params) = $this->router->run();
+		if($handler)
 		{
 			if ($this->config->fancy)
 			{
-				$validators = require __DIR__ . DIRECTORY_SEPARATOR . 'validators.php';
-				$this->validators = is_array($this->validators)
-					? array_merge($validators, $this->validators)
-					: $validators;
-				$mappers = require __DIR__ . DIRECTORY_SEPARATOR . 'mappers.php';
-				$this->mappers = is_array($this->mappers)
-					? array_merge($mappers, $this->mappers)
-					: $mappers;
+				$this->validators->register(require __DIR__ . DIRECTORY_SEPARATOR . 'validators.php');
+				$this->mappers->register(require __DIR__ . DIRECTORY_SEPARATOR . 'mappers.php');
 			}
 			$this->params = new Laziness($params, $this);
 			$this->processParamsHandlers($params);
-			if (!$this->isCli())
+			if(!$this->isCli())
 			{
 				$this->processParamsHandlers($_GET);
 				$this->processRequestBody($this->config->fancy);
 			}
-			Closure::callWithContext($callable, $this, $this->config->handlers);
+			if(is_string($handler))
+			{
+				$this->requestHandlers->__call($handler);
+			}
+			else
+			{
+				$handler = $handler->bindTo($this);
+				$handler();
+			}
 		}
 		else
 		{
@@ -167,15 +181,12 @@ class App extends Laziness
 	{
 		foreach($input as $name => $value)
 		{
-			if (isset($this->paramHandlers[$name]))
+			if ($this->paramHandlers->registered($name))
 			{
-				list($handler,$eager) = $this->paramHandlers[$name];
 				$args = [$value];
-				$this->params->$name = $eager
-					? Closure::callWithContext($handler, $this, $this->config->params, $args)
-					: function() use ($handler, $args){
-						return Closure::callWithContext($handler, $this, $this->config->params, $args);
-					};
+				$this->params->$name = in_array($name, $this->eagerParams, true)
+					? $this->paramHandlers->__call($name, $args)
+					: $this->paramHandlers->delayedCall($name, $args);
 			}
 		}
 	}

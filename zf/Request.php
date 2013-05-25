@@ -24,16 +24,8 @@ trait Request
 
 	private function processRequestBody($fancy)
 	{
-		if ($fancy)
-		{
-			FancyObject::setValidators($this->validators);
-			FancyObject::setMappers($this->mappers);
-		}
-
 		$this->query = function() use ($fancy) {
-			$validators = Closure::getInstance($this, $this->config->validators);
-			$mappers = Closure::getInstance($this, $this->config->mappers);
-			return $fancy ? (new FancyObject($_GET, $validators, $mappers))->setParent($this) : $_GET;
+			return $fancy ? (new FancyObject($_GET, $this->validators, $this->mappers))->setParent($this) : $_GET;
 		};
 		if ('GET' == $this->requestMethod) return;
 
@@ -57,9 +49,7 @@ trait Request
 			{
 				$ret = file_get_contents('php://input');
 			}
-			$validators = Closure::getInstance($this, $this->config->validators);
-			$mappers = Closure::getInstance($this, $this->config->mappers);
-			return $fancy ? (new FancyObject($ret, $validators, $mappers))->setParent($this) : $ret;
+			return $fancy ? (new FancyObject($ret, $this->validators, $this->mappers))->setParent($this) : $ret;
 		};
 		return $this;
 	}

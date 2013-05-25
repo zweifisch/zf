@@ -9,16 +9,14 @@ class FancyObject implements \JsonSerializable
 	private $context;
 	private $path;
 	private $usedValidators;
-	private static $validators;
-	private static $mappers;
 
 	function __construct($root, $validators, $mappers)
 	{
 		$this->root = is_array($root) ? $root : [];
 		$this->usedValidators = [];
 		$this->path = [];
-		$this->validatorClosures = $validators;
-		$this->mapperClosures = $mappers;
+		$this->validators = $validators;
+		$this->mappers = $mappers;
 	}
 
 	function __get($name)
@@ -33,11 +31,7 @@ class FancyObject implements \JsonSerializable
 		{
 			return $this->getAs(substr($name, 2), $args);
 		}
-		if (empty(self::$validators[$name]))
-		{
-			self::$validators[$name] = $this->validatorClosures->get($name, false);
-		}
-		$this->usedValidators[$name] = $this->validatorClosures->call(self::$validators[$name], $args);
+		$this->usedValidators[$name] = $this->validators->__call($name, $args);
 		return $this;
 	}
 
@@ -79,11 +73,7 @@ class FancyObject implements \JsonSerializable
 
 	private function map($type, $value, $path)
 	{
-		if(empty(self::$mappers[$type]))
-		{
-			self::$mappers[$type] = $this->mapperClosures->get($type, false);
-		}
-		return $this->mapperClosures->call(self::$mappers[$type], [$value, $path]);
+		return $this->mappers->__call($type, [$value, $path]);
 	}
 
 	private function get($required)
@@ -121,16 +111,6 @@ class FancyObject implements \JsonSerializable
 		}
 		$preserveRules or $this->usedValidators = [];
 		return true;
-	}
-
-	public static function setValidators($validators)
-	{
-		self::$validators = $validators;
-	}
-
-	public static function setMappers($mappers)
-	{
-		self::$mappers = $mappers;
 	}
 
 }
