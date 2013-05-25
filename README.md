@@ -37,7 +37,7 @@ $app->get('/hello/:name', function(){
 
 ### component
 
-components are just classes attached to the $app instance, any class can used, `\zf\Mongo` and `\zf\Redis` are available out of the box:
+components are just classes attached to the $app instance, any class can be used, `\zf\Mongo` and `\zf\Redis` are available out of the box:
 ```php
 $app->register('mongo', '\zf\Mongo', $app->config->mongo);
 $app->register('redis', '\zf\Redis', $app->config->redis);
@@ -80,6 +80,22 @@ $app->get('/user/:id', function($data){
 	$this->send($user);
 });
 ```
+
+handler with highest priority get called first, the default priority is 0
+```php
+$app->on('event', -1, function(){
+	// will be called after all handlers
+});
+```
+
+listening for multiple events
+```php
+$app->on('user:*', function($data, $event){
+	// will get called for `user:login`, `user:logout` etc.
+});
+```
+
+to stop an event, return an truthy value in the handler
 
 ### helper
 
