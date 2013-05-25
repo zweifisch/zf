@@ -4,23 +4,21 @@ namespace zf;
 
 class Helper
 {
-	use Closure;
-
 	private $registered;
 	private $binded;
 	private $context;
-	private $path;
+	private $closures;
 
-	public function __construct($context,$path)
+	public function __construct($context,$closures)
 	{
 		$this->context = $context;
-		$this->path = $path;
+		$this->closures = $closures;
 	}
 
 	public function __call($name, $args)
 	{
 		$closure = $this->__get($name);
-		return $this->callClosure(null, $closure, null, $args);
+		return call_user_func_array($closure, $args);
 	}
 
 	public function __get($name)
@@ -34,7 +32,7 @@ class Helper
 			}
 			else
 			{
-				$closure = $this->getClosure($this->path, $name, false);
+				$closure = $this->closures->get($name, false);
 			}
 			$this->binded[$name] = $closure->bindTo($this->context);
 		}

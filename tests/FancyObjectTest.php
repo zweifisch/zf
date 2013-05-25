@@ -38,7 +38,9 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 
 	public function testRequired()
 	{
-		$fancy = new FancyObject([]);
+		$validators = \zf\Closure::getInstance(null, '');
+		$mappers = \zf\Closure::getInstance(null, '');
+		$fancy = new FancyObject([], $validators, $mappers);
 		$failed = false;
 		$that = $this;
 		$fancy->on('validation:failed', function($message) use (&$failed, $that){
@@ -61,7 +63,9 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 	public function provider()
 	{
 		$source = ['key'=>'str','key2'=>['key3'=>['key4'=>'2'], 'key5'=>'1.2']];
-		return [[new FancyObject($source), $source]];
+		$validators = \zf\Closure::getInstance(null, '');
+		$mappers = \zf\Closure::getInstance(null, '');
+		return [[new FancyObject($source, $validators, $mappers), $source]];
 	}
 
 }

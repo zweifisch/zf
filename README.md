@@ -81,7 +81,7 @@ $app->get('/user/:id', function($data){
 });
 ```
 
-handler with highest priority get called first, the default priority is 0
+handler with highest priority get called first, the default priority is `0`
 ```php
 $app->on('event', -1, function(){
 	// will be called after all handlers
@@ -95,7 +95,7 @@ $app->on('user:*', function($data, $event){
 });
 ```
 
-to stop an event, return an truthy value in the handler
+to stop an event, return a truthy value in the handler
 
 ### helper
 

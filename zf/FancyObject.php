@@ -4,7 +4,6 @@ namespace zf;
 
 class FancyObject implements \JsonSerializable
 {
-	use Closure;
 	use EventEmitter;
 	private $root;
 	private $context;
@@ -13,12 +12,13 @@ class FancyObject implements \JsonSerializable
 	private static $validators;
 	private static $mappers;
 
-	function __construct($root, $context=null)
+	function __construct($root, $validators, $mappers)
 	{
 		$this->root = is_array($root) ? $root : [];
-		$this->context = $context;
 		$this->usedValidators = [];
 		$this->path = [];
+		$this->validatorClosures = $validators;
+		$this->mapperClosures = $mappers;
 	}
 
 	function __get($name)
@@ -35,9 +35,9 @@ class FancyObject implements \JsonSerializable
 		}
 		if (empty(self::$validators[$name]))
 		{
-			self::$validators[$name] = $this->getClosure('validators', $name, false);
+			self::$validators[$name] = $this->validatorClosures->get($name, false);
 		}
-		$this->usedValidators[$name] = $this->callClosure('validators', self::$validators[$name], null, $args);
+		$this->usedValidators[$name] = $this->validatorClosures->call(self::$validators[$name], $args);
 		return $this;
 	}
 
@@ -52,7 +52,8 @@ class FancyObject implements \JsonSerializable
 		list($isset, $value) = $this->get($required);
 		if(!$isset)
 		{
-			if($required){
+			if($required)
+			{
 				return $this->done(null);
 			}
 			else
@@ -80,9 +81,9 @@ class FancyObject implements \JsonSerializable
 	{
 		if(empty(self::$mappers[$type]))
 		{
-			self::$mappers[$type] = $this->getClosure('mappers', $type, false);
+			self::$mappers[$type] = $this->mapperClosures->get($type, false);
 		}
-		return $this->callClosure('mappers', self::$mappers[$type], $this->context, [$value, $path]);
+		return $this->mapperClosures->call(self::$mappers[$type], [$value, $path]);
 	}
 
 	private function get($required)

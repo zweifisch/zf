@@ -7,7 +7,6 @@ class App extends Laziness
 	use Request;
 	use Response;
 	use EventEmitter;
-	use Closure;
 
 	private $paramHandlers;
 	private $requestHandlers;
@@ -34,7 +33,9 @@ class App extends Laziness
 			->set('fancy');
 		$this->config->load('configs.php');
 		$this->router = $this->isCli() ? new CliRouter() : new Router();
-		$this->register('helper', '\\'.__NAMESPACE__.'\\Helper', $this, $this->config->helpers);
+		$this->helper = function(){
+			return new Helper($this, Closure::getInstance($this, $this->config->helpers));
+		};
 	}
 
 	function __call($name, $args)
@@ -45,7 +46,7 @@ class App extends Laziness
 		}
 		elseif ($this->helper->registered($name))
 		{
-			return $this->callClosure($this->config->helpers, $this->helper->$name, null, $args);
+			return $this->helper->__call($name, $args);
 		}
 		elseif ($this->isCli() && (0 == strncmp('sig', $name, 3)))
 		{
@@ -81,7 +82,7 @@ class App extends Laziness
 
 	public function param($name, $callable, $eager=false)
 	{
-		$this->paramHandlers[$name] = [$callable,$eager];
+		$this->paramHandlers[$name] = [$callable, $eager];
 		return $this;
 	}
 
@@ -121,7 +122,7 @@ class App extends Laziness
 	public function pass($handlerName)
 	{
 		$handler = isset($this->requestHandlers[$handlerName])? $this->requestHandlers[$handlerName] : $handlerName;
-		$this->callClosure('handlers', $handler, $this);
+		Closure::callWithContext($handler, $this, $this->config->handlers);
 	}
 
 	public function run()
@@ -148,7 +149,7 @@ class App extends Laziness
 				$this->processParamsHandlers($_GET);
 				$this->processRequestBody($this->config->fancy);
 			}
-			$this->callClosure('handlers', $callable, $this);
+			Closure::callWithContext($callable, $this, $this->config->handlers);
 		}
 		else
 		{
@@ -171,9 +172,9 @@ class App extends Laziness
 				list($handler,$eager) = $this->paramHandlers[$name];
 				$args = [$value];
 				$this->params->$name = $eager
-					? $this->callClosure('params', $handler, $this, $args)
+					? Closure::callWithContext($handler, $this, $this->config->params, $args)
 					: function() use ($handler, $args){
-						return $this->callClosure('params', $handler, $this, $args);
+						return Closure::callWithContext($handler, $this, $this->config->params, $args);
 					};
 			}
 		}

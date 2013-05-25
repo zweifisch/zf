@@ -31,7 +31,9 @@ trait Request
 		}
 
 		$this->query = function() use ($fancy) {
-			return $fancy ? (new FancyObject($_GET, $this))->setParent($this) : $_GET;
+			$validators = Closure::getInstance($this, $this->config->validators);
+			$mappers = Closure::getInstance($this, $this->config->mappers);
+			return $fancy ? (new FancyObject($_GET, $validators, $mappers))->setParent($this) : $_GET;
 		};
 		if ('GET' == $this->requestMethod) return;
 
@@ -55,7 +57,9 @@ trait Request
 			{
 				$ret = file_get_contents('php://input');
 			}
-			return $fancy ? (new FancyObject($ret, $this))->setParent($this) : $ret;
+			$validators = Closure::getInstance($this, $this->config->validators);
+			$mappers = Closure::getInstance($this, $this->config->mappers);
+			return $fancy ? (new FancyObject($ret, $validators, $mappers))->setParent($this) : $ret;
 		};
 		return $this;
 	}
