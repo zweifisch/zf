@@ -38,7 +38,7 @@ class Closure
 		}
 		elseif (1 === $closure)
 		{
-			throw new \Exception("invalid closure in \"$this->lookupPath/$closureName.php\", forgot to return the closure?");
+			throw new \Exception("invalid closure in \"$key.php\", forgot to return the closure?");
 		}
 
 		if ($useCache)
