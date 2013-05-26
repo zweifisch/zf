@@ -189,7 +189,7 @@ $app->on('validation:failed', function($message){
 });
 ```
 
-available validators `between`, `min`, `max`, `in`, `minlen`, `maxlen`
+available validators `between`, `min`, `max`, `in`, `minlen`, `maxlen`, `match`
 
 add a new validator:
 ```php

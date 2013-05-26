@@ -78,7 +78,8 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 	public function testSanitize()
 	{
 		// $value = $this->fancy->str->sanitize('trim')->asStr();
-		// $this->assertSame($value, 'str');
+		$value = $this->fancy->str->asStr();
+		$this->assertSame($value, 'str');
 	}
 
 	public function testRequired()

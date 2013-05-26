@@ -55,6 +55,10 @@ class FancyObject implements \JsonSerializable
 				$value = $default[0];
 			}
 		}
+		elseif(is_string($value))
+		{
+			$value = trim($value);
+		}
 		$mappedValue = $this->map($type, $value, implode('.', $this->path));
 		if(is_null($mappedValue))
 		{
