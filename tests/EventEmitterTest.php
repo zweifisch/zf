@@ -30,13 +30,18 @@ class EventEmitterTest extends PHPUnit_Framework_TestCase
 		$called = [];
 		$emitter = $this->getObjectForTrait('\zf\EventEmitter');
 
-		$emitter->on('test:fuzzy', function() use (&$called){
+		$that = $this;
+
+		$emitter->on('test:fuzzy', function($data, $event) use (&$called, $that){
+			$that->assertSame($event, 'test:fuzzy');
 			$called[] = 1;
 		});
-		$emitter->on('*:fuzzy', function() use (&$called){
+		$emitter->on('*:fuzzy', function($data, $event) use (&$called, $that){
+			$that->assertSame($event, 'test:fuzzy');
 			$called[] = 2;
 		});
-		$emitter->on('test:*', function() use (&$called){
+		$emitter->on('test:*', function($data, $event) use (&$called, $that){
+			$that->assertSame($event, 'test:fuzzy');
 			$called[] = 3;
 		});
 		$emitter->on('fuzzy:*', function() use (&$called){
