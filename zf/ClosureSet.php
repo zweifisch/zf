@@ -7,11 +7,13 @@ class ClosureSet
 	private $registered;
 	private $lookupPath;
 	private $context;
+	public $delayed;
 
 	public function __construct($context,$lookupPath)
 	{
 		$this->context = $context;
 		$this->lookupPath = $lookupPath;
+		$this->delayed = new Delayed($this);
 	}
 
 	public function __load($closureName)
@@ -67,12 +69,6 @@ class ClosureSet
 		return $closure();
 	}
 
-	public function delayedCall($name, $args=null)
-	{
-		$that = $this;
-		return function() use ($name, $args, $that){ return $that->__call($name, $args); };
-	}
-
 	public function register($name, $closure=null)
 	{
 		if(is_array($name))
@@ -100,4 +96,20 @@ class ClosureSet
 		return array_key_exists($name, $this->registered);
 	}
 
+}
+
+class Delayed
+{
+	private $closureSet;
+
+	public function __construct($closureSet)
+	{
+		$this->closureSet= $closureSet;
+	}
+
+	public function __call($name, $args)
+	{
+		$closureSet = $this->closureSet;
+		return function() use ($name, $args, $closureSet){ return $closureSet->__call($name, $args); };
+	}
 }

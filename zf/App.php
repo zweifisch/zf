@@ -17,14 +17,14 @@ class App extends Laziness
 		parent::__construct();
 		$this->reflection = new Reflection();
 		$this->register('config','\\'.__NAMESPACE__.'\\Config');
-		$this->set('handlers', 'handlers')
+		$this->set('nodebug')
+			->set('handlers', 'handlers')
 			->set('helpers', 'helpers')
 			->set('params', 'params')
 			->set('views', 'views')
 			->set('validators', 'validators')
 			->set('mappers', 'mappers')
 			->set('viewext', '.php')
-			->set('nodebug')
 			->set('charset', 'utf-8')
 			->set('nopretty')
 			->set('fancy');
@@ -186,7 +186,7 @@ class App extends Laziness
 				$args = [$value];
 				$this->params->$name = in_array($name, $this->eagerParams, true)
 					? $this->paramHandlers->__call($name, $args)
-					: $this->paramHandlers->delayedCall($name, $args);
+					: $this->paramHandlers->delayed->__call($name, $args);
 			}
 		}
 	}
