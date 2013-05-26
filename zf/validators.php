@@ -19,5 +19,8 @@ return [
 	'in' => function($values) {
 		is_array($values) or $values = func_get_args();
 		return function($value) use ($values) { return in_array($value, $values, true); };
-	}
+	},
+	'match' => function($regexp) {
+		return function($value) use ($regexp) { return preg_match($regexp, $value); };
+	},
 ];
