@@ -4,29 +4,25 @@ namespace zf;
 
 class Laziness implements \JsonSerializable
 {
-	protected $container;
-	protected $context;
+	protected $_container;
+	protected $_context;
 
 	public function __construct($array=null, $context=null)
 	{
-		$this->container = $array ? $array : [];
-		$this->context = $context ? $context : $this;
+		$this->_container = $array ? $array : [];
+		$this->_context = $context ? $context : $this;
 	}
 
 	public function __get($name)
 	{
-		if (array_key_exists($name, $this->container))
+		if (array_key_exists($name, $this->_container))
 		{
-			if ($this->container[$name] instanceof \Closure)
+			if ($this->_container[$name] instanceof \Closure)
 			{
-				$closure = $this->container[$name]->bindTo($this->context);
-				$this->container[$name] = $closure();
-				return $this->container[$name];
+				$closure = $this->_container[$name]->bindTo($this->_context);
+				$this->_container[$name] = $closure();
 			}
-			else
-			{
-				return $this->container[$name];
-			}
+			return $this->_container[$name];
 		}
 		else
 		{
@@ -36,29 +32,24 @@ class Laziness implements \JsonSerializable
 
 	public function __isset($name)
 	{
-		return isset($this->container[$name]);
+		return isset($this->_container[$name]);
 	}
 
 	public function __set($name, $value)
 	{
-		$this->container[$name] = $value;
-	}
-
-	public function getAll()
-	{
-		return $this->container;
+		$this->_container[$name] = $value;
 	}
 
 	public function jsonSerialize()
 	{
-		foreach($this->container as $key=>$value)
+		foreach($this->_container as $key=>$value)
 		{
 			if($value instanceof \Closure)
 			{
-				$binded = $value->bindTo($this->context);
-				$this->container[$key] = $binded();
+				$binded = $value->bindTo($this->_context);
+				$this->_container[$key] = $binded();
 			}
 		}
-		return $this->container;
+		return $this->_container;
 	}
 }
