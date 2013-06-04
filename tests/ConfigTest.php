@@ -12,11 +12,13 @@ class ConfigTest extends PHPUnit_Framework_TestCase
 		$this->assertSame($config->key, 'value');
 	}
 
-	public function testBuilSet()
+	public function testBulkSet()
 	{
 		$config = new Config;
-		$config->set(['key'=>'value']);
+		$config->set(['key'=>'value', 'nopretty', 'fancy']);
 		$this->assertSame($config->key, 'value');
+		$this->assertFalse($config->pretty);
+		$this->assertTrue($config->fancy);
 	}
 
 	public function testBoolenOption()

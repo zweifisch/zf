@@ -277,6 +277,8 @@ $app->set('key','value');
 
 $app->set('fancy');  # equivelant to $app->set('fancy', true);
 $app->set('nofancy');  # equivelant to $app->set('fancy', false);
+
+$app->set(['pretty', 'nofancy', 'key'=>'value']); # multiple set
 ```
 
 retrieve 

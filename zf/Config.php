@@ -24,30 +24,27 @@ class Config
 	{
 		if(1 == func_num_args())
 		{
-			if(is_array($name))
-			{
-				foreach($name as $key=>$value)
-				{
-					$this->configs[$key] = $value;
-				}
-			}
-			else
-			{
-				if(0 == strncmp('no', $name, 2))
-				{
-					$name = substr($name, 2);
-					$this->configs[$name] = false;
-				}
-				else
-				{
-					$this->configs[$name] = true;
-				}
-			}
+			is_array($name)? $this->multiSet($name) : $this->setBool($name);
 		}
 		else
 		{
 			$this->configs[$name] = $value;
 		}
+	}
+
+	private function multiSet($options)
+	{
+		foreach($options as $key=>$value)
+		{
+			is_int($key)? $this->setBool($value) : $this->configs[$key] = $value;
+		}
+	}
+
+	private function setBool($name)
+	{
+		strncmp('no', $name, 2)
+			? $this->configs[$name] = true
+			: $this->configs[substr($name, 2)] = false;
 	}
 
 	public function __isset($name)
