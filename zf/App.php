@@ -9,25 +9,22 @@ class App extends Laziness
 	use EventEmitter;
 
 	private $router;
-	private $reflection;
 	private $eagerParams = [];
 
 	function __construct()
 	{
 		parent::__construct();
-		$this->reflection = new Reflection();
-		$this->register('config','\\'.__NAMESPACE__.'\\Config');
-		$this->set('nodebug')
-			->set('handlers', 'handlers')
-			->set('helpers', 'helpers')
-			->set('params', 'params')
-			->set('views', 'views')
-			->set('validators', 'validators')
-			->set('mappers', 'mappers')
-			->set('viewext', '.php')
-			->set('charset', 'utf-8')
-			->set('nopretty')
-			->set('fancy');
+		$this->config = new Config;
+		$this->set(['nodebug', 'nopretty', 'fancy',
+			'handlers'   => 'handlers',
+			'helpers'    => 'helpers',
+			'params'     => 'params',
+			'views'      => 'views',
+			'validators' => 'validators',
+			'mappers'    => 'mappers',
+			'viewext'    => '.php',
+			'charset'    => 'utf-8',
+		]);
 		$this->config->load('configs.php');
 		$this->router = $this->isCli() ? new CliRouter() : new Router();
 		$this->helper = function(){
@@ -78,24 +75,16 @@ class App extends Laziness
 
 	public function set($name, $value=null)
 	{
-		if(1 == func_num_args())
-		{
-			$this->config->set($name);
-		}
-		else
-		{
-			$this->config->set($name, $value);
-		}
+		1 == func_num_args()
+			? $this->config->set($name)
+			: $this->config->set($name, $value);
 		return $this;
 	}
 
 	public function param($name, $handler, $eager=false)
 	{
 		$this->paramHandlers->register($name, $handler);
-		if($eager)
-		{
-			$this->eagerParams[] = $name;
-		}
+		if($eager) $this->eagerParams[] = $name;
 		return $this;
 	}
 
@@ -127,7 +116,7 @@ class App extends Laziness
 	{
 		$constructArgs = array_slice(func_get_args(), 2);
 		$this->$alias = function() use ($className, $constructArgs){
-			return $this->reflection->getInstance($className, $constructArgs);
+			return (new \ReflectionClass($className))->newInstanceArgs($constructArgs);
 		};
 		return $this;
 	}
