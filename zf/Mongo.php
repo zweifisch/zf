@@ -5,35 +5,47 @@ namespace zf;
 class Mongo
 {
 
-	private $config;
-	private $cachedConnections;
-	private $cachedClients;
+	private $_config;
+	private $_cachedConnections = [];
 
 	public function __construct($config)
 	{
-		$this->cachedConnections = array();
-		$this->cachedClients = array();
-		$this->config = $config;
+		$this->_config = $this->_rewriteConfig($config);
 	}
 
-	public function __get($name)
+	private function _rewriteConfig($config)
 	{
-		if (empty($this->cachedClients[$name]))
+		$ret = [];
+		$collections = [];
+		foreach($config as $collection=>$conf)
 		{
-			if(isset($this->config[$name]))
+			if(is_int($collection))
 			{
-				$config = $this->config[$name];
-				if(empty($this->cachedConnections[$config['url']]))
-				{
-					$options = isset($config['options']) ? $config['options'] : [];
-					$this->cachedConnections[$name] = new \MongoClient($config['url'], $options);
-				}
-				$ret = $this->cachedConnections[$name];
-				if (isset($config['database'])) $ret = $ret->selectDB($config['database']);
-				if (isset($config['collection'])) $ret = $ret->selectCollection($config['collection']);
-				$this->cachedClients[$name] = $ret;
+				$collections[] = $conf;
+			}
+			else
+			{
+				while($collections) $ret[array_pop($collections)] = $conf;
+				$ret[$collection] = $conf;
 			}
 		}
-		return $this->cachedClients[$name];
+		return $ret;
+	}
+
+	public function __get($collection)
+	{
+		if(empty($this->_config[$collection]))
+			throw new \Exception("collection \"$collection\" not defined");
+
+		$config = $this->_config[$collection];
+		if(empty($this->_cachedConnections[$config['url']]))
+		{
+			$this->_cachedConnections[$collection] = isset($config['options'])
+				? new \MongoClient($config['url'], $config['options'])
+				: new \MongoClient($config['url']);
+		}
+		return $this->$collection = $this->_cachedConnections[$collection]
+			->selectDB($config['database'])
+			->selectCollection($collection);
 	}
 }
