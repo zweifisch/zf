@@ -418,7 +418,7 @@ return $exports;
 $app->register('mongo', '\zf\Mongo', $app->config->mongo);
 
 $app->get('/user/:id', function(){
-	$this->send($this->mongo->users.findOne(['_id'=>$this->params->id]));
+	$this->send($this->mongo->users->findOne(['_id'=>$this->params->id]));
 });
 ```
 
