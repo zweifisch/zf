@@ -392,6 +392,36 @@ $app->helper3(); #  ommit the 'helper'
 * [phpredis](https://github.com/nicolasff/phpredis)
 * mongo `sudo pecl install mongo`
 
+## connecting to mongodb
+
+in configs.php
+```php
+$exports['mongo'] = [
+	'users','articles' => [
+		'url' => 'mongodb://10.0.1.1:27017,10.0.1.2:27017',
+		'database'=> 'production',
+		'options' => [
+			'replicaSet'=> 'rs0',
+			'readPreference' => \MongoClient::RP_SECONDARY_PREFERRED,
+		],
+	],
+	'logs' => [
+		'url' => 'mongodb://10.0.2.1:27017',
+		'database'=> 'production',
+	],
+];
+
+return $exports;
+```
+
+```php
+$app->register('mongo', '\zf\Mongo', $app->config->mongo);
+
+$app->get('/user/:id', function(){
+	$this->send($this->mongo->users.findOne(['_id'=>$this->params->id]));
+});
+```
+
 ## examples
 
 there is an exmaple demostrating how to add/list/delte users, to run it using php's builtin server: (needs the php mongo extension metioned above)
