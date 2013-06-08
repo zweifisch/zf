@@ -106,7 +106,7 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function map($type, $closure)
+	public function map($type, $closure=null)
 	{
 		$this->mappers->register($type, $closure);
 		return $this;
