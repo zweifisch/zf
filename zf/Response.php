@@ -74,7 +74,7 @@ trait Response
 
 		$options or $options = [];
 
-		if(!is_string($body))
+		if(!is_string($body) && empty($options['type']))
 		{
 			$body = $this->config->pretty
 				? json_encode($body, JSON_PRETTY_PRINT)
