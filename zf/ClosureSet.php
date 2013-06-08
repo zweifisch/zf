@@ -4,26 +4,26 @@ namespace zf;
 
 class ClosureSet
 {
-	private $registered;
-	private $lookupPath;
-	private $context;
+	private $_registered;
+	private $_lookupPath;
+	private $_context;
 	public $delayed;
 
 	public function __construct($context,$lookupPath)
 	{
-		$this->context = $context;
-		$this->lookupPath = $lookupPath;
+		$this->_context = $context;
+		$this->_lookupPath = $lookupPath;
 		$this->delayed = new Delayed($this);
 	}
 
 	public function __load($closureName)
 	{
-		$filename = $this->lookupPath.DIRECTORY_SEPARATOR.$closureName.'.php';
+		$filename = $this->_lookupPath.DIRECTORY_SEPARATOR.$closureName.'.php';
 		$closure = is_readable($filename) ? require $filename: null;
 
 		if (!$closure)
 		{
-			throw new \Exception("closure \"$closureName\" not found under \"$this->lookupPath\"");
+			throw new \Exception("closure \"$closureName\" not found under \"$this->_lookupPath\"");
 		}
 		elseif (1 === $closure)
 		{
@@ -34,10 +34,10 @@ class ClosureSet
 
 	public function __get($name)
 	{
-		if(isset($this->registered[$name]))
+		if(isset($this->_registered[$name]))
 		{
-			$closure = $this->registered[$name];
-			$this->registered[$name] = null; #  keep the key in $registered array
+			$closure = $this->_registered[$name];
+			$this->_registered[$name] = null; #  keep the key in $_registered array
 			if(is_string($closure))
 			{
 				$closure = $this->__load($closure);
@@ -51,7 +51,7 @@ class ClosureSet
 		{
 			throw new \Exception("invalid closure \"$name\"");
 		}
-		is_null($this->context) or $closure = $closure->bindTo($this->context);
+		is_null($this->_context) or $closure = $closure->bindTo($this->_context);
 		return $this->{$name} = $closure;
 	}
 
@@ -75,25 +75,20 @@ class ClosureSet
 		{
 			foreach($name as $name=>$closure)
 			{
-				if(is_int($name))
-				{
-					$this->registered[$closure] = null;
-				}
-				else
-				{
-					$this->registered[$name] = $closure;
-				}
+				is_int($name)
+					? $this->_registered[$closure] = null
+					: $this->_registered[$name] = $closure;
 			}
 		}
 		else
 		{
-			$this->registered[$name] = $closure;
+			$this->_registered[$name] = $closure;
 		}
 	}
 
 	public function registered($name)
 	{
-		return array_key_exists($name, $this->registered);
+		return $this->_registered && array_key_exists($name, $this->_registered);
 	}
 
 }
@@ -104,7 +99,7 @@ class Delayed
 
 	public function __construct($closureSet)
 	{
-		$this->closureSet= $closureSet;
+		$this->closureSet = $closureSet;
 	}
 
 	public function __call($name, $args)
