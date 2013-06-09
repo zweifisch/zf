@@ -8,8 +8,8 @@ class App extends Laziness
 	use Response;
 	use EventEmitter;
 
-	private $router;
-	private $eagerParams = [];
+	private $_router;
+	private $_eagerParams = [];
 
 	function __construct()
 	{
@@ -24,23 +24,24 @@ class App extends Laziness
 			'mappers'    => 'mappers',
 			'viewext'    => '.php',
 			'charset'    => 'utf-8',
+			'rootdir'    => $this->isCli() ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT'],
 		]);
-		$this->config->load('configs.php');
-		$this->router = $this->isCli() ? new CliRouter() : new Router();
+		$this->config->load($this->path('configs.php'));
+		$this->_router = $this->isCli() ? new CliRouter() : new Router();
 		$this->helper = function(){
-			return new ClosureSet($this, $this->config->helpers);
+			return new ClosureSet($this, $this->path($this->config->helpers));
 		};
 		$this->requestHandlers = function(){
-			return new ClosureSet($this, $this->config->handlers);
+			return new ClosureSet($this, $this->path($this->config->handlers));
 		};
 		$this->paramHandlers = function(){
-			return new ClosureSet($this, $this->config->params);
+			return new ClosureSet($this, $this->path($this->config->params));
 		};
 		$this->validators = function(){
-			return new ClosureSet($this, $this->config->validators);
+			return new ClosureSet($this, $this->path($this->config->validators));
 		};
 		$this->mappers = function(){
-			return new ClosureSet($this, $this->config->mappers);
+			return new ClosureSet($this, $this->path($this->config->mappers));
 		};
 	}
 
@@ -48,7 +49,7 @@ class App extends Laziness
 	{
 		if (in_array($name, ['get', 'post', 'put', 'delete', 'patch', 'head', 'cmd'], true))
 		{
-			$this->router->append($name, $args);
+			$this->_router->append($name, $args);
 		}
 		elseif ($this->helper->registered($name))
 		{
@@ -81,10 +82,20 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function param($name, $handler, $eager=false)
+	public function param($name, $handler=null)
 	{
-		$this->paramHandlers->register($name, $handler);
-		if($eager) $this->eagerParams[] = $name;
+		$this->_paramsTmp = $this->paramHandlers->register($name, $handler);
+		return $this;
+	}
+
+	public function eager()
+	{
+		if(is_array($this->_paramsTmp))
+		{
+			1 == count($this->_paramsTmp)
+				? $this->_eagerParams[] = $this->_paramsTmp[0]
+				: $this->_eagerParams = array_merge($this->_eagerParams, $this->_paramsTmp);
+		}
 		return $this;
 	}
 
@@ -129,7 +140,7 @@ class App extends Laziness
 	public function run()
 	{
 		$this->requestMethod = $this->isCli() ? 'CLI' : strtoupper($_SERVER['REQUEST_METHOD']);
-		list($handler, $params) = $this->router->run();
+		list($handler, $params) = $this->_router->run();
 		if($handler)
 		{
 			if ($this->config->fancy)
@@ -162,8 +173,13 @@ class App extends Laziness
 
 	public function defaults($defaults)
 	{
-		$this->router->attach($defaults);
+		$this->_router->attach($defaults);
 		return $this;
+	}
+
+	public function path()
+	{
+		return $this->config->rootdir.DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, func_get_args());
 	}
 
 	private function processParamsHandlers($input)
@@ -173,7 +189,7 @@ class App extends Laziness
 			if ($this->paramHandlers->registered($name))
 			{
 				$args = [$value];
-				$this->params->$name = in_array($name, $this->eagerParams, true)
+				$this->params->$name = in_array($name, $this->_eagerParams, true)
 					? $this->paramHandlers->__call($name, $args)
 					: $this->paramHandlers->delayed->__call($name, $args);
 			}

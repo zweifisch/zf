@@ -76,14 +76,15 @@ class ClosureSet
 			foreach($name as $name=>$closure)
 			{
 				is_int($name)
-					? $this->_registered[$closure] = null
-					: $this->_registered[$name] = $closure;
+					? $this->_registered[$ret[] = $closure] = null
+					: $this->_registered[$ret[] = $name] = $closure;
 			}
 		}
 		else
 		{
-			$this->_registered[$name] = $closure;
+			$this->_registered[$ret[] = $name] = $closure;
 		}
+		return $ret;
 	}
 
 	public function registered($name)
