@@ -61,7 +61,13 @@ $app->param('user_ids', function($user_ids) {
 	$this->send(400);
 });
 ```
-the param handler won't be called, unless `$this->params->user_ids` is accessed
+the param handler won't be called, unless `$this->params->user_ids` is accessed, to make the handler get called as soon as possible
+use `$app->eager();`
+
+```php
+// `user_id.php` `post_id.php` and `ids.php` should be located in `./params/` by default
+$app->param(['user_id','post_id','user_ids'=>'ids','post_ids'=>'ids'])->eager();
+```
 
 ### events
 
@@ -384,7 +390,7 @@ $app->helper3(); #  ommit the 'helper'
 
 * `$app->register` won't initilize class
 * `$app->attr = closure` closure won't be invoked unless `$app->attr` is accessed
-* param handler won't be called unless `$app->params->param` is accessed, to make the handler get called as soon as possible, supply a extra parameter like this `$app->param('param','handler',true);`
+* param handler won't be called unless `$app->params->param` is accessed
 * request body won't be parsed unless `$app->body` is accessed
 
 ## optional dependencies
