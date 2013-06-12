@@ -115,7 +115,7 @@ trait Response
 		if ($this->isCli())
 		{
 			echo "Usage:\n\n";
-			foreach ($this->router->cmds() as $cmd)
+			foreach ($this->_router->cmds() as $cmd)
 			{
 				echo '  php ', $_SERVER['argv'][0], ' ' , $cmd, "\n";
 			}
