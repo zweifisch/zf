@@ -293,6 +293,8 @@ retrieve
 $app->config->key;
 ```
 
+`configs-$ENV.php` will be loaded if enviroment variable `ENV` is set
+
 ### chaining
 
 ```php
