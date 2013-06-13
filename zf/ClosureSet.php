@@ -19,7 +19,7 @@ class ClosureSet
 	public function __load($closureName)
 	{
 		$filename = $this->_lookupPath.DIRECTORY_SEPARATOR.$closureName.'.php';
-		$closure = is_readable($filename) ? require $filename: null;
+		$closure = stream_resolve_include_path($filename) ? require $filename: null;
 
 		if (!$closure)
 		{

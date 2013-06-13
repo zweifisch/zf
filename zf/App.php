@@ -24,24 +24,27 @@ class App extends Laziness
 			'mappers'    => 'mappers',
 			'viewext'    => '.php',
 			'charset'    => 'utf-8',
-			'rootdir'    => $this->isCli() ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT'],
+			'basedir'    => $this->isCli() ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT'],
 		]);
-		$this->config->load($this->path('configs.php'));
+		set_include_path(get_include_path() . PATH_SEPARATOR . $this->config->basedir);
+		$this->config->load('configs.php', true);
+		if(getenv('ENV'))
+			$this->config->load('configs-'.getenv(ENV).'.php', true);
 		$this->_router = $this->isCli() ? new CliRouter() : new Router();
 		$this->helper = function(){
-			return new ClosureSet($this, $this->path($this->config->helpers));
+			return new ClosureSet($this, $this->config->helpers);
 		};
 		$this->requestHandlers = function(){
-			return new ClosureSet($this, $this->path($this->config->handlers));
+			return new ClosureSet($this, $this->config->handlers);
 		};
 		$this->paramHandlers = function(){
-			return new ClosureSet($this, $this->path($this->config->params));
+			return new ClosureSet($this, $this->config->params);
 		};
 		$this->validators = function(){
-			return new ClosureSet($this, $this->path($this->config->validators));
+			return new ClosureSet($this, $this->config->validators);
 		};
 		$this->mappers = function(){
-			return new ClosureSet($this, $this->path($this->config->mappers));
+			return new ClosureSet($this, $this->config->mappers);
 		};
 	}
 
@@ -140,6 +143,17 @@ class App extends Laziness
 	public function run()
 	{
 		$this->requestMethod = $this->isCli() ? 'CLI' : strtoupper($_SERVER['REQUEST_METHOD']);
+
+		if($this->isCli())
+		{
+			$this->cmd('dist <name>', function(){
+				$entryScript = basename($_SERVER['argv'][0]);
+				$phar = new \Phar($this->params->name, \FilesystemIterator::CURRENT_AS_FILEINFO | \FilesystemIterator::KEY_AS_FILENAME, $this->params->name);
+				$phar->buildFromDirectory($this->config->basedir, '/\.php$/');
+				$phar->setStub($phar->createDefaultStub($entryScript));
+			});
+		}
+
 		list($handler, $params) = $this->_router->run();
 		if($handler)
 		{
@@ -179,7 +193,7 @@ class App extends Laziness
 
 	public function path()
 	{
-		return $this->config->rootdir.DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, func_get_args());
+		return $this->config->basedir.DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, func_get_args());
 	}
 
 	private function processParamsHandlers($input)

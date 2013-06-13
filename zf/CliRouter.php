@@ -100,7 +100,7 @@ class CliRouter
 			}
 			else
 			{
-				if ($item !== $positionalArgs[$pos])
+				if (empty($positionalArgs[$pos]) || $item !== $positionalArgs[$pos])
 				{
 					return false;
 				}

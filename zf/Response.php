@@ -166,7 +166,7 @@ trait Response
 	private function renderWithContext($template, $context, $renderer)
 	{
 		$path = $this->config->views . DIRECTORY_SEPARATOR . $template . $this->config->viewext;
-		if (!is_readable($path)) throw new \Exception("template $template($path) not found");
+		if (!stream_resolve_include_path($path)) throw new \Exception("template $template($path) not found");
 		$renderer = $renderer->bindTo((object)$context);
 		return $renderer($path);
 	}
