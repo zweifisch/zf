@@ -4,19 +4,26 @@ namespace zf;
 
 class Config
 {
-	private $configs = [];
+	private $_configs = [];
 
 	public function __get($name)
 	{
-		if (!array_key_exists($name, $this->configs)) throw new \Exception("config key '$name' not found");
-		return $this->configs[$name];
+		if(array_key_exists($name, $this->_configs))
+		{
+			return $this->_configs[$name];
+		}
+		throw new \Exception("config key \"$name\" not found");
 	}
 
-	public function load($path)
+	public function load($path, $quiet=false)
 	{
-		if (is_readable($path))
+		if(stream_resolve_include_path($path))
 		{
-			$this->configs = array_merge($this->configs, require $path);
+			$this->_configs = array_merge($this->_configs, require $path);
+		}
+		else
+		{
+			if(!$quiet) throw new \Exception("config \"$path\" not loaded");
 		}
 	}
 
@@ -28,7 +35,7 @@ class Config
 		}
 		else
 		{
-			$this->configs[$name] = $value;
+			$this->_configs[$name] = $value;
 		}
 	}
 
@@ -36,24 +43,24 @@ class Config
 	{
 		foreach($options as $key=>$value)
 		{
-			is_int($key)? $this->setBool($value) : $this->configs[$key] = $value;
+			is_int($key)? $this->setBool($value) : $this->_configs[$key] = $value;
 		}
 	}
 
 	private function setBool($name)
 	{
 		strncmp('no', $name, 2)
-			? $this->configs[$name] = true
-			: $this->configs[substr($name, 2)] = false;
+			? $this->_configs[$name] = true
+			: $this->_configs[substr($name, 2)] = false;
 	}
 
 	public function __isset($name)
 	{
-		return isset($this->configs[$name]);
+		return isset($this->_configs[$name]);
 	}
 
 	public function __set($name, $value)
 	{
-		$this->configs[$name] = $value;
+		$this->_configs[$name] = $value;
 	}
 }

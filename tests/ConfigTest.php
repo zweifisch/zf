@@ -37,4 +37,22 @@ class ConfigTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue(isset($config->key));
 		$this->assertFalse(isset($config->value));
 	}
+
+	/**
+  	 * @expectedException Exception
+	 */
+	public function testException()
+	{
+		$config = new Config;
+		$this->config->ENV;
+	}
+
+	/**
+  	 * @expectedException Exception
+	 */
+	public function testLoadException()
+	{
+		$config = new Config;
+		$config->load('config.php');
+	}
 }
