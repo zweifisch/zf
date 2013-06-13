@@ -9,6 +9,7 @@ a micro php framework/router for both web and cli
 * jsonp support
 * lazy
 * scalable
+* phar support
 * requires php 5.4
 * ideal for building restful apis or commandline apps
 
@@ -339,6 +340,12 @@ if no command matched(404), a help message will be printed, and program will exi
 ### get piped input
 
 use `$this->getstdin();`
+
+### distribute as phar
+
+```sh
+php app.php dist app.phar
+```
 
 ### handle signals
 
