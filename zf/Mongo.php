@@ -10,7 +10,7 @@ class Mongo
 
 	public function __construct($config)
 	{
-		$this->_config = $this->_rewriteConfig($config);
+		$this->_config = $config;
 	}
 
 	private function _rewriteConfig($config)
@@ -35,7 +35,13 @@ class Mongo
 	public function __get($collection)
 	{
 		if(empty($this->_config[$collection]))
-			throw new \Exception("collection \"$collection\" not defined");
+		{
+			$this->_config = $this->_rewriteConfig($this->_config);
+			if(empty($this->_config[$collection]))
+			{
+				throw new \Exception("collection \"$collection\" not defined");
+			}
+		}
 
 		$config = $this->_config[$collection];
 		if(empty($this->_cachedConnections[$config['url']]))
@@ -47,5 +53,10 @@ class Mongo
 		return $this->$collection = $this->_cachedConnections[$collection]
 			->selectDB($config['database'])
 			->selectCollection($collection);
+	}
+
+	public function __call($collection,$ns)
+	{
+		return $this->__get($ns ? $collection.'.'.implode('.',$ns) : $collection);
 	}
 }
