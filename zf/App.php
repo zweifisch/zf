@@ -29,7 +29,7 @@ class App extends Laziness
 		set_include_path(get_include_path() . PATH_SEPARATOR . $this->config->basedir);
 		$this->config->load('configs.php', true);
 		if(getenv('ENV'))
-			$this->config->load('configs-'.getenv(ENV).'.php', true);
+			$this->config->load('configs-'.getenv('ENV').'.php', true);
 		$this->_router = $this->isCli() ? new CliRouter() : new Router();
 		$this->helper = function(){
 			return new ClosureSet($this, $this->config->helpers);
