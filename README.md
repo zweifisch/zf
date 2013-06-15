@@ -345,6 +345,7 @@ use `$this->getstdin();`
 
 ### distribute as phar
 
+make sure `phar.readonly` is set to `Off` in `php.ini`
 ```sh
 php app.php dist app.phar
 ```
