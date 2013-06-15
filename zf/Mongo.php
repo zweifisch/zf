@@ -2,7 +2,7 @@
 
 namespace zf;
 
-class Mongo
+class Mongo implements \ArrayAccess
 {
 
 	private $_config;
@@ -55,8 +55,12 @@ class Mongo
 			->selectCollection($collection);
 	}
 
-	public function __call($collection,$ns)
+	public function offsetGet($offset)
 	{
-		return $this->__get($ns ? $collection.'.'.implode('.',$ns) : $collection);
+		return $this->__get($offset);
 	}
+
+	public function offsetExists($offset) { }
+	public function offsetSet($offset, $value) { }
+	public function offsetUnset($offset) { }
 }
