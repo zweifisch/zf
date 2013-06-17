@@ -17,11 +17,6 @@ trait Request
 		return $ret;
 	}
 
-	public function isCli()
-	{
-		return 'cli' == PHP_SAPI;
-	}
-
 	private function processRequestBody($fancy)
 	{
 		$this->query = function() use ($fancy) {

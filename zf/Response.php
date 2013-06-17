@@ -112,7 +112,7 @@ trait Response
 
 	public function notFound()
 	{
-		if ($this->isCli())
+		if ($this->isCli)
 		{
 			echo "Usage:\n\n";
 			foreach ($this->_router->cmds() as $cmd)

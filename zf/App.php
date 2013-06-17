@@ -14,6 +14,11 @@ class App extends Laziness
 	function __construct()
 	{
 		parent::__construct();
+
+		$this->isCli = 'cli' == PHP_SAPI;
+		$basedir = $this->isCli ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT'];
+		set_include_path(get_include_path() . PATH_SEPARATOR . $basedir);
+
 		$this->config = new Config;
 		$this->set(['nodebug', 'nopretty', 'fancy',
 			'handlers'   => 'handlers',
@@ -24,13 +29,14 @@ class App extends Laziness
 			'mappers'    => 'mappers',
 			'viewext'    => '.php',
 			'charset'    => 'utf-8',
-			'basedir'    => $this->isCli() ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT'],
+			'basedir'    => $basedir,
 		]);
-		set_include_path(get_include_path() . PATH_SEPARATOR . $this->config->basedir);
 		$this->config->load('configs.php', true);
 		if(getenv('ENV'))
 			$this->config->load('configs-'.getenv('ENV').'.php', true);
-		$this->_router = $this->isCli() ? new CliRouter() : new Router();
+
+		$this->_router = $this->isCli ? new CliRouter() : new Router();
+
 		$this->helper = function(){
 			return new ClosureSet($this, $this->config->helpers);
 		};
@@ -58,7 +64,7 @@ class App extends Laziness
 		{
 			return $this->helper->__call($name, $args);
 		}
-		elseif ($this->isCli() && (0 == strncmp('sig', $name, 3)))
+		elseif ($this->isCli && (0 == strncmp('sig', $name, 3)))
 		{
 			$name = strtoupper($name);
 			if (defined($name))
@@ -142,9 +148,9 @@ class App extends Laziness
 
 	public function run()
 	{
-		$this->requestMethod = $this->isCli() ? 'CLI' : strtoupper($_SERVER['REQUEST_METHOD']);
+		$this->requestMethod = $this->isCli ? 'CLI' : strtoupper($_SERVER['REQUEST_METHOD']);
 
-		if($this->isCli())
+		if($this->isCli)
 		{
 			$this->cmd('dist <name>', function(){
 				$entryScript = basename($_SERVER['argv'][0]);
@@ -164,7 +170,7 @@ class App extends Laziness
 			}
 			$this->params = new Laziness($params, $this);
 			$this->processParamsHandlers($params);
-			if(!$this->isCli())
+			if(!$this->isCli)
 			{
 				$this->processParamsHandlers($_GET);
 				$this->processRequestBody($this->config->fancy);
