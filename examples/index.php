@@ -33,7 +33,7 @@ require '../zf/zf.php';
 $app = new \zf\App();
 
 $app->set('pretty');
-$app->register('mongo','\zf\Mongo', $app->config->mongo);
+$app->register('mongo','\zf\Mongo');
 
 $app->param('ids', function($ids){
 	return explode(',', $ids);

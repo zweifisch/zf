@@ -135,8 +135,14 @@ class App extends Laziness
 	public function register($alias, $className)
 	{
 		$constructArgs = array_slice(func_get_args(), 2);
-		$this->$alias = function() use ($className, $constructArgs){
-			return (new \ReflectionClass($className))->newInstanceArgs($constructArgs);
+		$this->$alias = function() use ($className, $constructArgs, $alias){
+			if(empty($constructArgs) && isset($this->config->$alias))
+			{
+				$constructArgs = $this->config->$alias;
+			}
+			return is_array($this->config->$alias) && !is_assoc($this->config->$alias)
+				? (new \ReflectionClass($className))->newInstanceArgs($constructArgs)
+				: (new \ReflectionClass($className))->newInstance($constructArgs);
 		};
 		return $this;
 	}
@@ -216,4 +222,8 @@ class App extends Laziness
 		}
 	}
 
+}
+
+function is_assoc($array) {
+	return (bool)count(array_filter(array_keys($array), 'is_string'));
 }

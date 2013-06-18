@@ -16,7 +16,7 @@ require '../zf/zf.php';
 $app = new \zf\App();
 
 $app->set('pretty');
-$app->register('redis','\zf\Redis', $app->config->redis);
+$app->register('redis','\zf\Redis');
 
 $app->helper('getTime', function($format){
 	return date($format ,($_SERVER['REQUEST_TIME']));
