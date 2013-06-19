@@ -140,7 +140,7 @@ class App extends Laziness
 			{
 				$constructArgs = $this->config->$alias;
 			}
-			return is_array($this->config->$alias) && !is_assoc($this->config->$alias)
+			return is_array($constructArgs) && !is_assoc($constructArgs)
 				? (new \ReflectionClass($className))->newInstanceArgs($constructArgs)
 				: (new \ReflectionClass($className))->newInstance($constructArgs);
 		};

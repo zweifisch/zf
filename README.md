@@ -431,7 +431,7 @@ return $exports;
 ```
 
 ```php
-$app->register('mongo', '\zf\Mongo', $app->config->mongo);
+$app->register('mongo', '\zf\Mongo');
 
 $app->on('error:*',function($data,$event){
 	$this->mongo['logs.errors']->insert(['type'=>$event, 'data'=>$data]);
@@ -468,7 +468,7 @@ return $exports;
 ```
 
 ```php
-$app->register('db','\PDO',$app->config->db);
+$app->register('db','\PDO');
 
 $app->get('/users', function(){
 	$user = $this->db->users->bind(['limit'=>10,'offset'=>0])->fetchAll();
