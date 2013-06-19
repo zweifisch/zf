@@ -15,14 +15,10 @@ a micro php framework/router for both web and cli
 
 ## synopsis
 
-to install using [composer](http://getcomposer.org/), add the fellowing to your `composer.json`
-```javascript
-{
-  "require": {
-    "zweifisch/zf": "*"
-  }
-}
-```
+install using [composer](http://getcomposer.org/)
+```sh
+composer.phar require 'zweifisch/zf:*'
+``
 
 if you're not using composer, download soruce code [here](https://github.com/zweifisch/zf/tags)
 
