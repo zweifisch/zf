@@ -37,6 +37,11 @@ class App extends Laziness
 
 		$this->_router = $this->isCli ? new CliRouter() : new Router();
 
+		$global_exception_handler = function($exception) {
+			if(!$this->emit('exception', $exception)) throw $exception;
+		};
+		set_exception_handler($global_exception_handler->bindTo($this));
+
 		$this->helper = function(){
 			return new ClosureSet($this, $this->config->helpers);
 		};

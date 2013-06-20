@@ -69,7 +69,10 @@ trait EventEmitter
 		$ret = [];
 		foreach($events as $e)
 		{
-			$ret = array_merge($ret, $this->listeners[$e]);
+			if(isset($this->listeners[$e]))
+			{
+				$ret = array_merge($ret, $this->listeners[$e]);
+			}
 		}
 		uasort($ret, function($a, $b){ return $a[0] > $b[0] ? -1 : 1; });
 		return array_map(function($listener){ return $listener[1];}, $ret);
@@ -77,13 +80,13 @@ trait EventEmitter
 
 	public function emit($event, $data=null)
 	{
-		foreach($this->getListeners($event) as $listener)
+		$listeners = $this->getListeners($event);
+		foreach($listeners as $listener)
 		{
 			$listener = $listener->bindTo($this);
-			if($listener($data, $event)) return $this;
+			if($listener($data, $event)) return true;
 		}
-		is_null($this->parent) or $this->parent->emit($event, $data);
-		return $this;
+		return is_null($this->parent) ? (bool)$listeners : $this->parent->emit($event, $data);
 	}
 
 	public function setParent($parent)
