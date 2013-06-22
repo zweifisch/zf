@@ -13,50 +13,54 @@ class Router
 
 	public function parse($pattern)
 	{
-		$count = preg_match_all('/:([^\/?]+)/', $pattern, $names);
-		$regexp = preg_replace('(\/:[^\\/?]+)', '(?:/([^/?]+))', $pattern);
-		$regexp = '/^'.str_replace('/','\/', $regexp).'$/';
-		return [$names[1], $regexp, $count];
+		preg_match_all('/:([^\/?]+)/', $pattern, $names);
+		$regexp = preg_replace(['(\/[^:\\/?]+)','(\/:[^\\/?\\(]+)'], ['(?:\0)','(?:/([^/?]+))'], $pattern);
+		return [$names[1], '/^'.str_replace('/','\/', $regexp).'$/'];
+	}
+
+	public function match($pattern, $path)
+	{
+		list($names, $regexp) = $this->parse($pattern);
+		if(preg_match($regexp, $path, $values))
+		{
+			foreach($names as $idx=>$name)
+			{
+				$params[$name] = isset($values[$idx+1]) ? $values[$idx+1] : null;
+			}
+			return $params;
+		}
 	}
 
 	public function dispatch($method, $path)
 	{
-		if(isset($this->rules[$method]))
+		if(!isset($this->rules[$method])) return [null, null];
+
+		foreach($this->rules[$method] as $rule)
 		{
-			foreach($this->rules[$method] as $rule)
+			list($pattern, $callback) = $rule;
+
+			if($staticPrefix = strstr($pattern, '/:', true))
 			{
-				list($pattern, $callback) = $rule;
-				list($names, $regexp, $count) = $this->parse($pattern);
-				if($count > 0)
+				if(!strncmp($staticPrefix, $path, strlen($staticPrefix)))
 				{
-					$matched = preg_match($regexp, $path, $values);
-					if($matched > 0)
+					if($params = $this->match($pattern, $path))
 					{
-						array_shift($values);
-						if(count($names) > count($values))
-						{
-							array_pop($names); #  last param can be optional
-						}
-						return [$callback, array_combine($names, $values)];
-					}
-				}
-				else
-				{
-					if ($path === $pattern) # static
-					{
-						return [$callback,array()];
+						return [$callback, $params];
 					}
 				}
 			}
+			else # static pattern
+			{
+				if($path === $pattern) return [$callback, null];
+			}
 		}
-		return [false,false];
+		return [null, null];
 	}
 
 	public function run()
 	{
 		$path = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : $_SERVER['REQUEST_URI'];
-		$pos = strpos($path, '?');
-		if ($pos)
+		if($pos = strpos($path, '?'));
 		{
 			$path = substr($path,0,$pos);
 		}

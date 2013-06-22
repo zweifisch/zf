@@ -180,10 +180,10 @@ class App extends Laziness
 				$this->mappers->register(require __DIR__ . DIRECTORY_SEPARATOR . 'mappers.php');
 			}
 			$this->params = new Laziness($params, $this);
-			$this->processParamsHandlers($params);
+			if($params) $this->processParamsHandlers($params);
 			if(!$this->isCli)
 			{
-				$this->processParamsHandlers($_GET);
+				if($_GET) $this->processParamsHandlers($_GET);
 				$this->processRequestBody($this->config->fancy);
 			}
 			if(is_string($handler))
