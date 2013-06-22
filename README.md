@@ -66,6 +66,13 @@ use `$app->eager();`
 $app->param(['user_id','post_id','user_ids'=>'ids','post_ids'=>'ids'])->eager();
 ```
 
+params can be optional
+```php
+$app->get('/foo/:f?/bar', function(){
+	// $this->params->f will be null when GET /foo/bar
+});
+```
+
 ### events
 
 ```php
