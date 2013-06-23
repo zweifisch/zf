@@ -2,6 +2,10 @@
 
 namespace zf;
 
+use Phar;
+use FilesystemIterator;
+use Exception;
+
 class App extends Laziness
 {
 	use Request;
@@ -78,12 +82,12 @@ class App extends Laziness
 			}
 			else
 			{
-				throw new \Exception("signal \"$name\" not found");
+				throw new Exception("signal \"$name\" not found");
 			}
 		}
 		else
 		{
-			throw new \Exception("method \"$name\" not found");
+			throw new Exception("method \"$name\" not found");
 		}
 		return $this;
 	}
@@ -163,12 +167,7 @@ class App extends Laziness
 
 		if($this->isCli)
 		{
-			$this->cmd('dist <name>', function(){
-				$entryScript = basename($_SERVER['argv'][0]);
-				$phar = new \Phar($this->params->name, \FilesystemIterator::CURRENT_AS_FILEINFO | \FilesystemIterator::KEY_AS_FILENAME, $this->params->name);
-				$phar->buildFromDirectory($this->config->basedir, '/\.php$/');
-				$phar->setStub($phar->createDefaultStub($entryScript));
-			});
+			$this->phar();
 		}
 
 		list($handler, $params) = $this->_router->run();
@@ -224,6 +223,31 @@ class App extends Laziness
 					? $this->paramHandlers->__call($name, $args)
 					: $this->paramHandlers->delayed->__call($name, $args);
 			}
+		}
+	}
+
+	private function phar()
+	{
+		if('.phar' == substr($_SERVER['SCRIPT_FILENAME'], -5))
+		{
+			$this->cmd('extract <path>', function(){
+				try {
+					$phar = new Phar($_SERVER['SCRIPT_FILENAME']);
+					$phar->extractTo($this->params->path, null, true);
+				} catch (Exception $e) {
+					echo $e->getMessage();
+					exit(1);
+				}
+			});
+		}
+		else
+		{
+			$this->cmd('dist <name>', function(){
+				$entryScript = basename($_SERVER['SCRIPT_FILENAME']);
+				$phar = new Phar($this->params->name, FilesystemIterator::CURRENT_AS_FILEINFO | FilesystemIterator::KEY_AS_FILENAME, $this->params->name);
+				$phar->buildFromDirectory($this->config->basedir, '/\.php$/');
+				$phar->setStub($phar->createDefaultStub($entryScript));
+			});
 		}
 	}
 

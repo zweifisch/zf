@@ -353,6 +353,11 @@ make sure `phar.readonly` is set to `Off` in `php.ini`
 php app.php dist app.phar
 ```
 
+to extract
+```sh
+php app.phar extract /dest/path
+```
+
 ### handle signals
 
 see `examples/cli.php` for more details
