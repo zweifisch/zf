@@ -3,8 +3,10 @@
 namespace zf;
 
 use Phar;
-use FilesystemIterator;
+use Closure;
 use Exception;
+use ReflectionClass;
+use FilesystemIterator;
 
 class App extends Laziness
 {
@@ -141,18 +143,25 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function register($alias, $className)
+	public function register($alias, $component)
 	{
-		$constructArgs = array_slice(func_get_args(), 2);
-		$this->$alias = function() use ($className, $constructArgs, $alias){
-			if(empty($constructArgs) && isset($this->config->$alias))
-			{
-				$constructArgs = $this->config->$alias;
-			}
-			return is_array($constructArgs) && !is_assoc($constructArgs)
-				? (new \ReflectionClass($className))->newInstanceArgs($constructArgs)
-				: (new \ReflectionClass($className))->newInstance($constructArgs);
-		};
+		if($component instanceof Closure)
+		{
+			$this->$alias = $component;
+		}
+		else
+		{
+			$constructArgs = array_slice(func_get_args(), 2);
+			$this->$alias = function() use ($component, $constructArgs, $alias){
+				if(empty($constructArgs) && isset($this->config->$alias))
+				{
+					$constructArgs = $this->config->$alias;
+				}
+				return is_array($constructArgs) && !is_assoc($constructArgs)
+					? (new ReflectionClass($component))->newInstanceArgs($constructArgs)
+					: (new ReflectionClass($component))->newInstance($constructArgs);
+			};
+		}
 		return $this;
 	}
 
