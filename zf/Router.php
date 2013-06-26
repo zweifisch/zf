@@ -60,7 +60,7 @@ class Router
 	public function run()
 	{
 		$path = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : $_SERVER['REQUEST_URI'];
-		if($pos = strpos($path, '?'));
+		if($pos = strpos($path, '?'))
 		{
 			$path = substr($path,0,$pos);
 		}
