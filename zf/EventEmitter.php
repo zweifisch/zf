@@ -7,6 +7,7 @@ trait EventEmitter
 	private $listeners;
 	private $eventsIndex;
 	private $parent;
+	private $lastHandler;
 
 	public function on($event, $callback)
 	{
@@ -23,9 +24,18 @@ trait EventEmitter
 			in_array($event, $this->eventsIndex[$key], true) or $this->eventsIndex[$key][] = $event;
 		}
 
-		$this->listeners[$event][] = [$priority, $callback];
+		$handler = [$priority, $callback];
+		$this->lastHandler = &$handler;
+		$this->listeners[$event][] = &$handler;
 
-		return $this->emit('listener:registered',['event'=>$event, 'callback'=>$callback]);
+		$this->emit('listener:registered',['event'=>$event, 'callback'=>$callback]);
+		return $this;
+	}
+
+	public function priority($priority)
+	{
+		$this->lastHandler[0] = $priority;
+		return $this;
 	}
 
 	private function getMatchedEvents($event)

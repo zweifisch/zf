@@ -12,13 +12,13 @@ class EventEmitterTest extends PHPUnit_Framework_TestCase
 			$called[] = 2;
 		});
 
-		$emitter->on('test', -1, function() use (&$called){
+		$emitter->on('test', function() use (&$called){
 			$called[] = 3;
-		});
+		})->priority(-1);
 
-		$emitter->on('test', 1, function() use (&$called){
+		$emitter->on('test', function() use (&$called){
 			$called[] = 1;
-		});
+		})->priority(1);
 
 		$emitter->emit('test');
  
