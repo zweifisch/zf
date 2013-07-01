@@ -63,4 +63,10 @@ class AppTest extends PHPUnit_Framework_TestCase
 		$this->app->register('sc', 'SomeComponent');
 		$this->assertSame($config,$this->app->sc->getConfig());
 	}
+
+	public function testSetGet()
+	{
+		$this->app->set('option', [true]);
+		$this->assertSame([true], $this->app->get('option'));
+	}
 }

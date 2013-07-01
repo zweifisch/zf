@@ -67,7 +67,7 @@ class App extends Laziness
 
 	function __call($name, $args)
 	{
-		if (in_array($name, ['get', 'post', 'put', 'delete', 'patch', 'head', 'cmd'], true))
+		if (in_array($name, ['post', 'put', 'delete', 'patch', 'head', 'cmd'], true))
 		{
 			$this->_router->append($name, $args);
 		}
@@ -100,6 +100,19 @@ class App extends Laziness
 			? $this->config->set($name)
 			: $this->config->set($name, $value);
 		return $this;
+	}
+
+	public function get($name, $args=null)
+	{
+		if(1 == func_num_args())
+		{
+			return $this->config->$name;
+		}
+		else
+		{
+			$this->_router->append($name, $args);
+			return $this;
+		}
 	}
 
 	public function param($name, $handler=null)
