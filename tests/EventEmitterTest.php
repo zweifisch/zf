@@ -2,6 +2,11 @@
 
 class EventEmitterTest extends PHPUnit_Framework_TestCase
 {
+	public function setUp()
+	{
+		$this->emitter = $this->getObjectForTrait('\zf\EventEmitter');
+	}
+
 	public function testPrioirty()
 	{
 		$called = [];
@@ -92,6 +97,22 @@ class EventEmitterTest extends PHPUnit_Framework_TestCase
 		$emitter->emit('test');
  
       $this->assertSame($called, [1,1]);
+	}
+
+	public function testOnce()
+	{
+		$called=[];
+		$this->emitter->once('once', function($data, $event) use (&$called){
+			$called[] = 1;
+		});
+
+		$this->emitter->on('once', function($data, $event) use (&$called){
+			$called[] = 2;
+		});
+		$this->emitter->emit('once');
+		$this->emitter->emit('once');
+		$this->assertSame([1,2,2], $called);
+
 	}
 }
 

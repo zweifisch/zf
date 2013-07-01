@@ -9,12 +9,9 @@ trait EventEmitter
 	private $parent;
 	private $lastHandler;
 
-	public function on($event, $callback)
+	public function on($event, $callback, $once=false)
 	{
-		3 == func_num_args()
-			? list($event, $priority, $callback) = func_get_args()
-			: $priority = 0;
-
+		$priority = 0;
 		$keys = explode(':', $event);
 
 		foreach($keys as $key)
@@ -24,12 +21,17 @@ trait EventEmitter
 			in_array($event, $this->eventsIndex[$key], true) or $this->eventsIndex[$key][] = $event;
 		}
 
-		$handler = [$priority, $callback];
+		$handler = [$priority, $callback, $once];
 		$this->lastHandler = &$handler;
 		$this->listeners[$event][] = &$handler;
 
 		$this->emit('listener:registered',['event'=>$event, 'callback'=>$callback]);
 		return $this;
+	}
+
+	public function once($event, $callback)
+	{
+		return $this->on($event, $callback, true);
 	}
 
 	public function priority($priority)
@@ -82,6 +84,9 @@ trait EventEmitter
 			if(isset($this->listeners[$e]))
 			{
 				$ret = array_merge($ret, $this->listeners[$e]);
+				$this->listeners[$e] = array_filter($this->listeners[$e], function($listener){
+					return !$listener[2]; // not 'once'
+				});
 			}
 		}
 		uasort($ret, function($a, $b){ return $a[0] > $b[0] ? -1 : 1; });
