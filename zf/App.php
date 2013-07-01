@@ -16,6 +16,7 @@ class App extends Laziness
 
 	private $_router;
 	private $_eagerParams = [];
+	private $_lastComponent;
 
 	function __construct()
 	{
@@ -158,6 +159,7 @@ class App extends Laziness
 
 	public function register($alias, $component)
 	{
+		$this->_lastComponent = $alias;
 		if($component instanceof Closure)
 		{
 			$this->$alias = $component;
@@ -176,6 +178,18 @@ class App extends Laziness
 			};
 		}
 		return $this;
+	}
+
+	public function initialized($callback)
+	{
+		$component = $this->_lastComponent;
+		$this->once('computed', function($data) use ($component, $callback){
+			if($data['key'] == $component)
+			{
+				$callback($data['value']);
+				return true;
+			}
+		});
 	}
 
 	public function pass($handlerName)

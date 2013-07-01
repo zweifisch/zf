@@ -2,8 +2,14 @@
 
 namespace zf;
 
-class Laziness implements \JsonSerializable
+use Closure;
+use Exception;
+use JsonSerializable;
+
+class Laziness implements JsonSerializable
 {
+	use EventEmitter;
+
 	protected $_container;
 	protected $_context;
 
@@ -15,18 +21,19 @@ class Laziness implements \JsonSerializable
 
 	public function __get($name)
 	{
-		if (array_key_exists($name, $this->_container))
+		if(array_key_exists($name, $this->_container))
 		{
-			if ($this->_container[$name] instanceof \Closure)
+			if($this->_container[$name] instanceof Closure)
 			{
 				$closure = $this->_container[$name]->bindTo($this->_context);
 				$this->_container[$name] = $closure();
+				$this->emit('computed', ['key'=>$name, 'value'=>$this->_container[$name]]);
 			}
 			return $this->_container[$name];
 		}
 		else
 		{
-			throw new \Exception("attribute \"$name\" not found");
+			throw new Exception("attribute \"$name\" not found");
 		}
 	}
 
@@ -44,7 +51,7 @@ class Laziness implements \JsonSerializable
 	{
 		foreach($this->_container as $key=>$value)
 		{
-			if($value instanceof \Closure)
+			if($value instanceof Closure)
 			{
 				$binded = $value->bindTo($this->_context);
 				$this->_container[$key] = $binded();

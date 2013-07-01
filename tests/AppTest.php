@@ -69,4 +69,15 @@ class AppTest extends PHPUnit_Framework_TestCase
 		$this->app->set('option', [true]);
 		$this->assertSame([true], $this->app->get('option'));
 	}
+
+	public function testComponentInitialized()
+	{
+		$called = false;
+		$this->app->register('sc', 'SomeComponent')->initialized(function($sc) use (&$called){
+			$called = true;
+		});
+		$this->assertFalse($called);
+		$this->app->sc;
+		$this->assertTrue($called);
+	}
 }
