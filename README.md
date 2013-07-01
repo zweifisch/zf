@@ -43,6 +43,14 @@ $app->register('redis', '\zf\Redis', $app->config->redis);
 $app->mongo->users->findOne();
 ```
 
+execute some additional code, when component is actually initialized
+```php
+$app->register('component', 'SomeClass')->initialized(function($component){
+	$connected = $component->connect();
+	$this->debug('component', $connected);
+});
+```
+
 ### param
 
 ```php
@@ -93,9 +101,9 @@ $app->get('/user/:id', function($data){
 
 handler with highest priority get called first, the default priority is `0`
 ```php
-$app->on('event', -1, function(){
+$app->on('event', function(){
 	// will be called after all handlers
-});
+})->priority(-1);
 ```
 
 listening for multiple events
