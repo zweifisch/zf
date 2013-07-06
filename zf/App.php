@@ -27,7 +27,7 @@ class App extends Laziness
 		set_include_path(get_include_path() . PATH_SEPARATOR . $basedir);
 
 		$this->config = new Config;
-		$this->set(['nodebug', 'nopretty', 'fancy',
+		$this->set(['nodebug', 'nopretty', 'fancy', 'nodist', 'noextract',
 			'handlers'   => 'handlers',
 			'helpers'    => 'helpers',
 			'params'     => 'params',
@@ -274,7 +274,7 @@ class App extends Laziness
 
 	private function phar()
 	{
-		if('.phar' == substr($_SERVER['SCRIPT_FILENAME'], -5))
+		if('.phar' == substr($_SERVER['SCRIPT_FILENAME'], -5) && $this->config->extract)
 		{
 			$this->cmd('extract <path>', function(){
 				try {
@@ -286,7 +286,7 @@ class App extends Laziness
 				}
 			});
 		}
-		else
+		elseif($this->config->dist)
 		{
 			$this->cmd('dist <name>', function(){
 				$entryScript = basename($_SERVER['SCRIPT_FILENAME']);
