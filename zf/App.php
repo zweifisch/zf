@@ -44,15 +44,20 @@ class App extends Laziness
 
 		$this->_router = $this->isCli ? new CliRouter() : new Router();
 
-		$global_exception_handler = function($exception) {
+		$on_exception = function($exception) {
 			if(!$this->emit('exception', $exception)) throw $exception;
 		};
-		set_exception_handler($global_exception_handler->bindTo($this));
+		set_exception_handler($on_exception->bindTo($this));
 
 		$on_shutdown = function(){
 			$this->emit('shutdown');
 		};
 		register_shutdown_function($on_shutdown->bindTo($this));
+
+		$on_error = function(){
+			$this->emit('error', (object)array_combine(['no','str','file','line','context'], func_get_args())) or die();
+		};
+		set_error_handler($on_error->bindTo($this));
 
 		$this->helper = function(){
 			return new ClosureSet($this, $this->config->helpers);
@@ -73,18 +78,18 @@ class App extends Laziness
 
 	function __call($name, $args)
 	{
-		if (in_array($name, ['post', 'put', 'delete', 'patch', 'head', 'cmd'], true))
+		if(in_array($name, ['post', 'put', 'delete', 'patch', 'head', 'cmd'], true))
 		{
 			$this->_router->append($name, $args);
 		}
-		elseif ($this->helper->registered($name))
+		elseif($this->helper->registered($name))
 		{
 			return $this->helper->__call($name, $args);
 		}
-		elseif ($this->isCli && (0 == strncmp('sig', $name, 3)))
+		elseif($this->isCli && (0 == strncmp('sig', $name, 3)))
 		{
 			$name = strtoupper($name);
-			if (defined($name))
+			if(defined($name))
 			{
 				pcntl_signal(constant($name), $args[0]->bindTo($this));
 			}
