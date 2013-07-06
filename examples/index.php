@@ -36,12 +36,12 @@ $app->set('pretty');
 $app->register('mongo','\zf\Mongo');
 
 $app->param('ids', function($ids){
-	return explode(',', $ids);
+	if($ids) return explode(',', $ids);
 });
 
 $app->get('/users/:ids?', function(){
 	$criteria = [];
-	if (isset($this->params->ids)){
+	if ($this->params->ids){
 		$criteria = ['_id' => ['$in' => $this->params->ids]];
 	}
 	$users = $this->mongo->users->find($criteria);
@@ -119,6 +119,7 @@ $app->head('/cache-control', function(){
 $app->post('/debug', function(){
 	$this->set('debug');
 	$this->debug('input', $this->body);
+	$this->debug('ip', $this->clientIP());
 	$this->send(200);
 });
 
