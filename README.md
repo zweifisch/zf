@@ -115,6 +115,11 @@ $app->on('user:*', function($data, $event){
 
 to stop an event, return a truthy value in the handler
 
+#### predefined events
+
+`error`, `exception`, `shutdown`
+see examples/events.php
+
 ### helper
 
 ```php
@@ -357,18 +362,20 @@ use `$this->getstdin();`
 ### distribute as phar
 
 make sure `phar.readonly` is set to `Off` in `php.ini`
+enable `dist`, `$app->set('dist');`
 ```sh
 php app.php dist app.phar
 ```
 
 to extract
+enable `extract`, `$app->set('extract');`
 ```sh
 php app.phar extract /dest/path
 ```
 
 ### handle signals
 
-see `examples/cli.php` for more details
+see `examples/signals.php` for more details
 ```php
 $app->sigint(function(){
 	echo 'ctrl-c pressed';
