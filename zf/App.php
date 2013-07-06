@@ -55,7 +55,8 @@ class App extends Laziness
 		register_shutdown_function($on_shutdown->bindTo($this));
 
 		$on_error = function(){
-			$this->emit('error', (object)array_combine(['no','str','file','line','context'], func_get_args())) or die();
+			return $this->emit('error', (object)array_combine(
+				['no','str','file','line','context'], func_get_args()));
 		};
 		set_error_handler($on_error->bindTo($this));
 
