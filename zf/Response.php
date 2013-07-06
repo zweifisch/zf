@@ -2,6 +2,9 @@
 
 namespace zf;
 
+use JsonSerializable;
+use stdClass;
+
 trait Response
 { 
 	private $debug;
@@ -183,5 +186,34 @@ trait Response
 			];
 		}
 		return $this;
+	}
+
+	public function log($msg)
+	{
+		$toString = function($object)
+		{
+			if(is_string($object))
+			{
+				return $object;
+			}
+			elseif(is_array($object) || $object instanceof JsonSerializable || $object instanceof stdClass)
+			{
+				return json_encode($object, JSON_UNESCAPED_UNICODE);
+			}
+			else
+			{
+				return var_export($object, true);
+			}
+		};
+
+		if(func_num_args() > 1)
+		{
+			$msg = vsprintf($msg, array_map($toString, array_slice(func_get_args(), 1)));
+		}
+		else
+		{
+			$msg = $toString($msg);
+		}
+		echo $msg, PHP_EOL;
 	}
 }
