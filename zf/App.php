@@ -49,6 +49,11 @@ class App extends Laziness
 		};
 		set_exception_handler($global_exception_handler->bindTo($this));
 
+		$on_shutdown = function(){
+			$this->emit('shutdown');
+		};
+		register_shutdown_function($on_shutdown->bindTo($this));
+
 		$this->helper = function(){
 			return new ClosureSet($this, $this->config->helpers);
 		};
