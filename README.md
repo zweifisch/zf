@@ -43,16 +43,16 @@ is equivelent to
 ```php
 $app->get('/posts', 'posts/index'); // handlers/posts/index.php
 $app->post('/posts', 'posts/create');
-$app->get('/posts/:id', 'posts/show');
+$app->get('/posts/:posts', 'posts/show');
 
-$app->put('/posts/:id', 'posts/update');
-$app->patch('/posts/:id', 'posts/modify');
-$app->delete('/posts/:id', 'posts/destroy');
+$app->put('/posts/:posts', 'posts/update');
+$app->patch('/posts/:posts', 'posts/modify');
+$app->delete('/posts/:posts', 'posts/destroy');
 
-$app->post('/posts/:id/:action', 'posts/:action');
+$app->post('/posts/:posts/:action', 'posts/$action'); // handlers/posts/$action.php
 
 $app->get('/posts', 'posts/new');
-$app->get('/posts/:id/edit', 'posts/edit');
+$app->get('/posts/:posts/edit', 'posts/edit');
 ```
 
 ### component
