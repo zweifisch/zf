@@ -106,6 +106,25 @@ class App extends Laziness
 		return $this;
 	}
 
+	public function resource($name)
+	{
+		$pass = function() use ($name){
+			$this->pass($name.'/'.$this->params->action);
+		};
+
+		$this->_router->bulk([
+			['GET',    "/$name", "$name/index"],
+			['POST',   "/$name", "$name/create"],
+			['GET',    "/$name/:$name", "$name/show"],
+			['PUT',    "/$name/:$name", "$name/update"],
+			['PATCH',  "/$name/:$name", "$name/modify"],
+			['DELETE', "/$name/:$name", "$name/destroy"],
+			['GET',    "/$name", "$name/new"],
+			['GET',    "/$name/:$name/edit", "$name/edit"],
+			['POST',   "/$name/:$name/:action", $pass],
+		]);
+	}
+
 	public function set($name, $value=null)
 	{
 		1 == func_num_args()

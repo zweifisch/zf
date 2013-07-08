@@ -8,6 +8,7 @@ class ClosureSet
 	private $_lookupPath;
 	private $_context;
 	public $delayed;
+	public $_path;
 
 	public function __construct($context,$lookupPath)
 	{
@@ -16,11 +17,20 @@ class ClosureSet
 		$this->delayed = new Delayed($this);
 	}
 
+	public function _getPath($append, $preserve=false)
+	{
+		$path = $this->_path
+			? $this->_lookupPath.DIRECTORY_SEPARATOR.implode('DIRECTORY_SEPARATOR', $this->_path)
+			: $this->_lookupPath;
+		$preserve or $this->_path = null;
+		return $path.DIRECTORY_SEPARATOR.$append;
+	}
+
 	public function __load($closureName)
 	{
-		$filename = $this->_lookupPath.DIRECTORY_SEPARATOR.$closureName.'.php';
+		$closureName = str_replace(['.','/'], DIRECTORY_SEPARATOR, $closureName);
+		$filename = $this->_getPath($closureName.'.php');
 		$closure = stream_resolve_include_path($filename) ? require $filename: null;
-
 		if (!$closure)
 		{
 			throw new \Exception("closure \"$closureName\" not found under \"$this->_lookupPath\"");
@@ -45,6 +55,11 @@ class ClosureSet
 		}
 		else
 		{
+			if(is_dir($this->_getPath($name, true)))
+			{
+				$this->_path[] = $name;
+				return  $this;
+			}
 			$closure = $this->__load($name);
 		}
 		if (!$closure instanceof \Closure)

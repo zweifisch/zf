@@ -45,10 +45,23 @@ class RouterTest extends PHPUnit_Framework_TestCase
 		$this->router->append('GET',['/1/:foo?/:bar?/2', 'cb1']);
 		$this->router->append('GET',['/2/:foo?/3/:bar?', 'cb2']);
 
+		$this->dispatch();
+	}
+
+	public function testBulk()
+	{
+		$this->router->bulk([
+			['GET', '/0/:foo?', 'cb0'],
+			['GET', '/1/:foo?/:bar?/2', 'cb1'],
+			['GET', '/2/:foo?/3/:bar?', 'cb2'],
+		]);
+		$this->dispatch();
+	}
+
+	public function dispatch(){
 		list($cb,$params) = $this->router->dispatch('GET','/0');
 		$this->assertSame($cb, 'cb0');
 		$this->assertSame($params, ['foo'=>null]);
-		return;
 
 		list($cb,$params) = $this->router->dispatch('GET','/0/f');
 		$this->assertSame($cb, 'cb0');

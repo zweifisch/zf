@@ -38,6 +38,11 @@ class ClosureSetTest extends PHPUnit_Framework_TestCase
 	public function testLoadClosure()
 	{
 		$this->assertSame($this->helper->inc(1), 2);
+
+		$this->assertSame($this->helper->math->sum(1,2,3), 6);
+
+		$this->assertSame(6, $this->helper->{'math.sum'}(1,2,3));
+		$this->assertSame(6, $this->helper->{'math/sum'}(1,2,3));
 	}
 
 	public function setup()

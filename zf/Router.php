@@ -11,6 +11,15 @@ class Router
 		$this->rules[strtoupper($method)][] = $rule; #  defaultdict? what's that?
 	}
 
+	public function bulk($rules)
+	{
+		foreach($rules as $rule)
+		{
+			list($method, $path, $handler) = $rule;
+			$this->append($method, [$path, $handler]);
+		}
+	}
+
 	public function parse($pattern)
 	{
 		preg_match_all('/:([^\/?]+)/', $pattern, $names);
