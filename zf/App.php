@@ -133,7 +133,7 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function get($name, $args=null)
+	public function get($name)
 	{
 		if(1 == func_num_args())
 		{
@@ -141,7 +141,7 @@ class App extends Laziness
 		}
 		else
 		{
-			$this->_router->append($name, $args);
+			$this->_router->append('GET', func_get_args());
 			return $this;
 		}
 	}

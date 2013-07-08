@@ -12,8 +12,13 @@ class RouterTest extends PHPUnit_Framework_TestCase
 
 	public function testStaticPattern()
 	{
+		$this->router->append('GET',['/','cb0']);
 		$this->router->append('GET',['/1','cb1']);
 		$this->router->append('GET',['/2','cb2']);
+
+		list($cb,$params) = $this->router->dispatch('GET','/');
+		$this->assertEquals($cb, 'cb0');
+		$this->assertSame($params, null);
 
 		list($cb,$params) = $this->router->dispatch('GET','/1');
 		$this->assertEquals($cb, 'cb1');
