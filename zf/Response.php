@@ -130,6 +130,12 @@ trait Response
 		}
 	}
 
+	public function redirect($url, $permanent=false)
+	{
+		header('Location: ' . $url, true, $permanent ? 301 : 302);
+		exit();
+	}
+
 	public function jsonp($body)
 	{
 		if(isset($_GET['callback']))

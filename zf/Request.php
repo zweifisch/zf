@@ -28,7 +28,7 @@ trait Request
 
 		$this->body = function() use ($contentType, $fancy){
 			$ret = '';
-			if ($contentType == 'application/json')
+			if (!strncmp($contentType,'application/json', 16))
 			{
 				$ret = json_decode(file_get_contents('php://input'), true);
 			}
@@ -36,7 +36,7 @@ trait Request
 			{
 				'POST' == $this->requestMethod ? $ret = $_POST : parse_str(file_get_contents('php://input'), $ret);
 			}
-			elseif (0 == strncmp($contentType, 'multipart/form-data', 19))
+			elseif (!strncmp($contentType, 'multipart/form-data', 19))
 			{
 				$ret = array_merge($_POST, $_FILES);
 			}
