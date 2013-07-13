@@ -8,6 +8,11 @@ use Exception;
 use ReflectionClass;
 use FilesystemIterator;
 
+const EVENT_EXCEPTION = 'event_exception';
+const EVENT_ERROR = 'event_error';
+const EVENT_SHUTDOWN = 'event_shutdown';
+const EVENT_VALIDATION_ERROR = 'event_validation_error';
+
 class App extends Laziness
 {
 	use Request;
@@ -45,17 +50,17 @@ class App extends Laziness
 		$this->_router = $this->isCli ? new CliRouter() : new Router();
 
 		$on_exception = function($exception) {
-			if(!$this->emit('exception', $exception)) throw $exception;
+			if(!$this->emit(EVENT_EXCEPTION, $exception)) throw $exception;
 		};
 		set_exception_handler($on_exception->bindTo($this));
 
 		$on_shutdown = function(){
-			$this->emit('shutdown');
+			$this->emit(EVENT_SHUTDOWN);
 		};
 		register_shutdown_function($on_shutdown->bindTo($this));
 
 		$on_error = function(){
-			return $this->emit('error', (object)array_combine(
+			return $this->emit(EVENT_ERROR, (object)array_combine(
 				['no','str','file','line','context'], func_get_args()));
 		};
 		set_error_handler($on_error->bindTo($this));

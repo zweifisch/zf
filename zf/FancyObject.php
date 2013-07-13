@@ -62,7 +62,7 @@ class FancyObject implements \JsonSerializable
 		$mappedValue = $this->map($type, $value, implode('.', $this->path));
 		if(is_null($mappedValue))
 		{
-			$this->emit('validation:failed', ['validator'=> $type, 'input'=> $value, 'key'=> implode('.', $this->path)]);
+			$this->emit(EVENT_VALIDATION_ERROR, ['validator'=> $type, 'input'=> $value, 'key'=> implode('.', $this->path)]);
 			return $this->done(null);
 		}
 		return $this->validate($mappedValue) ? $this->done($mappedValue): $this->done(null);
@@ -93,7 +93,7 @@ class FancyObject implements \JsonSerializable
 			{
 				if ($required)
 				{
-					$this->emit('validation:failed', ['validator'=> 'required', 'input'=>null, 'key'=> implode('.', $this->path)]);
+					$this->emit(EVENT_VALIDATION_ERROR, ['validator'=> 'required', 'input'=>null, 'key'=> implode('.', $this->path)]);
 				}
 				$this->path = [];
 				return [false, null];

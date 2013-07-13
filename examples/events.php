@@ -2,7 +2,7 @@
 
 require '../vendor/autoload.php';
 
-$app = new \zf\App();
+$app = new zf\App();
 $app->set('pretty');
 
 $app->cmd('exception', function(){
@@ -13,15 +13,15 @@ $app->cmd('error', function(){
 	$this->log($msg);
 });
 
-$app->on('exception', function($exception){
+$app->on(zf\EVENT_EXCEPTION, function($exception){
 	$this->log($exception->getMessage());
 });
 
-$app->on('shutdown', function(){
-	$this->log('shutting down');
+$app->on(zf\EVENT_SHUTDOWN, function(){
+	$this->log("\nshutting down");
 });
 
-$app->on('error', function($error){
+$app->on(zf\EVENT_ERROR, function($error){
 	$this->log($error->str);
 	die();
 });

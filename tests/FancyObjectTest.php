@@ -87,7 +87,7 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 		$fancy = new FancyObject([], $this->validators, $this->mappers);
 		$failed = false;
 		$that = $this;
-		$fancy->on('validation:failed', function($message) use (&$failed, $that){
+		$fancy->on(zf\EVENT_VALIDATION_ERROR, function($message) use (&$failed, $that){
 			$failed = true;
 			$that->assertSame(json_encode($message), json_encode(['validator'=>'required', 'input'=>null, 'key'=>'key0.key1']));
 		});
