@@ -2,10 +2,12 @@
 
 namespace zf;
 
+use Exception;
+
 class PDO extends \PDO
 {
 	private $_queries;
-	private $_querie;
+	private $_query;
 	private $_params;
 
 	public function __construct($config)
@@ -19,7 +21,7 @@ class PDO extends \PDO
 
 	public function fetchAll($fn=null)
 	{
-		return $this->execute(function($statement) use ($fn){
+		return $this->_execute(function($statement) use ($fn){
 			return $fn
 				? $statement->fetchAll(\PDO::FETCH_FUNC, $fn)
 				: $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -28,7 +30,7 @@ class PDO extends \PDO
 
 	public function fetchOne($fn=null)
 	{
-		return $this->execute(function($statement) use ($fn){
+		return $this->_execute(function($statement) use ($fn){
 			return $fn
 				? $statement->fetch(\PDO::FETCH_FUNC, $fn)
 				: $statement->fetch(\PDO::FETCH_ASSOC);
@@ -37,14 +39,14 @@ class PDO extends \PDO
 
 	public function fetchColumn($column=null)
 	{
-		return $this->execute(function($statement) use ($column){
+		return $this->_execute(function($statement) use ($column){
 			return $statement->fetchColumn((int)$column);
 		});
 	}
 
-	public function update()
+	public function execute()
 	{
-		return $this->execute(function($statement){
+		return $this->_execute(function($statement){
 			return $statement->rowCount();
 		});
 	}
@@ -83,27 +85,44 @@ class PDO extends \PDO
 			$type = '\PDO::PARAM_'.strtoupper(substr($name,4));
 			if(!defined($type))
 			{
-				throw new \Exception("type \"$type\" not defined");
+				throw new Exception("type \"$type\" not defined");
 			}
 			$this->_params[] = [$args[0], $args[1], constant($type)];
 			return $this;
 		}
+		if(isset($this->_query[$name]))
+		{
+			if($args) $this->bind($args[0]);
+			$this->_query = $this->_query[$name];
+			if(!strncmp('select', $this->_query, 6) || !strncmp('SELECT', $this->_query, 6))
+			{
+				return $this->fetchAll();
+			}
+			return $this->execute();
+		}
+		throw new Exception("method '$name' not defined");
 	}
 
 	public function __get($queryname)
 	{
-		if(empty($this->_queries[$queryname]))
+		if(isset($this->_query[$queryname]))
 		{
-			throw new \Exception("query \"$queryname\" not defined");
+			$this->_query = $this->_query[$queryname];
+			return $this;
 		}
-		$this->_query = $this->_queries[$queryname];
-		return $this;
+		if(isset($this->_queries[$queryname]))
+		{
+			$this->_query = $this->_queries[$queryname];
+			return $this;
+		}
+		throw new Exception("query '$queryname' not defined");
 	}
 
-	private function execute($fetch)
+	private function _execute($fetch)
 	{
 		$this->_statement = $this->prepare($this->_query);
-		if($this->_params){
+		if($this->_params)
+		{
 			foreach($this->_params as $param)
 			{
 				list($name, $value, $type) = $param;
