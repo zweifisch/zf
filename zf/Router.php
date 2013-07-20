@@ -48,19 +48,23 @@ class Router
 		{
 			list($pattern, $callback) = $rule;
 
-			if($staticPrefix = strstr($pattern, '/:', true))
+			if(false === strpos($pattern, '/:')) # static pattern
 			{
-				if(!strncmp($staticPrefix, $path, strlen($staticPrefix)))
+				if($path === $pattern)
+				{
+					return [$callback, null];
+				}
+			}
+			else
+			{
+				$staticPrefix = strstr($pattern, '/:', true);
+				if(!$staticPrefix || !strncmp($staticPrefix, $path, strlen($staticPrefix)))
 				{
 					if($params = $this->match($pattern, $path))
 					{
 						return [$callback, $params];
 					}
 				}
-			}
-			else # static pattern
-			{
-				if($path === $pattern) return [$callback, null];
 			}
 		}
 		return [null, null];

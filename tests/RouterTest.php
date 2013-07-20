@@ -34,6 +34,7 @@ class RouterTest extends PHPUnit_Framework_TestCase
 	public function testParams()
 	{
 		$this->router->append('GET',['/1/:foo/:bar/2','cb1']);
+		$this->router->append('GET',['/:foo','cb2']);
 
 		list($cb,$params) = $this->router->dispatch('GET','/1/2/3/4');
 		$this->assertSame($cb, null);
@@ -42,6 +43,10 @@ class RouterTest extends PHPUnit_Framework_TestCase
 		list($cb,$params) = $this->router->dispatch('GET','/1/2/3/2');
 		$this->assertSame($cb, 'cb1');
 		$this->assertSame($params, ['foo'=>'2', 'bar'=>'3']);
+
+		list($cb,$params) = $this->router->dispatch('GET','/1');
+		$this->assertSame($cb, 'cb2');
+		$this->assertSame($params, ['foo'=>'1']);
 	}
 
 	public function testOptinalParams()
