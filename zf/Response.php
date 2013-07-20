@@ -155,13 +155,12 @@ trait Response
 		}
 	}
 
-	public function render($template, $context)
+	public function render($template, $context=null)
 	{	
-		$this->renderWithContext($template, $context, function($path){ include $path; });
-		$this->send(200);
+		$this->send(200, $this->renderAsString($template,$context));
 	}
 
-	public function renderAsString($template, $context)
+	public function renderAsString($template, $context=null)
 	{
 		return $this->renderWithContext($template, $context, function($path){
 			ob_start();
@@ -175,8 +174,8 @@ trait Response
 	private function renderWithContext($template, $context, $renderer)
 	{
 		$path = $this->config->views . DIRECTORY_SEPARATOR . $template . $this->config->viewext;
-		if (!stream_resolve_include_path($path)) throw new \Exception("template $template($path) not found");
-		$renderer = $renderer->bindTo((object)$context);
+		if(!stream_resolve_include_path($path)) throw new \Exception("template $template($path) not found");
+		if($context) $renderer = $renderer->bindTo((object)$context);
 		return $renderer($path);
 	}
 
