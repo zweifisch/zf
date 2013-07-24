@@ -23,4 +23,16 @@ $exports['mq'] = [
 	'password' => 'guest',
 ];
 
+$exports['db'] = [
+	'dsn' => 'mysql:host=localhost;dbname=mysql;charset=utf8',
+	'username' => 'root',
+	'password' => 'secret',
+	'queries' => [
+		'users' => [
+			'list' =>
+				'select User,Host from user limit :skip,:limit',
+		]
+	],
+];
+
 return $exports;
