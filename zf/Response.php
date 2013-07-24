@@ -120,7 +120,19 @@ trait Response
 			echo "Usage:\n\n";
 			foreach ($this->_router->cmds() as $cmd)
 			{
+				list($cmd, $options) = $cmd;
 				echo '  php ', $_SERVER['argv'][0], ' ' , $cmd, "\n";
+				foreach($options as $option=>$default)
+				{
+					if(is_bool($default))
+					{
+						echo "      --$option\n";
+					}
+					else
+					{
+						echo "      --$option\tdefault: $default\n";
+					}
+				}
 			}
 			exit(1);
 		}

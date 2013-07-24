@@ -98,8 +98,12 @@ class CliRouter
 
 	public function cmds()
 	{
-		return array_map(function($rule){
-			return $rule[0];
-		}, $this->rules);
+		$cmds = [];
+		foreach($this->rules as $idx=>$rule)
+		{
+			$options = isset($this->options[$idx]) ? $this->options[$idx] : [];
+			$cmds[] = [$rule[0], $options];
+		}
+		return $cmds;
 	}
 }
