@@ -1,7 +1,7 @@
 <?php
 
 /*
- * php redis.php incr counter --by 2
+ * php redis.php incr counter --by=2
  * php redis.php incr counter
  *
  */
@@ -11,8 +11,8 @@ $app = new \zf\App();
 
 $app->register('redis','\zf\Redis');
 
-$app->cmd('incr <key> --by <by>', function(){
+$app->cmd('incr <key>', function(){
 	echo $this->redis->default->incr($this->params->key, $this->params->by);
-})->defaults(['by'=>1]);
+})->options(['by'=>1]);
 
 $app->run();
