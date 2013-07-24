@@ -92,7 +92,7 @@ class App extends Laziness
 		{
 			return $this->helper->__call($name, $args);
 		}
-		elseif($this->isCli && (0 == strncmp('sig', $name, 3)))
+		elseif($this->isCli && !strncmp('sig', $name, 3))
 		{
 			$name = strtoupper($name);
 			if(defined($name))
@@ -272,9 +272,9 @@ class App extends Laziness
 		}
 	}
 
-	public function defaults($defaults)
+	public function options($options)
 	{
-		$this->_router->attach($defaults);
+		$this->_router->options($options);
 		return $this;
 	}
 

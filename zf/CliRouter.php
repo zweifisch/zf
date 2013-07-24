@@ -5,113 +5,69 @@ namespace zf;
 class CliRouter
 {
 	private $rules;
-	private $defaults;
+	private $options;
 
-	public function append($_, $rule)
+	public function append($method, $rule)
 	{
-		$this->rules[] = $rule;
-		$this->defaults[] = [];
+		if('cmd' == $method) $this->rules[] = $rule;
 	}
 
-	public function attach($defaults)
+	public function options($options)
 	{
-		$this->defaults[count($this->rules) - 1] = $defaults;
+		$opts = [];
+		foreach($options as $key=>$value)
+		{
+			is_int($key) ? $opts[$value] = false : $opts[$key] = $value;
+		}
+		$this->options[count($this->rules) - 1] = $opts;
 	}
 
 	private function parse($args)
 	{
 		$positionalArgs = [];
 		$options = [];
-		$optname = null;
 		foreach($args as $arg)
 		{
-			if (0 == strncmp('--', $arg, 2))
+			if(!strncmp('--', $arg, 2))
 			{
-				if ($optname)
+				if($optname = strstr($arg, '=', true))
 				{
-					$options[$optname] = true;
-				}
-				$optname = $arg;
-			}
-			else
-			{
-				if ($optname)
-				{
-					$options[$optname] = $arg;
-					$optname = null;
+					$options[substr($optname, 2)] = substr(strstr($arg, '='), 1);
 				}
 				else
 				{
-					$positionalArgs[] = $arg;
+					$options[substr($arg, 2)] = true;
 				}
 			}
+			else
+			{
+				$positionalArgs[] = $arg;
+			}
 		}
-
-		if ($optname)
-		{
-			$options[substr($optname,2)] = true;
-		}
-
 		return [$positionalArgs, $options];
 	}
 
-	private function match($positionalArgs, $options, $pattern, $defaults)
+	private function match($positionalArgs, $pattern)
 	{
 		$pos = 0;
 		$ret = [];
-		$optionName = null;
 		foreach(explode(' ', $pattern) as $item)
 		{
-			if (0 == strncmp('<', $item, 1))
+			if(!strncmp('<', $item, 1))
 			{
 				$name = substr($item, 1, strlen($item) - 2);
-				if($optionName)
 				{
-					if (isset($options[$optionName]))
-					{
-						$ret[$name] = $options[$optionName];
-					}
-					elseif (isset($defaults[$name]))
-					{
-						$ret[$name] = $defaults[$name];
-					}
-					else
-					{
-						return false;
-					}
-					$optionName = null;
+					if(!isset($positionalArgs[$pos])) return false;
+					$ret[$name] = $positionalArgs[$pos];
 				}
-				else
-				{
-					if (isset($positionalArgs[$pos]))
-					{
-						$ret[$name] = $positionalArgs[$pos];
-						$pos ++;
-					}
-					else
-					{
-						return false;
-					}
-				}
-			}
-			elseif(0 == strncmp('--', $item, 2))
-			{
-				$optionName = $item;
 			}
 			else
 			{
-				if (empty($positionalArgs[$pos]) || $item !== $positionalArgs[$pos])
-				{
-					return false;
-				}
-				$pos ++;
+				if(empty($positionalArgs[$pos]) || $item !== $positionalArgs[$pos]) return false;
 			}
+			$pos ++;
 		}
-		if (count($positionalArgs) == $pos)
-		{
-			return $ret;
-		}
-		return false;
+		return count($positionalArgs) == $pos ? $ret : false;
 	}
 
 	public function dispatch($args)
@@ -121,17 +77,19 @@ class CliRouter
 		foreach($this->rules as $idx => $rule)
 		{
 			list($pattern, $callable) = $rule;
-			$params = $this->match($positionalArgs, $options, $pattern, $this->defaults[$idx]);
-			if ($params !== false)
+			$params = $this->match($positionalArgs, $pattern);
+			if($params !== false)
 			{
-				return [$callable, $params];
+				return isset($this->options[$idx])
+					? [$callable, array_merge($this->options[$idx], $params, $options)]
+					: [$callable, array_merge($params, $options)];
 			}
 		}
 	}
 
 	public function run()
 	{
-		if (isset($_SERVER['argv']) && count($_SERVER['argv']) > 1)
+		if(isset($_SERVER['argv']) && count($_SERVER['argv']) > 1)
 		{
 			return $this->dispatch(array_slice($_SERVER['argv'], 1));
 		}
@@ -140,11 +98,8 @@ class CliRouter
 
 	public function cmds()
 	{
-		$cmds = [];
-		foreach ($this->rules as $rule)
-		{
-			$cmds[] = $rule[0];
-		}
-		return $cmds;
+		return array_map(function($rule){
+			return $rule[0];
+		}, $this->rules);
 	}
 }
