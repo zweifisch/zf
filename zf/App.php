@@ -274,7 +274,7 @@ class App extends Laziness
 
 	public function options($options)
 	{
-		$this->_router->options($options);
+		if($this->isCli) $this->_router->options($options);
 		return $this;
 	}
 
