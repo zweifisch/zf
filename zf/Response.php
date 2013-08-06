@@ -46,6 +46,7 @@ trait Response
 		504 => 'Gateway Timeout',
 		505 => 'HTTP Version Not Supported'
 	];
+	private $status = 200;
 
 	public function lastModified($time)
 	{
@@ -71,9 +72,14 @@ trait Response
 		header('Cache-Control: '. implode(', ', $args));
 	}
 
+	public function status($code)
+	{
+		$this->status = $code;
+	}
+
 	public function send($code, $body='', $options=null)
 	{
-		is_int($code) or list($code, $body, $options) = [200, $code, $body];
+		is_int($code) or list($code, $body, $options) = [$this->status, $code, $body];
 
 		$options or $options = [];
 
@@ -96,6 +102,11 @@ trait Response
 		$options['code'] = $code;
 
 		$this->response($options);
+	}
+
+	public function end($code, $body='', $options=null)
+	{
+		$this->send($code, $body, $options);
 	}
 
 	public function response($response)
@@ -168,7 +179,7 @@ trait Response
 	}
 
 	public function render($template, $vars=null)
-	{	
+	{
 		$this->send(200, $this->renderAsString($template,$vars));
 	}
 

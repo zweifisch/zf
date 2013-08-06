@@ -229,7 +229,7 @@ class App extends Laziness
 
 	public function pass($handlerName)
 	{
-		$this->requestHandlers->__call($handlerName);
+		return $this->requestHandlers->__call($handlerName);
 	}
 
 	public function run()
@@ -258,13 +258,14 @@ class App extends Laziness
 			}
 			if(is_string($handler))
 			{
-				$this->requestHandlers->__call($handler);
+				$response = $this->requestHandlers->__call($handler);
 			}
 			else
 			{
 				$handler = $handler->bindTo($this);
-				$handler();
+				$response = $handler();
 			}
+			$this->send($response);
 		}
 		else
 		{
