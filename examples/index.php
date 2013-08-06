@@ -50,45 +50,46 @@ $app->get('/users/:ids?', function(){
 
 $app->post('/user', function(){
 	$this->mongo->users->save($this->body->asArray());
-	$this->send(['ok' => true]);
+	return ['ok' => true];
 });
 
 $app->delete('/users/:ids', function(){
 	$this->mongo->users->remove(['_id' => ['$in' => $this->params->ids]]);
-	$this->send(['ok' => true]);
+	return ['ok' => true];
 });
 
 $app->get('/time/:format', function(){
-	$this->send($this->helper->getTime($this->params->format));
+	return $this->helper->getTime($this->params->format);
 });
 
 $app->get('/git/:cmd', 'git');
 
 $app->get('/', function(){
-	$this->render('index',['now'=> date('H:i:s')]);
+	return $this->render('index',['now'=> date('H:i:s')]);
 });
 
 $app->handler('dump', function(){
-	$this->send($this->body);
+	return $this->body;
 });
 
 $app->post('/dump', function(){
-	$this->pass('dump');
+	return $this->pass('dump');
 });
 
 $app->put('/dump', function(){
-	$this->pass('dump');
+	return $this->pass('dump');
 });
 
 $app->get('/search', function(){
 	$keyword = $this->query->keyword->asStr();
 	$page = $this->query->page->min(1)->asInt();
 	$size = $this->query->size->between(5,20)->asInt(10);
-	$this->send(['query'=>$this->query, 'result'=> []]);
+	return ['query'=>$this->query, 'result'=> []];
 });
 
-$app->on('validation:failed', function($message){
-	$this->send(400, $message);
+$app->on(zf\EVENT_VALIDATION_ERROR, function($message){
+	$this->status(400);
+	$this->end($message);
 });
 
 class Thing
@@ -109,7 +110,7 @@ $app->map('Thing', function($value){
 });
 
 $app->post('/thing', function(){
-	$this->send($this->body->thing->asThing()->mutate());
+	return $this->body->thing->asThing()->mutate();
 });
 
 $app->head('/cache-control', function(){
@@ -120,7 +121,7 @@ $app->post('/debug', function(){
 	$this->set('debug');
 	$this->debug('input', $this->body);
 	$this->debug('ip', $this->clientIP());
-	$this->send(200);
+	return 200;
 });
 
 $app->run();

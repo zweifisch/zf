@@ -5,6 +5,6 @@
 	<title></title>
 </head>
 <body>
-	now is: <?= $this->now ?>
+	now is: <?= $now ?>
 </body>
 </html>
