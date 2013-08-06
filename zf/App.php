@@ -124,7 +124,6 @@ class App extends Laziness
 			['PUT',    "/$name/:$name", "$name/update"],
 			['PATCH',  "/$name/:$name", "$name/modify"],
 			['DELETE', "/$name/:$name", "$name/destroy"],
-			['GET',    "/$name", "$name/new"],
 			['GET',    "/$name/:$name/edit", "$name/edit"],
 			['POST',   "/$name/:$name/:action", $pass],
 		]);

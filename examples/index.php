@@ -40,12 +40,13 @@ $app->param('ids', function($ids){
 });
 
 $app->get('/users/:ids?', function(){
+	$this->set('jsonp', 'callback');
 	$criteria = [];
 	if ($this->params->ids){
 		$criteria = ['_id' => ['$in' => $this->params->ids]];
 	}
 	$users = $this->mongo->users->find($criteria);
-	$this->jsonp(iterator_to_array($users));
+	return iterator_to_array($users);
 });
 
 $app->post('/user', function(){

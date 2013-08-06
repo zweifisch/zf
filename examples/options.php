@@ -1,9 +1,8 @@
 <?php
 
 /*
- * php defaults.php ls users --limit=50 --skip=100 '*admin*'
- * php defaults.php ls users '*admin*' --skip=100 
- * php defaults.php ls users '*admin*'
+ * php options.php mv foo bar
+ * php options.php mv --overwrite foo bar
  *
  */
 
@@ -13,8 +12,14 @@ $app = new \zf\App();
 $app->param('skip', 'int');
 $app->param('limit', 'int');
 
-$app->cmd('ls users <pattern>', function(){
-	$this->send($this->params);
-})->options(['limit' => 20, 'skip' => 0]);
+$app->set('pretty');
+
+$app->cmd('mv <src> <target>', function(){
+	return $this->params;
+})->options(['overwrite','interactive']);
+
+$app->cmd('mail <to>', function(){
+	return $this->params;
+})->options(['cc'=>'','subject'=>'untitled']);
 
 $app->run();

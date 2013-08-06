@@ -101,6 +101,13 @@ trait Response
 		$options['body'] = $body;
 		$options['code'] = $code;
 
+		if(isset($this->config->jsonp) && !empty($_GET[$this->config->jsonp]))
+		{
+			$callback = $_GET[$this->config->jsonp];
+			$options['body'] = "$callback && $callback({$options['body']})";
+			$options['type'] = 'text/javascript';
+		}
+
 		$this->response($options);
 	}
 
@@ -144,6 +151,7 @@ trait Response
 						echo "      --$option\tdefault: $default\n";
 					}
 				}
+				echo "\n";
 			}
 			exit(1);
 		}
@@ -157,25 +165,6 @@ trait Response
 	{
 		header('Location: ' . $url, true, $permanent ? 301 : 302);
 		exit();
-	}
-
-	public function jsonp($body)
-	{
-		if(isset($_GET['callback']))
-		{
-			$callback = $_GET['callback'];
-			$body = $this->config->pretty
-				? json_encode($body, JSON_PRETTY_PRINT)
-				: json_encode($body);
-			$this->send("$callback && $callback($body)",[
-				'type'    => 'text/javascript',
-				'charset' => $this->config->charset,
-			]);
-		}
-		else
-		{
-			$this->send($body);
-		}
 	}
 
 	public function render($template, $vars=null)
