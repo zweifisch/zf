@@ -2,26 +2,27 @@
 
 namespace zf;
 
-class FancyObject implements \JsonSerializable
+use JsonSerializable;
+
+class FancyObject implements JsonSerializable
 {
 	use EventEmitter;
-	private $root;
-	private $context;
-	private $path;
-	private $usedValidators;
+	private $_root;
+	private $_path;
+	private $_validators;
 
 	function __construct($root, $validators, $mappers)
 	{
-		$this->root = is_array($root) ? $root : [];
-		$this->usedValidators = [];
-		$this->path = [];
-		$this->validators = $validators;
-		$this->mappers = $mappers;
+		$this->_root = is_array($root) ? $root : [];
+		$this->_validators = [];
+		$this->_path = [];
+		$this->validatorSet = $validators;
+		$this->mapperSet = $mappers;
 	}
 
 	function __get($name)
 	{
-		$this->path[] = $name;
+		$this->_path[] = $name;
 		return $this;
 	}
 
@@ -29,26 +30,52 @@ class FancyObject implements \JsonSerializable
 	{
 		if (0 == strncmp('as', $name, 2))
 		{
-			return $this->getAs(substr($name, 2), $args);
+			return $this->_getAs(substr($name, 2), $args);
 		}
-		$this->usedValidators[$name] = $this->validators->__call($name, $args);
+		$this->_validators[$name] = $this->validatorSet->__call($name, $args);
 		return $this;
+	}
+
+	public function extract($keys)
+	{
+		$ret = [];
+		foreach($keys as $key => $validators)
+		{
+			$default = null;
+			foreach(explode('|', $validators) as $validator)
+			{
+				list($name, $args) = explode(':', $validator);
+				$args = explode(',', $args);
+				$name == 'default'
+					? $default = $args
+					: $this->_validators[$name] = $this->validatorSet->__call($name, $args);
+			}
+			$exploded = explode(':', $key);
+			1 == count($exploded) or list($key, $type) = $exploded;
+			$type = isset($type) ? $type : 'Str';
+			$this->_path = explode('.', $key);
+			if(is_null($ret[$key] = $this->_getAs($type, $default)))
+			{
+				return null;
+			}
+		}
+		return $ret;
 	}
 
 	public function jsonSerialize()
 	{
-		return $this->root;
+		return $this->_root;
 	}
 
-	private function getAs($type, $default)
+	private function _getAs($type, $default)
 	{
 		$required = empty($default);
-		list($isset, $value) = $this->get($required);
+		list($isset, $value) = $this->_get($required);
 		if(!$isset)
 		{
 			if($required)
 			{
-				return $this->done(null);
+				return $this->_done(null);
 			}
 			else
 			{
@@ -59,31 +86,26 @@ class FancyObject implements \JsonSerializable
 		{
 			$value = trim($value);
 		}
-		$mappedValue = $this->map($type, $value, implode('.', $this->path));
+		$mappedValue = $this->mapperSet->__call($type, [$value, implode('.', $this->_path)]);
 		if(is_null($mappedValue))
 		{
-			$this->emit(EVENT_VALIDATION_ERROR, ['validator'=> $type, 'input'=> $value, 'key'=> implode('.', $this->path)]);
-			return $this->done(null);
+			$this->emit(EVENT_VALIDATION_ERROR, ['validator'=> $type, 'input'=> $value, 'key'=> implode('.', $this->_path)]);
+			return $this->_done(null);
 		}
-		return $this->validate($mappedValue) ? $this->done($mappedValue): $this->done(null);
+		return $this->_validate($mappedValue) ? $this->_done($mappedValue): $this->_done(null);
 	}
 
-	private function done($ret)
+	private function _done($ret)
 	{
-		$this->path = [];
-		$this->usedValidators = [];
+		$this->_path = [];
+		$this->_validators = [];
 		return $ret;
 	}
 
-	private function map($type, $value, $path)
+	private function _get($required)
 	{
-		return $this->mappers->__call($type, [$value, $path]);
-	}
-
-	private function get($required)
-	{
-		$cursor = $this->root;
-		foreach ($this->path as $path)
+		$cursor = $this->_root;
+		foreach ($this->_path as $path)
 		{
 			if(isset($cursor[$path]))
 			{
@@ -93,27 +115,27 @@ class FancyObject implements \JsonSerializable
 			{
 				if ($required)
 				{
-					$this->emit(EVENT_VALIDATION_ERROR, ['validator'=> 'required', 'input'=>null, 'key'=> implode('.', $this->path)]);
+					$this->emit(EVENT_VALIDATION_ERROR, ['validator'=> 'required', 'input'=>null, 'key'=> implode('.', $this->_path)]);
 				}
-				$this->path = [];
+				$this->_path = [];
 				return [false, null];
 			}
 		}
 		return [true, $cursor];
 	}
 
-	private function validate($value, $preserveRules=false)
+	private function _validate($value, $preserveRules=false)
 	{
-		foreach($this->usedValidators as $name => $validator)
+		foreach($this->_validators as $name => $validator)
 		{
 			if(!$validator($value))
 			{
-				$preserveRules or $this->usedValidators = [];
-				$this->emit('validation:failed', ['validator'=> $name, 'input'=> $value, 'key'=> implode('.', $this->path)]);
+				$preserveRules or $this->_validators = [];
+				$this->emit(EVENT_VALIDATION_ERROR, ['validator'=> $name, 'input'=> $value, 'key'=> implode('.', $this->_path)]);
 				return false;
 			}
 		}
-		$preserveRules or $this->usedValidators = [];
+		$preserveRules or $this->_validators = [];
 		return true;
 	}
 

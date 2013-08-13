@@ -31,7 +31,7 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 	{
 		$triggered = false;
 		$that = $this;
-		$this->fancy->on('validation:failed', function($data) use (&$triggered, $that){
+		$this->fancy->on(zf\EVENT_VALIDATION_ERROR, function($data) use (&$triggered, $that){
 			$triggered = true;
 			$that->assertSame($data['key'], 'key');
 		});
@@ -47,7 +47,7 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 	{
 		$triggered = false;
 		$that = $this;
-		$this->fancy->on('validation:failed', function($data) use (&$triggered, $that){
+		$this->fancy->on(zf\EVENT_VALIDATION_ERROR, function($data) use (&$triggered, $that){
 			$triggered = true;
 			$that->assertSame($data['key'], 'key2.key5');
 		});
@@ -63,7 +63,7 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 	{
 		$triggered = false;
 		$that = $this;
-		$this->fancy->on('validation:failed', function($data) use (&$triggered, $that){
+		$this->fancy->on(zf\EVENT_VALIDATION_ERROR, function($data) use (&$triggered, $that){
 			$triggered = true;
 			$that->assertSame($data['key'], 'key');
 		});
@@ -102,6 +102,36 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 	{
 		$fancy = new FancyObject([]);
 		$fancy->asNull();
+	}
+
+	public function testExtract()
+	{
+		$result = $this->fancy->extract([
+			'key' => 'minlen:3',
+		]);
+		$expected = ['key'=>'str'];
+		$this->assertSame($expected, $result);
+
+		$result = $this->fancy->extract([
+			'key' => 'minlen:4',
+		]);
+		$this->assertNull($result);
+
+		$result = $this->fancy->extract([
+			'key' => 'minlen:3',
+			'key2.key5:Int' => 'min:1',
+		]);
+		$expected = ['key'=>'str', 'key2.key5'=>1];
+		$this->assertSame($expected, $result);
+	}
+
+	public function testExtractDefault()
+	{
+		$result = $this->fancy->extract([
+			'key3' => 'default:defaultval|minlen:5',
+		]);
+		$expected = ['key3'=>'defaultval'];
+		$this->assertSame($expected, $result);
 	}
 
 	public function setup()
