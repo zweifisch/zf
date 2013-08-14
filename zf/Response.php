@@ -169,27 +169,7 @@ trait Response
 
 	public function render($template, $vars=null)
 	{
-		$this->send(200, $this->renderAsString($template,$vars));
-	}
-
-	public function renderAsString($template, $vars=null)
-	{
-		return $this->renderWithContext($template, function($path) use ($vars){
-			if($vars) extract($vars);
-			ob_start();
-			include $path;
-			$ret = ob_get_contents();
-			ob_end_clean();
-			return $ret;
-		});
-	}
-
-	private function renderWithContext($template, $renderer)
-	{
-		$path = $this->config->views . DIRECTORY_SEPARATOR . $template . $this->config->viewext;
-		if(!stream_resolve_include_path($path)) throw new \Exception("template $template($path) not found");
-		$renderer = $renderer->bindTo($this);
-		return $renderer($path);
+		return $this->engines->__call($this->get('view engine'), [$template, $vars]);
 	}
 
 	public function debug($msg, $object)

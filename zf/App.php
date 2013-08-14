@@ -42,6 +42,7 @@ class App extends Laziness
 			'viewext'    => '.php',
 			'charset'    => 'utf-8',
 			'basedir'    => $basedir,
+			'view engine' => 'default',
 		]);
 		$this->config->load('configs.php', true);
 		if(getenv('ENV'))
@@ -79,6 +80,11 @@ class App extends Laziness
 		};
 		$this->mappers = function(){
 			return new ClosureSet($this, $this->config->mappers);
+		};
+		$this->engines = function(){
+			$engines = new ClosureSet($this, $this->get('view engine'));
+			$engines->register(require __DIR__ . DIRECTORY_SEPARATOR . 'engines.php');
+			return $engines;
 		};
 	}
 
@@ -217,7 +223,7 @@ class App extends Laziness
 	public function initialized($callback)
 	{
 		$component = $this->_lastComponent;
-		$this->once('computed', function($data) use ($component, $callback){
+		$this->on('computed', function($data) use ($component, $callback){
 			if($data['key'] == $component)
 			{
 				$callback($data['value']);
@@ -243,7 +249,7 @@ class App extends Laziness
 		list($handler, $params) = $this->_router->run();
 		if($handler)
 		{
-			if ($this->config->fancy)
+			if($this->config->fancy)
 			{
 				$this->validators->register(require __DIR__ . DIRECTORY_SEPARATOR . 'validators.php');
 				$this->mappers->register(require __DIR__ . DIRECTORY_SEPARATOR . 'mappers.php');
