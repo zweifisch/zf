@@ -119,9 +119,16 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 
 		$result = $this->fancy->extract([
 			'key' => 'minlen:3',
-			'key2.key5:Int' => 'min:1',
+			'key2.key5',
 		]);
-		$expected = ['key'=>'str', 'key2.key5'=>1];
+		$expected = ['key'=>'str', 'key2.key5'=>'1.2'];
+		$this->assertSame($expected, $result);
+
+		$result = $this->fancy->key2->extract([
+			'key3.key4:Int' => 'min:1',
+			'key5:Num',
+		]);
+		$expected = ['key3.key4'=>2, 'key5'=>1.2];
 		$this->assertSame($expected, $result);
 	}
 

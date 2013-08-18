@@ -38,22 +38,29 @@ class FancyObject implements JsonSerializable
 
 	public function extract($keys)
 	{
+		$path = $this->_path;
 		$ret = [];
 		foreach($keys as $key => $validators)
 		{
 			$default = null;
-			foreach(explode('|', $validators) as $validator)
+			if(is_int($key)) // no validation
 			{
-				list($name, $args) = explode(':', $validator);
-				$args = explode(',', $args);
-				$name == 'default'
-					? $default = $args
-					: $this->_validators[$name] = $this->validatorSet->__call($name, $args);
+				$key = $validators;
+			}
+			else
+			{
+				foreach(explode('|', $validators) as $validator)
+				{
+					list($name, $args) = explode(':', $validator);
+					$args = explode(',', $args);
+					$name == 'default'
+						? $default = $args
+						: $this->_validators[$name] = $this->validatorSet->__call($name, $args);
+				}
 			}
 			$exploded = explode(':', $key);
-			1 == count($exploded) or list($key, $type) = $exploded;
-			$type = isset($type) ? $type : 'Str';
-			$this->_path = explode('.', $key);
+			2 == count($exploded) ? list($key, $type) = $exploded : $type = 'Str';
+			$this->_path = $path ? array_merge($path, explode('.', $key)) : explode('.', $key);
 			if(is_null($ret[$key] = $this->_getAs($type, $default)))
 			{
 				return null;
