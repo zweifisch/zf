@@ -66,6 +66,7 @@ $app->get('/time/:format', function(){
 $app->get('/git/:cmd', 'git');
 
 $app->get('/', function(){
+	$this->log('%s %s', $this->clientIP(), date('H:i:s'));
 	return $this->render('index',['now'=> date('H:i:s')]);
 });
 

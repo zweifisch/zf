@@ -113,6 +113,9 @@ trait Response
 
 	public function end($code, $body='', $options=null)
 	{
+		$buffer = ob_get_contents();
+		ob_end_clean();
+		file_put_contents('php://stderr', $buffer, FILE_APPEND);
 		$this->send($code, $body, $options);
 	}
 

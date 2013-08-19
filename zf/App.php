@@ -25,6 +25,7 @@ class App extends Laziness
 
 	function __construct()
 	{
+		ob_start();
 		parent::__construct();
 
 		$this->isCli = 'cli' == PHP_SAPI;
@@ -270,7 +271,7 @@ class App extends Laziness
 				$handler = $handler->bindTo($this);
 				$response = $handler();
 			}
-			$this->send($response);
+			$this->end($response);
 		}
 		else
 		{
