@@ -10,11 +10,29 @@ a micro php framework for both web and cli
 * ideal for building restful apis or commandline apps
 * requires php 5.4
 
-work in progress [document](http://zweifisch.github.io/zf-doc/getting_started.html)
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$app = new zf\App();
+
+$app->get('/', function(){
+	return $this->render('index');
+});
+
+$app->get('/hello/:name', function(){
+	return ['hello' => $this->params->name];
+});
+
+$app->run();
+```
+
+work in progress [documentation](http://zweifisch.github.io/zf-doc/getting_started.html)
 
 ## tests
 
-run tests
+to run tests
 
 ```sh
 composer.phar install --dev

@@ -81,6 +81,8 @@ trait Response
 	{
 		is_int($code) or list($code, $body, $options) = [$this->status, $code, $body];
 
+		if(is_null($body)) $body = '';
+
 		$options or $options = [];
 
 		if(!is_string($body) && empty($options['type']))
