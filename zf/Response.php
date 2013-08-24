@@ -136,10 +136,11 @@ trait Response
 
 	public function notFound()
 	{
-		if ($this->isCli)
+		if($this->isCli)
 		{
+			$this->_router->cmds() or exit(1);
 			echo "Usage:\n\n";
-			foreach ($this->_router->cmds() as $cmd)
+			foreach($this->_router->cmds() as $cmd)
 			{
 				list($cmd, $options) = $cmd;
 				echo '  php ', $_SERVER['argv'][0], ' ' , $cmd, "\n";

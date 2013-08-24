@@ -7,6 +7,11 @@ class CliRouter
 	private $rules;
 	private $options;
 
+	public function __construct()
+	{
+		$this->rules = [];
+	}
+
 	public function append($method, $rule)
 	{
 		if('cmd' == $method) $this->rules[] = $rule;
