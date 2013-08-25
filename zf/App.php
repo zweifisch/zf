@@ -241,7 +241,7 @@ class App extends Laziness
 	public function rpc($path, $closureSet)
 	{
 		$this->post($path, function() use ($closureSet){
-			$jsonRpc = new JsonRpc();
+			$jsonRpc = new JsonRpc(isset($this->config->{'jsonrpc codes'}) ? $this->get('jsonrpc codes') : null);
 			$_SERVER['HTTP_CONTENT_TYPE'] = 'application/json';
 			if($jsonRpc->parse($this->body->asArray(null)))
 			{

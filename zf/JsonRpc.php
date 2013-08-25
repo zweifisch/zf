@@ -23,7 +23,7 @@ class JsonRpc
 	{
 		if($errorCodes)
 		{
-			$this->codes = array_merge($codes, $errorCodes);
+			$this->codes += $errorCodes;
 		}
 	}
 
