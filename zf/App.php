@@ -238,6 +238,42 @@ class App extends Laziness
 		return $this->requestHandlers->__call($handlerName);
 	}
 
+	public function rpc($path, $closureSet)
+	{
+		$this->post($path, function() use ($closureSet){
+			$jsonRpc = new JsonRpc();
+			$_SERVER['HTTP_CONTENT_TYPE'] = 'application/json';
+			if($jsonRpc->parse($this->body->asArray(null)))
+			{
+				$closureSet = new ClosureSet($this, $closureSet);
+				$this->helper->register('error', function($code, $data) use ($jsonRpc){
+					return $jsonRpc->error($code, $data);
+				});
+				foreach($jsonRpc->calls as $call)
+				{
+					if(is_array($call))
+					{
+						list($method, $params, $id) = $call;
+						if($closureSet->exists($method))
+						{
+							$result = $closureSet->__call($method, $params);
+							if($id) $jsonRpc->result($id, $result);
+						}
+						else
+						{
+							$jsonRpc->result($id, $jsonRpc->methodNotFound());
+						}
+					}
+					else
+					{
+						$jsonRpc->result(null, $call);
+					}
+				}
+			}
+			return $jsonRpc->response();
+		});
+	}
+
 	public function run()
 	{
 		$this->requestMethod = $this->isCli ? 'CLI' : strtoupper($_SERVER['REQUEST_METHOD']);

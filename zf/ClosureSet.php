@@ -2,6 +2,8 @@
 
 namespace zf;
 
+use Exception;
+
 class ClosureSet
 {
 	private $_registered;
@@ -17,7 +19,7 @@ class ClosureSet
 		$this->delayed = new Delayed($this);
 	}
 
-	public function _getPath($append, $preserve=false)
+	private function _getPath($append, $preserve=false)
 	{
 		$path = $this->_path
 			? $this->_lookupPath.DIRECTORY_SEPARATOR.implode('DIRECTORY_SEPARATOR', $this->_path)
@@ -26,18 +28,18 @@ class ClosureSet
 		return $path.DIRECTORY_SEPARATOR.$append;
 	}
 
-	public function __load($closureName)
+	private function _load($closureName)
 	{
 		$closureName = str_replace(['.','/'], DIRECTORY_SEPARATOR, $closureName);
 		$filename = $this->_getPath($closureName.'.php');
 		$closure = stream_resolve_include_path($filename) ? require $filename: null;
 		if (!$closure)
 		{
-			throw new \Exception("closure \"$closureName\" not found under \"$this->_lookupPath\"");
+			throw new Exception("closure \"$closureName\" not found under \"$this->_lookupPath\"");
 		}
 		elseif (1 === $closure)
 		{
-			throw new \Exception("invalid closure in \"$filename\", forgot to return the closure?");
+			throw new Exception("invalid closure in \"$filename\", forgot to return the closure?");
 		}
 		return $closure;
 	}
@@ -50,7 +52,7 @@ class ClosureSet
 			$this->_registered[$name] = null; #  keep the key in $_registered array
 			if(is_string($closure))
 			{
-				$closure = $this->__load($closure);
+				$closure = $this->_load($closure);
 			}
 		}
 		else
@@ -60,11 +62,11 @@ class ClosureSet
 				$this->_path[] = $name;
 				return  $this;
 			}
-			$closure = $this->__load($name);
+			$closure = $this->_load($name);
 		}
 		if (!$closure instanceof \Closure)
 		{
-			throw new \Exception("invalid closure \"$name\"");
+			throw new Exception("invalid closure \"$name\"");
 		}
 		is_null($this->_context) or $closure = $closure->bindTo($this->_context);
 		return $this->{$name} = $closure;
@@ -105,6 +107,18 @@ class ClosureSet
 	public function registered($name)
 	{
 		return $this->_registered && array_key_exists($name, $this->_registered);
+	}
+
+	public function exists($name)
+	{
+		if($this->_registered && array_key_exists($name, $this->_registered) || isset($this->$name))
+		{
+			return true;
+		}
+
+		$name = str_replace(['.','/'], DIRECTORY_SEPARATOR, $name);
+		$filename = $this->_getPath($name.'.php');
+		return stream_resolve_include_path($filename);
 	}
 
 }

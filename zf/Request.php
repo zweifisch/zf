@@ -19,14 +19,13 @@ trait Request
 
 	private function processRequestBody($fancy)
 	{
-		$this->query = function() use ($fancy) {
+		$this->query = function() use ($fancy){
 			return $fancy ? (new FancyObject($_GET, $this->validators, $this->mappers))->setParent($this) : $_GET;
 		};
 		if ('GET' == $this->requestMethod) return;
 
-		$contentType = isset($_SERVER['HTTP_CONTENT_TYPE']) ? $_SERVER['HTTP_CONTENT_TYPE'] : '';
-
-		$this->body = function() use ($contentType, $fancy){
+		$this->body = function() use ($fancy){
+			$contentType = isset($_SERVER['HTTP_CONTENT_TYPE']) ? $_SERVER['HTTP_CONTENT_TYPE'] : '';
 			$ret = '';
 			if (!strncmp($contentType,'application/json', 16))
 			{
