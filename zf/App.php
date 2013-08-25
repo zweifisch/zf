@@ -246,7 +246,7 @@ class App extends Laziness
 			if($jsonRpc->parse($this->body->asArray(null)))
 			{
 				$closureSet = new ClosureSet($this, $closureSet);
-				$this->helper->register('error', function($code, $data) use ($jsonRpc){
+				$this->helper->register('error', function($code, $data=null) use ($jsonRpc){
 					return $jsonRpc->error($code, $data);
 				});
 				foreach($jsonRpc->calls as $call)

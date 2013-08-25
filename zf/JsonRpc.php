@@ -27,7 +27,7 @@ class JsonRpc
 		}
 	}
 
-	private function error($code, $data=null)
+	public function error($code, $data=null)
 	{
 		if(!isset($this->codes[$code]))
 		{
