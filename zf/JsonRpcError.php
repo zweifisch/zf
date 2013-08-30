@@ -5,13 +5,13 @@ namespace zf;
 class JsonRpcError
 {
 
-	public $id;
+	public $code;
 	public $message;
 	public $data;
 
-	public function __construct($id, $message, $data=null)
+	public function __construct($code, $message, $data=null)
 	{
-		$this->id = $id;
+		$this->code = $code;
 		$this->message = $message;
 		$this->data = $data;
 	}
