@@ -256,7 +256,7 @@ class App extends Laziness
 						list($method, $params, $id) = $call;
 						if($closureSet->exists($method))
 						{
-							$result = $closureSet->__call($method, $params);
+							$result = $closureSet->__apply($method, $params);
 							if($id) $jsonRpc->result($id, $result);
 						}
 						else
@@ -367,6 +367,7 @@ class App extends Laziness
 
 }
 
-function is_assoc($array) {
+function is_assoc($array)
+{
 	return (bool)count(array_filter(array_keys($array), 'is_string'));
 }

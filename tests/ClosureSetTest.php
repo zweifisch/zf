@@ -45,6 +45,28 @@ class ClosureSetTest extends PHPUnit_Framework_TestCase
 		$this->assertSame(6, $this->helper->{'math/sum'}(1,2,3));
 	}
 
+	public function testKeywordArguments()
+	{
+		$this->helper->register('name', function($firstname, $lastname='bar'){
+			return $firstname . ' ' . $lastname;
+		});
+
+		$this->assertEquals('foo bar', $this->helper->__apply('name', ['firstname'=> 'foo']));
+		$this->assertEquals('foo oof', $this->helper->__apply('name', ['lastname'=> 'oof', 'firstname'=> 'foo']));
+	}
+
+	/**
+	 * @expectedException InvalidArgumentException
+	 */
+	public function testKeywordArgumentsException()
+	{
+		$this->helper->register('name', function($firstname, $lastname='bar'){
+			return $firstname . ' ' . $lastname;
+		});
+
+		$this->assertEquals('foo bar', $this->helper->__apply('name', ['lastname'=> 'foo']));
+	}
+
 	public function setup()
 	{
 		$this->helper = new ClosureSet(null, __DIR__ . DIRECTORY_SEPARATOR . 'closures');

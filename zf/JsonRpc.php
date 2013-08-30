@@ -93,4 +93,3 @@ class JsonRpc
 		return $this->batch ? $this->results : current($this->results);
 	}
 }
-

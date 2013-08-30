@@ -3,6 +3,8 @@
 namespace zf;
 
 use Exception;
+use InvalidArgumentException;
+use ReflectionFunction;
 
 class ClosureSet
 {
@@ -84,6 +86,35 @@ class ClosureSet
 				(3 == $numArgs ? $closure($args[0], $args[1], $args[2]) : call_user_func_array($closure, $args))));
 		}
 		return $closure();
+	}
+
+	public function __apply($name, $args)
+	{
+		if(is_assoc($args))
+		{
+			$reflection = new ReflectionFunction($this->$name);
+			$params = [];
+			foreach($reflection->getParameters() as $param)
+			{
+				if(array_key_exists($param->name, $args))
+				{
+					$params[] = $args[$param->name];
+				}
+				else
+				{
+					if($param->isOptional())
+					{
+						$params[] = $param->getDefaultValue();
+					}
+					else
+					{
+						throw new InvalidArgumentException("'$param->name' is required when calling '$name'");
+					}
+				}
+			}
+			$args = $params;
+		}
+		return $this->__call($name, $args);
 	}
 
 	public function register($name, $closure=null)
