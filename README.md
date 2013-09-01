@@ -19,11 +19,11 @@ require 'vendor/autoload.php';
 
 $app = new zf\App();
 
-$app->register('mongo');
+$app->register('mongo','\zf\Mongo');
 
 $app->get('/post/:id/comments', function($id, $offset=0, $limit=10){
 	$items = $this->mongo->comments->find(['postId' => $id])
-		->skip($offset)->limit(10);
+		->skip($offset)->limit($limit);
 	return [
 		'items' => iterator_to_array($items),
 		'total' => $items->count(),

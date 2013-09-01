@@ -40,14 +40,12 @@ assert "curl -s $host/foo\?query=nil | json input" null
 
 assert_end validation
 
-kill $pid
-exit 0
+assert 'curl -sH "Content-Type: application/json" -d '\''{"thing":{"key":"value"}}'\'' $host/thing | json value' key
+assert_raises 'curl -siH "Content-Type: application/json" -d '\''{"thin":{"key":"value"}}'\'' $host/thing | grep 400'
 
-assert "curl -sH 'Content-Type: application/json' -d '\''{"thing":{"key":"value"}}'\'' $host/thing"
-assert "curl -sH "Content-Type: application/json" -d '\''{"thin":{"key":"value"}}'\'' $host/thing"
-assert "curl -sI $host/cache-control"
-assert "curl -si -d a=b $host/debug"
-assert "curl -si -d a=b $host/debug | sed -n '/X-ZF-Debug/ s/.* // p' | json a" b
+assert_raises "curl -siI $host/cache-control | grep max-age"
+assert_raises "curl -si -d a=b $host/debug | grep -i x-zf-debug"
+assert "curl -si -d a=b $host/debug | sed -n '/X-ZF-Debug/ s/.* // p' | json 0.1.a" b
 
 assert_end misc
 
