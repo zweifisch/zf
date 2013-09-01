@@ -33,7 +33,7 @@ class App extends Laziness
 		set_include_path(get_include_path() . PATH_SEPARATOR . $basedir);
 
 		$this->config = new Config;
-		$this->set(['nodebug', 'nopretty', 'fancy', 'nodist', 'noextract',
+		$this->set(['nodebug', 'nopretty', 'nodist', 'noextract',
 			'handlers'   => 'handlers',
 			'helpers'    => 'helpers',
 			'params'     => 'params',
@@ -286,17 +286,14 @@ class App extends Laziness
 		list($handler, $params) = $this->_router->run();
 		if($handler)
 		{
-			if($this->config->fancy)
-			{
-				$this->validators->register(require __DIR__ . DIRECTORY_SEPARATOR . 'validators.php');
-				$this->mappers->register(require __DIR__ . DIRECTORY_SEPARATOR . 'mappers.php');
-			}
+			$this->validators->register(require __DIR__ . DIRECTORY_SEPARATOR . 'validators.php');
+			$this->mappers->register(require __DIR__ . DIRECTORY_SEPARATOR . 'mappers.php');
 			$this->params = new Laziness($params, $this);
 			if($params) $this->processParamsHandlers($params);
 			if(!$this->isCli)
 			{
 				if($_GET) $this->processParamsHandlers($_GET);
-				$this->processRequestBody($this->config->fancy);
+				$this->processRequestBody();
 			}
 			if(is_string($handler))
 			{
