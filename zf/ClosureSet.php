@@ -88,7 +88,7 @@ class ClosureSet
 
 	public function __apply($name, $args)
 	{
-		return $this->__call($name, is_assoc($args) ? Closure::keywordArgs($this->name, $args) : $args);
+		return $this->__call($name, is_assoc($args) ? Closure::keywordArgs($this->$name, $args) : $args);
 	}
 
 	public function register($name, $closure=null)

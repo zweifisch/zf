@@ -4,9 +4,11 @@ a micro php framework for both web and cli
 
 * closure for everything
 * lazy, scalable, extendable
-* commandline routing
-* events, validation
-* phar, jsonp support
+* commandline routing, distribute as phar
+* jsonrpc
+* validation
+* events
+* jsonp
 * ideal for building restful apis or commandline apps
 * requires php 5.4
 
@@ -17,12 +19,15 @@ require 'vendor/autoload.php';
 
 $app = new zf\App();
 
-$app->get('/', function(){
-	return $this->render('index');
-});
+$app->register('mongo');
 
-$app->get('/hello/:name', function(){
-	return ['hello' => $this->params->name];
+$app->get('/post/:id/comments', function($id, $offset=0, $limit=10){
+	$items = $this->mongo->comments->find(['postId' => $id])
+		->skip($offset)->limit(10);
+	return [
+		'items' => iterator_to_array($items),
+		'total' => $items->count(),
+	];
 });
 
 $app->run();
@@ -36,5 +41,5 @@ to run tests
 
 ```sh
 composer.phar install --dev
-vendor/bin/phpunit -c tests
+vendor/bin/phpunit -c unit-test
 ```

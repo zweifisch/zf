@@ -296,7 +296,7 @@ class App extends Laziness
 				if($_GET)
 				{
 					$this->processParamsHandlers($_GET);
-					$params += $_GET;
+					$params = $params ? $params + $_GET : $_GET;
 				}
 				$this->processRequestBody();
 			}
