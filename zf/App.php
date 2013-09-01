@@ -3,10 +3,10 @@
 namespace zf;
 
 use Phar;
-use Closure;
 use Exception;
 use ReflectionClass;
 use FilesystemIterator;
+use InvalidArgumentException;
 
 const EVENT_EXCEPTION = 'event_exception';
 const EVENT_ERROR = 'event_error';
@@ -201,7 +201,7 @@ class App extends Laziness
 	public function register($alias, $component)
 	{
 		$this->_lastComponent = $alias;
-		if($component instanceof Closure)
+		if($component instanceof \Closure)
 		{
 			$this->$alias = $component;
 		}
@@ -290,21 +290,28 @@ class App extends Laziness
 			$this->mappers->register(require __DIR__ . DIRECTORY_SEPARATOR . 'mappers.php');
 			$this->params = new Laziness($params, $this);
 			if($params) $this->processParamsHandlers($params);
+
 			if(!$this->isCli)
 			{
-				if($_GET) $this->processParamsHandlers($_GET);
+				if($_GET)
+				{
+					$this->processParamsHandlers($_GET);
+					$params += $_GET;
+				}
 				$this->processRequestBody();
 			}
-			if(is_string($handler))
+
+			try
 			{
-				$response = $this->requestHandlers->__call($handler);
+				$response = is_string($handler) 
+					? $this->requestHandlers->__apply($handler, $params)
+					: Closure::apply($handler, $params, $this);
+				$this->end($response);
 			}
-			else
+			catch(InvalidArgumentException $e)
 			{
-				$handler = $handler->bindTo($this);
-				$response = $handler();
+				$this->notFound();
 			}
-			$this->end($response);
 		}
 		else
 		{
@@ -367,4 +374,31 @@ class App extends Laziness
 function is_assoc($array)
 {
 	return (bool)count(array_filter(array_keys($array), 'is_string'));
+}
+
+function parse_doc($fn)
+{
+	$ret = [];
+	$key = null;
+	$reflection = new ReflectionFunction($fn);
+	foreach(explode("\n", $reflection->getDocComment()) as $line){
+		$line = trim($line, "* \t/");
+		if($line && $line{0} == '@')
+		{
+			$line = substr($line, 1);
+			if(2 == count($exploded = explode(' ', $line)))
+			{
+				list($key, $line) = $exploded;
+			}
+			else
+			{
+				list($key, $line) = [$line, null];
+			}
+		}
+		if($key && $line)
+		{
+			$ret[$key][] = $line;
+		}
+	}
+	return $ret;
 }

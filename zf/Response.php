@@ -163,7 +163,7 @@ trait Response
 		}
 		else
 		{
-			$this->send(404);
+			$this->end(404);
 		}
 	}
 
