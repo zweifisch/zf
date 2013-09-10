@@ -34,25 +34,26 @@ class Mongo implements \ArrayAccess
 
 	public function __get($collection)
 	{
+		$isGridFS = false;
 		if(empty($this->_config[$collection]))
 		{
 			$this->_config = $this->_rewriteConfig($this->_config);
-			if(empty($this->_config[$collection]))
+			$isGridFS = isset($this->_config[$collection.':GridFS']);
+			if(!$isGridFS && empty($this->_config[$collection]))
 			{
 				throw new \Exception("collection \"$collection\" not defined");
 			}
 		}
 
-		$config = $this->_config[$collection];
+		$config = $isGridFS ? $this->_config[$collection.'GridFS'] : $this->_config[$collection];
 		if(empty($this->_cachedConnections[$config['url']]))
 		{
 			$this->_cachedConnections[$collection] = isset($config['options'])
 				? new \MongoClient($config['url'], $config['options'])
 				: new \MongoClient($config['url']);
 		}
-		return $this->$collection = $this->_cachedConnections[$collection]
-			->selectDB($config['database'])
-			->selectCollection($collection);
+		$db = $this->_cachedConnections[$collection]->selectDB($config['database']);
+		return $this->$collection = $isGridFS ? $db->getGridFS() : $db->selectCollection($collection);
 	}
 
 	public function offsetGet($offset)
