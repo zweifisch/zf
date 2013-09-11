@@ -30,24 +30,21 @@ class App extends Laziness
 
 		$this->isCli = 'cli' == PHP_SAPI;
 		$basedir = $this->isCli ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT'];
-		set_include_path(get_include_path() . PATH_SEPARATOR . $basedir);
+		set_include_path($basedir . PATH_SEPARATOR . get_include_path());
 
 		$this->config = new Config;
-		$this->set(['nodebug', 'nopretty', 'nodist', 'noextract',
-			'handlers'   => 'handlers',
-			'helpers'    => 'helpers',
-			'params'     => 'params',
-			'views'      => 'views',
-			'validators' => 'validators',
-			'mappers'    => 'mappers',
-			'viewext'    => '.php',
-			'charset'    => 'utf-8',
-			'basedir'    => $basedir,
-			'view engine' => 'default',
-		]);
+		$this->config->set(require __DIR__ . DIRECTORY_SEPARATOR . 'config.php');
+		$components = $this->config->components;
 		$this->config->load('configs.php', true);
 		if(getenv('ENV'))
+		{
 			$this->config->load('configs-'.getenv('ENV').'.php', true);
+		}
+		if(isset($this->config->components))
+		{
+			$this->set('components', $components + $this->config->components);
+		}
+		$this->set('basedir', $basedir);
 		$this->rewriteConfig();
 
 		$this->_router = $this->isCli ? new CliRouter() : new Router();
@@ -63,31 +60,11 @@ class App extends Laziness
 		register_shutdown_function($on_shutdown->bindTo($this));
 
 		$on_error = function(){
+			$this->stderr();
 			return $this->emit(EVENT_ERROR, (object)array_combine(
 				['no','str','file','line','context'], func_get_args()));
 		};
 		set_error_handler($on_error->bindTo($this));
-
-		$this->helper = function(){
-			return new ClosureSet($this, $this->config->helpers);
-		};
-		$this->requestHandlers = function(){
-			return new ClosureSet($this, $this->config->handlers);
-		};
-		$this->paramHandlers = function(){
-			return new ClosureSet($this, $this->config->params);
-		};
-		$this->validators = function(){
-			return new ClosureSet($this, $this->config->validators);
-		};
-		$this->mappers = function(){
-			return new ClosureSet($this, $this->config->mappers);
-		};
-		$this->engines = function(){
-			$engines = new ClosureSet($this, $this->get('view engine'));
-			$engines->register(require __DIR__ . DIRECTORY_SEPARATOR . 'engines.php');
-			return $engines;
-		};
 	}
 
 	function __call($name, $args)
@@ -245,6 +222,9 @@ class App extends Laziness
 					$constructArgs = $this->config->components[$name]['constructArgs'];
 					$component = $this->config->components[$name]['class'];
 				}
+				$constructArgs = array_map(function($arg){
+					return $arg instanceof \Closure ? $arg() : $arg;
+				}, $constructArgs);
 				return is_array($constructArgs) && !is_assoc($constructArgs)
 					? (new ReflectionClass($component))->newInstanceArgs($constructArgs)
 					: (new ReflectionClass($component))->newInstance($constructArgs);
@@ -318,8 +298,6 @@ class App extends Laziness
 		list($handler, $params) = $this->_router->run();
 		if($handler)
 		{
-			$this->validators->register(require __DIR__ . DIRECTORY_SEPARATOR . 'validators.php');
-			$this->mappers->register(require __DIR__ . DIRECTORY_SEPARATOR . 'mappers.php');
 			$this->params = new Laziness($params, $this);
 			if($params) $this->processParamsHandlers($params);
 
@@ -423,6 +401,11 @@ class App extends Laziness
 		}
 	}
 
+	public function __toString()
+	{
+		return 'App';
+	}
+
 }
 
 function is_assoc($array)
@@ -430,29 +413,3 @@ function is_assoc($array)
 	return (bool)count(array_filter(array_keys($array), 'is_string'));
 }
 
-function parse_doc($fn)
-{
-	$ret = [];
-	$key = null;
-	$reflection = new ReflectionFunction($fn);
-	foreach(explode("\n", $reflection->getDocComment()) as $line){
-		$line = trim($line, "* \t/");
-		if($line && $line{0} == '@')
-		{
-			$line = substr($line, 1);
-			if(2 == count($exploded = explode(' ', $line)))
-			{
-				list($key, $line) = $exploded;
-			}
-			else
-			{
-				list($key, $line) = [$line, null];
-			}
-		}
-		if($key && $line)
-		{
-			$ret[$key][] = $line;
-		}
-	}
-	return $ret;
-}
