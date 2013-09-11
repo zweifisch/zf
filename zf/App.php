@@ -48,6 +48,7 @@ class App extends Laziness
 		$this->config->load('configs.php', true);
 		if(getenv('ENV'))
 			$this->config->load('configs-'.getenv('ENV').'.php', true);
+		$this->rewriteConfig();
 
 		$this->_router = $this->isCli ? new CliRouter() : new Router();
 
@@ -116,6 +117,15 @@ class App extends Laziness
 			throw new Exception("method \"$name\" not found");
 		}
 		return $this;
+	}
+
+	public function __get($name)
+	{
+		if(!isset($this->$name) && isset($this->config->components) && isset($this->config->components[$name]))
+		{
+			$this->register($name); 
+		}
+		return parent::__get($name);
 	}
 
 	public function resource($name, $subResources=null)
@@ -219,20 +229,21 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function register($alias, $component)
+	public function register($name, $component=null)
 	{
-		$this->_lastComponent = $alias;
+		$this->_lastComponent = $name;
 		if($component instanceof \Closure)
 		{
-			$this->$alias = $component;
+			$this->$name = $component;
 		}
 		else
 		{
 			$constructArgs = array_slice(func_get_args(), 2);
-			$this->$alias = function() use ($component, $constructArgs, $alias){
-				if(empty($constructArgs) && isset($this->config->$alias))
+			$this->$name = function() use ($component, $constructArgs, $name){
+				if(empty($constructArgs) && isset($this->config->components) && isset($this->config->components[$name]))
 				{
-					$constructArgs = $this->config->$alias;
+					$constructArgs = $this->config->components[$name]['constructArgs'];
+					$component = $this->config->components[$name]['class'];
 				}
 				return is_array($constructArgs) && !is_assoc($constructArgs)
 					? (new ReflectionClass($component))->newInstanceArgs($constructArgs)
@@ -387,6 +398,28 @@ class App extends Laziness
 				$phar->buildFromDirectory($this->config->basedir, '/\.php$/');
 				$phar->setStub($phar->createDefaultStub($entryScript));
 			});
+		}
+	}
+
+	private function rewriteConfig()
+	{
+		if(isset($this->config->components))
+		{
+			$components = [];
+			foreach($this->config->components as $key => $constructArgs)
+			{
+				if(is_int($key))
+				{
+					list($name, $class) = explode(':', $constructArgs);
+					$components[$name] = ['class'=> $class, 'constructArgs'=> []];
+				}
+				else
+				{
+					list($name, $class) = explode(':', $key);
+					$components[$name] = ['class'=> $class, 'constructArgs'=> $constructArgs];
+				}
+			}
+			$this->config->set('components', $components);
 		}
 	}
 

@@ -60,8 +60,12 @@ class AppTest extends PHPUnit_Framework_TestCase
 	public function testRegisterComponentFromConfig()
 	{
 		$config = ['key'=>'value'];
-		$this->app->set('sc', $config);
-		$this->app->register('sc', 'SomeComponent');
+		$this->app->set('components', [
+				'sc'=> [
+					'class' => 'SomeComponent',
+					'constructArgs' => $config,
+				]]);
+		$this->app->register('sc');
 		$this->assertSame($config,$this->app->sc->getConfig());
 	}
 

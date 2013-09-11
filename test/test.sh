@@ -1,6 +1,10 @@
 . assert.sh
 
-host=localhost:5000
+if [ -z "$PORT" ]; then
+	PORT=17951
+fi
+
+host=localhost:$PORT
 php -S $host index.php &> server.log &
 pid=$!
 
