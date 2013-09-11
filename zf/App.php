@@ -118,22 +118,43 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function resource($name)
+	public function resource($name, $subResources=null)
 	{
 		$pass = function() use ($name){
 			$this->pass($name.'/'.$this->params->action);
 		};
 
 		$this->_router->bulk([
-			['GET',    "/$name", "$name/index"],
-			['POST',   "/$name", "$name/create"],
-			['GET',    "/$name/:$name", "$name/show"],
-			['PUT',    "/$name/:$name", "$name/update"],
-			['PATCH',  "/$name/:$name", "$name/modify"],
-			['DELETE', "/$name/:$name", "$name/destroy"],
-			['GET',    "/$name/:$name/edit", "$name/edit"],
-			['POST',   "/$name/:$name/:action", $pass],
+			['GET'    , "/$name"                , "$name/index"],
+			['GET'    , "/$name/new"            , "$name/new"],
+			['POST'   , "/$name"                , "$name/create"],
+			['GET'    , "/$name/:$name"         , "$name/show"],
+			['GET'    , "/$name/:$name/edit"    , "$name/edit"],
+			['PUT'    , "/$name/:$name"         , "$name/update"],
+			['PATCH'  , "/$name/:$name"         , "$name/modify"],
+			['DELETE' , "/$name/:$name"         , "$name/destroy"],
+			['POST'   , "/$name/:$name/:action" , $pass],
 		]);
+
+		if($subResources)
+		{
+			foreach($subResources as $res)
+			{
+				$this->_router->bulk([
+					['GET'    , "/$name/:$name/$res"               , "$name/$res/index"],
+					['GET'    , "/$name/:$name/$res/new"           , "$name/$res/new"],
+					['POST'   , "/$name/:$name/$res"               , "$name/$res/create"],
+					['GET'    , "/$name/:$name/$res/:$res"         , "$name/$res/show"],
+					['GET'    , "/$name/:$name/$res/:$res/edit"    , "$name/$res/edit"],
+					['PUT'    , "/$name/:$name/$res/:$res"         , "$name/$res/update"],
+					['PATCH'  , "/$name/:$name/$res/:$res"         , "$name/$res/modify"],
+					['DELETE' , "/$name/:$name/$res/:$res"         , "$name/$res/destroy"],
+					['POST'   , "/$name/:$name/$res/:$res/:action" , $pass],
+				]);
+			}
+		}
+
+		return $this;
 	}
 
 	public function set($name, $value=null)
