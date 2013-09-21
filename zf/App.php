@@ -320,9 +320,15 @@ class App extends Laziness
 				$doc = Closure::parseDoc($handler);
 				if(isset($doc['body']))
 				{
-					if($errors = $this->validator->validate($this->body->asRaw([]), $doc['body'][0]))
+					if($errors = $this->validator->validate($this->body->asRaw(), $doc['body'][0]))
 					{
 						$this->emit(EVENT_VALIDATION_ERROR, ['errors'=> $errors]);
+						$this->errors = $errors;
+						$this->body = null;
+					}
+					else
+					{
+						$this->body = $this->body->asRaw();
 					}
 				}
 				$response = Closure::apply($handler, $params, $this);

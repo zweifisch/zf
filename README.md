@@ -6,7 +6,7 @@ a micro php framework for both web and cli
 * lazy, scalable, extendable
 * commandline routing, distribute as phar
 * jsonrpc
-* validation
+* validation using jsonschema
 * events
 * jsonp
 * ideal for building restful apis or commandline apps
@@ -19,15 +19,8 @@ require 'vendor/autoload.php';
 
 $app = new zf\App();
 
-$app->register('mongo','\zf\Mongo');
-
-$app->get('/post/:id/comments', function($id, $offset=0, $limit=10){
-	$items = $this->mongo->comments->find(['postId' => $id])
-		->skip($offset)->limit($limit);
-	return [
-		'items' => iterator_to_array($items),
-		'total' => $items->count(),
-	];
+$app->get('/hello/:name', function($name, $more=''){
+	return ['hello' => $name.$more];
 });
 
 $app->run();
