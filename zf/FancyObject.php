@@ -13,7 +13,7 @@ class FancyObject implements JsonSerializable
 
 	function __construct($root, $validators, $mappers)
 	{
-		$this->_root = is_array($root) ? $root : [];
+		$this->_root = is_object($root) || is_array($root) ? $root : new \stdClass;
 		$this->_validators = [];
 		$this->_path = [];
 		$this->validatorSet = $validators;
@@ -114,7 +114,11 @@ class FancyObject implements JsonSerializable
 		$cursor = $this->_root;
 		foreach ($this->_path as $path)
 		{
-			if(isset($cursor[$path]))
+			if(is_object($cursor) && isset($cursor->$path))
+			{
+				$cursor = $cursor->$path;
+			}
+			elseif(is_array($cursor) && isset($cursor[$path]))
 			{
 				$cursor = $cursor[$path];
 			}

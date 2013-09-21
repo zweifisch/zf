@@ -44,7 +44,7 @@ class Closure
 		return $ret;
 	}
 
-	public static function parse_doc($fn)
+	public static function parseDoc($fn)
 	{
 		$ret = [];
 		$key = null;
@@ -69,5 +69,16 @@ class Closure
 			}
 		}
 		return $ret;
+	}
+
+	public static function memorize($fn)
+	{
+		$results = [];
+		return function() use ($results, $fn){
+			$params = func_get_args();
+			$key = var_export($params);
+			if(!array_key_exists($key, $results)) $results[$key] = call_user_func_array($fn, $params);
+			return $results;
+		};
 	}
 }

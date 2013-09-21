@@ -313,9 +313,19 @@ class App extends Laziness
 
 			try
 			{
-				$response = is_string($handler) 
-					? $this->requestHandlers->__apply($handler, $params)
-					: Closure::apply($handler, $params, $this);
+				if(is_string($handler))
+				{
+					$handler = $this->requestHandlers->__get($handler);
+				}
+				$doc = Closure::parseDoc($handler);
+				if(isset($doc['body']))
+				{
+					if($errors = $this->validator->validate($this->body->asRaw([]), $doc['body'][0]))
+					{
+						$this->emit(EVENT_VALIDATION_ERROR, ['errors'=> $errors]);
+					}
+				}
+				$response = Closure::apply($handler, $params, $this);
 				$this->end($response);
 			}
 			catch(InvalidArgumentException $e)

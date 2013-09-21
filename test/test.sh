@@ -63,4 +63,15 @@ assert_raises "curl -i $host/bar | grep 404"
 
 assert_end params
 
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":null}'\'' $host/posts | json errors.0.0' 'required'
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":null, "content":null}'\'' $host/posts | json errors.0.0' 'type'
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":""}'\'' $host/posts | json ok' 1
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "cat": "12345"}'\'' $host/posts | json ok' 1
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "cat": "123456"}'\'' $host/posts | json errors.0.0' 'maxLength'
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "tags": "123456"}'\'' $host/posts | json errors.0.0' 'type'
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "tags": []}'\'' $host/posts | json ok' 1
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "tags": [12]}'\'' $host/posts | json errors.0.0' 'type'
+
+assert_end schema 
+
 kill $pid

@@ -18,6 +18,13 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 		$this->assertSame($this->fancy->asArray(), $this->source);
 	}
 
+	public function testObject()
+	{
+		$source = json_decode(json_encode($this->source));
+		$fancy = new FancyObject($source, $this->validators, $this->mappers);
+		$this->assertSame($fancy->asRaw(), $source);
+	}
+
 	public function testDefault()
 	{
 		$this->assertSame($this->fancy->key0->asStr('default'), 'default');

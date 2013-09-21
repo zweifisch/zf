@@ -29,7 +29,7 @@ trait Request
 			$ret = '';
 			if (!strncmp($contentType,'application/json', 16))
 			{
-				$ret = json_decode(file_get_contents('php://input'), true);
+				$ret = json_decode(file_get_contents('php://input'));
 			}
 			elseif ($contentType == 'application/x-www-form-urlencoded')
 			{
@@ -47,7 +47,7 @@ trait Request
 			{
 				$ret = file_get_contents('php://input');
 			}
-			return (new FancyObject($ret, $this->validators, $this->mappers))->setParent($this);
+			return (new \zf\FancyObject($ret, $this->validators, $this->mappers))->setParent($this);
 		};
 		return $this;
 	}

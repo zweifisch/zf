@@ -6,6 +6,7 @@ return [
 	'Int'=> function($value){ return (int)$value; },
 	'Num'=> function($value){ return (float)$value; },
 	'Str'=> function($value){ return is_array($value) ? '' : (string)$value; },
+	'Raw'=> function($value){ return $value; },
 	'Array'=> function($value){ return (array)$value; },
 	'File'=> function($file, $path){
 		if(empty($_FILES[$path]) || empty($file['tmp_name'])) return null;

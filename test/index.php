@@ -72,7 +72,7 @@ class Thing
 }
 
 $app->map('Thing', function($value){
-	return new Thing($value);
+	return new Thing(get_object_vars($value));
 });
 
 $app->post('/thing', function(){
@@ -112,5 +112,7 @@ $app->get('/foo', function(){
 	$size = $this->query->size->between(5,20)->asInt(10);
 	return compact('keyword', 'page', 'size');
 });
+
+$app->resource('posts', ['comments']);
 
 $app->run();
