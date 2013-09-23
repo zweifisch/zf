@@ -12,9 +12,9 @@ class CliRouter
 		$this->rules = [];
 	}
 
-	public function append($method, $rule)
+	public function append($method, $pattern, $handlers)
 	{
-		if('cmd' == $method) $this->rules[] = $rule;
+		if('cmd' == $method) $this->rules[] = [$pattern, $handlers];
 	}
 
 	public function options($options)
@@ -81,13 +81,13 @@ class CliRouter
 
 		foreach($this->rules as $idx => $rule)
 		{
-			list($pattern, $callable) = $rule;
+			list($pattern, $handlers) = $rule;
 			$params = $this->match($positionalArgs, $pattern);
 			if($params !== false)
 			{
 				return isset($this->options[$idx])
-					? [$callable, array_merge($this->options[$idx], $params, $options)]
-					: [$callable, array_merge($params, $options)];
+					? [$handlers, array_merge($this->options[$idx], $params, $options)]
+					: [$handlers, array_merge($params, $options)];
 			}
 		}
 	}

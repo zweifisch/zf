@@ -6,17 +6,17 @@ class Router
 {
 	private $rules = [];
 
-	public function append($method, $rule)
+	public function append($method, $pattern, $handlers)
 	{
-		$this->rules[strtoupper($method)][] = $rule; #  defaultdict? what's that?
+		$this->rules[strtoupper($method)][] = [$pattern, $handlers];
 	}
 
 	public function bulk($rules)
 	{
 		foreach($rules as $rule)
 		{
-			list($method, $path, $handler) = $rule;
-			$this->append($method, [$path, $handler]);
+			list($method, $path, $handlers) = $rule;
+			$this->append($method, $path, $handlers);
 		}
 	}
 
@@ -46,13 +46,13 @@ class Router
 
 		foreach($this->rules[$method] as $rule)
 		{
-			list($pattern, $callback) = $rule;
+			list($pattern, $handlers) = $rule;
 
 			if(false === strpos($pattern, '/:')) # static pattern
 			{
 				if($path === $pattern)
 				{
-					return [$callback, null];
+					return [$handlers, null];
 				}
 			}
 			else
@@ -62,7 +62,7 @@ class Router
 				{
 					if($params = $this->match($pattern, $path))
 					{
-						return [$callback, $params];
+						return [$handlers, $params];
 					}
 				}
 			}

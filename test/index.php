@@ -54,7 +54,7 @@ $app->put('/dump', function(){
 });
 
 $app->on(zf\EVENT_VALIDATION_ERROR, function($message){
-	$this->status(400);
+	$this->header(400);
 	$this->end($message);
 });
 
@@ -112,6 +112,20 @@ $app->get('/foo', function(){
 	$size = $this->query->size->between(5,20)->asInt(10);
 	return compact('keyword', 'page', 'size');
 });
+
+$app->middleware('auth', function($user,$passwd){
+	if($this->server('PHP_AUTH_USER') != $user || $this->server('PHP_AUTH_PW') != $passwd){
+		$this->header('WWW-Authenticate', ['Basic realm'=> 'Login Required']);
+		$this->header(401);
+		return 'Unauthorized';
+	}
+});
+
+$app->get('/admin', 'auth:admin,secret', function(){
+	return 'admin';
+});
+
+$app->get('/console', 'console');
 
 $app->resource('posts', ['comments']);
 

@@ -57,4 +57,9 @@ trait Request
 		return isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
 	}
 
+	public function server($key, $default=null)
+	{
+		return isset($_SERVER[$key]) ? $_SERVER[$key] : $default;
+	}
+
 }

@@ -71,7 +71,8 @@ class App extends Laziness
 	{
 		if(in_array($name, ['post', 'put', 'delete', 'patch', 'head', 'cmd'], true))
 		{
-			$this->_router->append($name, $args);
+			$pattern = array_shift($args);
+			$this->_router->append($name, $pattern, $args);
 		}
 		elseif($this->helper->registered($name))
 		{
@@ -112,15 +113,15 @@ class App extends Laziness
 		};
 
 		$this->_router->bulk([
-			['GET'    , "/$name"                , "$name/index"],
-			['GET'    , "/$name/new"            , "$name/new"],
-			['POST'   , "/$name"                , "$name/create"],
-			['GET'    , "/$name/:$name"         , "$name/show"],
-			['GET'    , "/$name/:$name/edit"    , "$name/edit"],
-			['PUT'    , "/$name/:$name"         , "$name/update"],
-			['PATCH'  , "/$name/:$name"         , "$name/modify"],
-			['DELETE' , "/$name/:$name"         , "$name/destroy"],
-			['POST'   , "/$name/:$name/:action" , $pass],
+			['GET'    , "/$name"                , ["$name/index"]],
+			['GET'    , "/$name/new"            , ["$name/new"]],
+			['POST'   , "/$name"                , ["$name/create"]],
+			['GET'    , "/$name/:$name"         , ["$name/show"]],
+			['GET'    , "/$name/:$name/edit"    , ["$name/edit"]],
+			['PUT'    , "/$name/:$name"         , ["$name/update"]],
+			['PATCH'  , "/$name/:$name"         , ["$name/modify"]],
+			['DELETE' , "/$name/:$name"         , ["$name/destroy"]],
+			['POST'   , "/$name/:$name/:action" , [$pass]],
 		]);
 
 		if($subResources)
@@ -128,15 +129,15 @@ class App extends Laziness
 			foreach($subResources as $res)
 			{
 				$this->_router->bulk([
-					['GET'    , "/$name/:$name/$res"               , "$name/$res/index"],
-					['GET'    , "/$name/:$name/$res/new"           , "$name/$res/new"],
-					['POST'   , "/$name/:$name/$res"               , "$name/$res/create"],
-					['GET'    , "/$name/:$name/$res/:$res"         , "$name/$res/show"],
-					['GET'    , "/$name/:$name/$res/:$res/edit"    , "$name/$res/edit"],
-					['PUT'    , "/$name/:$name/$res/:$res"         , "$name/$res/update"],
-					['PATCH'  , "/$name/:$name/$res/:$res"         , "$name/$res/modify"],
-					['DELETE' , "/$name/:$name/$res/:$res"         , "$name/$res/destroy"],
-					['POST'   , "/$name/:$name/$res/:$res/:action" , $pass],
+					['GET'    , "/$name/:$name/$res"               , ["$name/$res/index"]],
+					['GET'    , "/$name/:$name/$res/new"           , ["$name/$res/new"]],
+					['POST'   , "/$name/:$name/$res"               , ["$name/$res/create"]],
+					['GET'    , "/$name/:$name/$res/:$res"         , ["$name/$res/show"]],
+					['GET'    , "/$name/:$name/$res/:$res/edit"    , ["$name/$res/edit"]],
+					['PUT'    , "/$name/:$name/$res/:$res"         , ["$name/$res/update"]],
+					['PATCH'  , "/$name/:$name/$res/:$res"         , ["$name/$res/modify"]],
+					['DELETE' , "/$name/:$name/$res/:$res"         , ["$name/$res/destroy"]],
+					['POST'   , "/$name/:$name/$res/:$res/:action" , [$pass]],
 				]);
 			}
 		}
@@ -160,7 +161,9 @@ class App extends Laziness
 		}
 		else
 		{
-			$this->_router->append('GET', func_get_args());
+			$args = func_get_args();
+			$pattern = array_shift($args);
+			$this->_router->append('GET', $pattern, $args);
 			return $this;
 		}
 	}
@@ -190,7 +193,13 @@ class App extends Laziness
 
 	public function handler($name, $closure)
 	{
-		$this->requestHandlers->register($name, $closure);
+		$this->handlers->register($name, $closure);
+		return $this;
+	}
+
+	public function middleware($name, $closure)
+	{
+		$this->middlewares->register($name, $closure);
 		return $this;
 	}
 
@@ -247,7 +256,7 @@ class App extends Laziness
 
 	public function pass($handlerName)
 	{
-		return $this->requestHandlers->__call($handlerName);
+		return $this->handlers->__call($handlerName);
 	}
 
 	public function rpc($path, $closureSet)
@@ -295,8 +304,8 @@ class App extends Laziness
 			$this->phar();
 		}
 
-		list($handler, $params) = $this->_router->run();
-		if($handler)
+		list($handlers, $params) = $this->_router->run();
+		if($handlers)
 		{
 			$this->params = new Laziness($params, $this);
 			if($params) $this->processParamsHandlers($params);
@@ -311,28 +320,26 @@ class App extends Laziness
 				$this->processRequestBody();
 			}
 
+			$handler = array_pop($handlers);
+
+			if($handlers)
+			{
+				foreach($handlers as $middleware)
+				{
+					$_params= [];
+					if(2 == count($exploded = explode(':', $middleware)))
+					{
+						list($middleware, $_params) = $exploded;
+						$_params = explode(',', $_params);
+					}
+					$middlewares[$middleware] = $_params;
+				}
+				$this->runMiddlewares($middlewares);
+			}
+
 			try
 			{
-				if(is_string($handler))
-				{
-					$handler = $this->requestHandlers->__get($handler);
-				}
-				$doc = Closure::parseDoc($handler);
-				if(isset($doc['body']))
-				{
-					if($errors = $this->validator->validate($this->body->asRaw(), $doc['body'][0]))
-					{
-						$this->emit(EVENT_VALIDATION_ERROR, ['errors'=> $errors]);
-						$this->errors = $errors;
-						$this->body = null;
-					}
-					else
-					{
-						$this->body = $this->body->asRaw();
-					}
-				}
-				$response = Closure::apply($handler, $params, $this);
-				$this->end($response);
+				$this->end($this->runHandler($handler, $params));
 			}
 			catch(InvalidArgumentException $e)
 			{
@@ -354,6 +361,33 @@ class App extends Laziness
 	public function path()
 	{
 		return $this->config->basedir.DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, func_get_args());
+	}
+
+	private function runHandler($handler, $params)
+	{
+		if(is_string($handler))
+		{
+			$handler = $this->handlers->__get($handler);
+		}
+
+		$doc = Closure::parseDoc($handler);
+		foreach($doc as $key => $lines)
+		{
+			$middlewares[$key] = explode(',', $lines[0]);
+		}
+		if(isset($middlewares)) $this->runMiddlewares($middlewares);
+		return Closure::apply($handler, $params, $this);
+	}
+
+	private function runMiddlewares($middlewares)
+	{
+		foreach($middlewares as $middleware => $params)
+		{
+			if($response = $this->middlewares->__call($middleware, $params))
+			{
+				$this->end($response);
+			}
+		}
 	}
 
 	private function processParamsHandlers($input)

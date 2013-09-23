@@ -46,7 +46,8 @@ trait Response
 		504 => 'Gateway Timeout',
 		505 => 'HTTP Version Not Supported'
 	];
-	private $status = 200;
+	private $_status = 200;
+	private $_headers = [];
 
 	public function lastModified($time)
 	{
@@ -63,23 +64,19 @@ trait Response
 		$args = func_get_args();
 		if(is_array(end($args)))
 		{
-			$options = array_pop($args);
-			foreach($options as $key=>$value)
-			{
-				$args[] = $key.'='.$value;
-			}
+			$args += array_pop($args);
 		}
-		header('Cache-Control: '. implode(', ', $args));
+		$this->header('Cache-Control', $args);
 	}
 
 	public function status($code)
 	{
-		$this->status = $code;
+		$this->_status = $code;
 	}
 
 	public function send($code, $body='', $options=null)
 	{
-		is_int($code) or list($code, $body, $options) = [$this->status, $code, $body];
+		is_int($code) or list($code, $body, $options) = [$this->_status, $code, $body];
 
 		if(is_null($body)) $body = '';
 
@@ -129,15 +126,14 @@ trait Response
 	public function response($response)
 	{
 		$code = $response['code'];
-		header("HTTP/1.1 $code {$this->statuses[$code]}");
-		header("Status: $code");
-		empty($response['charset'])
-			? header("Content-Type: ${response['type']}")
-			: header("Content-Type: ${response['type']}; charset=${response['charset']}");
+		header('HTTP/1.1 ' . $code . ' ' . $this->statuses[$code]);
+		header('Status: ' . $code);
+		header('Content-Type: ' . (empty($response['charset']) ? $response['type'] : $response['type'] . '; charset=' . $response['charset']));
 		if($this->config->debug && is_array($this->debug))
 		{
-			header('X-ZF-Debug: '.json_encode($this->debug));
+			header('X-ZF-Debug: ' . json_encode($this->debug));
 		}
+		$this->sendHeader();
 		exit($response['body']);
 	}
 
@@ -175,12 +171,51 @@ trait Response
 	public function redirect($url, $permanent=false)
 	{
 		header('Location: ' . $url, true, $permanent ? 301 : 302);
-		exit();
+		exit;
+	}
+
+	public function header($name, $value=null)
+	{
+		if(is_int($name))
+		{
+			$this->_status = $name;
+		}
+		else
+		{
+			$this->_headers[$name] = $value;
+		}
+	}
+
+	public function sendHeader()
+	{
+		foreach($this->_headers as $name => $value)
+		{
+			if(is_array($value))
+			{
+				foreach($value as $k=>$v)
+				{
+					$options[] = is_int($k) ? $v : $k.'='.$v;
+				}
+				$value = implode(', ', $options);
+			}
+			header(is_null($value) ? $name : $name. ': '. $value);
+		}
 	}
 
 	public function render($template, $vars=null)
 	{
 		return $this->engines->__call($this->get('view engine'), [$template, $vars]);
+	}
+
+	public function download($content, $name, $size=null)
+	{
+		header('Cache-Control: public, must-revalidate');
+		header('Pragma: hack');
+		header('Content-Type: application/octet-stream');
+		if($size) header('Content-Length: ' . $size);
+		header('Content-Disposition: attachment; filename="'.$name.'"');
+		header("Content-Transfer-Encoding: binary\n");
+		exit($content);
 	}
 
 	public function debug($msg, $object)
