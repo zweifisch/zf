@@ -71,13 +71,13 @@ class JsonRpc
 
 	public function parseSingleCall($call)
 	{
-		if(empty($call['method']) || empty($call['jsonrpc'])) return $this->error(-32600);
-		if($call['jsonrpc'] != $this->version) return $this->error(-32600);
+		if(empty($call->method) || empty($call->jsonrpc)) return $this->error(-32600);
+		if($call->jsonrpc != $this->version) return $this->error(-32600);
 
 		return [
-			$call['method'],
-			isset($call['params']) ? $call['params'] : [],
-			isset($call['id']) ? $call['id'] : null,
+			$call->method,
+			isset($call->params) ? $call->params : [],
+			isset($call->id) ? $call->id : null,
 		];
 	}
 
