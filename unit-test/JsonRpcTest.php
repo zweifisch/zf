@@ -13,9 +13,9 @@ class JsonRpcTest extends PHPUnit_Framework_TestCase
 
 	public function testParse()
 	{
-		$input = ['params'=>['p1'=>'value'], 'method'=>'m1', 'jsonrpc'=>'2.0'];
+		$input = (object)['params'=>(object)['p1'=>'value'], 'method'=>'m1', 'jsonrpc'=>'2.0'];
 		$this->rpc->parse($input);
-		$this->assertSame($this->rpc->calls, [['m1',['p1'=>'value'],null]]);
+		$this->assertSame(json_encode($this->rpc->calls), json_encode([['m1',(object)['p1'=>'value'],null]]));
 	}
 
 	public function testParseFailed()
@@ -28,14 +28,14 @@ class JsonRpcTest extends PHPUnit_Framework_TestCase
 	public function testParseBatch()
 	{
 		$input = [
-			['params'=>['p1'=>'value'], 'method'=>'m1', 'jsonrpc'=>'2.0'],
-			['params'=>['p1'=>'value'], 'method'=>'m2', 'jsonrpc'=>'2.0'],
+			(object)['params'=>(object)['p1'=>'value'], 'method'=>'m1', 'jsonrpc'=>'2.0'],
+			(object)['params'=>(object)['p1'=>'value'], 'method'=>'m2', 'jsonrpc'=>'2.0'],
 		];
 		$this->rpc->parse($input);
-		$this->assertSame($this->rpc->calls, [
-			['m1',['p1'=>'value'],null],
-			['m2',['p1'=>'value'],null],
-		]);
+		$this->assertSame(json_encode($this->rpc->calls), json_encode([
+			['m1',(object)['p1'=>'value'],null],
+			['m2',(object)['p1'=>'value'],null],
+		]));
 	}
 
 }

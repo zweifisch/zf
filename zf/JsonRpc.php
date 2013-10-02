@@ -43,13 +43,13 @@ class JsonRpc
 
 	public function parse($request)
 	{
-		if(!$request || !is_array($request))
+		if(!$request || !(is_array($request) || is_object($request)))
 		{
 			$this->result(null, $this->error(-32700));
 			return false;
 		}
 
-		if(is_assoc($request))
+		if(is_object($request))
 		{
 			$this->calls[] = $this->parseSingleCall($request);
 		}
