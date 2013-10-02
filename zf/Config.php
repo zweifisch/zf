@@ -27,16 +27,21 @@ class Config
 		}
 	}
 
-	public function set($name,$value=null)
+	public function set($name, $value=null)
 	{
 		if(1 == func_num_args())
 		{
-			is_array($name)? $this->multiSet($name) : $this->setBool($name);
+			is_array($name) ? $this->multiSet($name) : $this->setBool($name);
 		}
 		else
 		{
 			$this->_configs[$name] = $value;
 		}
+	}
+
+	public function get($name, $default=null)
+	{
+		return isset($this->_configs[$name]) ? $this->_configs[$name] : $default;
 	}
 
 	private function multiSet($options)

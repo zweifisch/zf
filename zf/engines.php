@@ -4,7 +4,7 @@ return [
 
 	'default' => function($template, $vars){
 		$renderWithContext = function($template, $closure){
-			$path = $this->config->views . DIRECTORY_SEPARATOR . $template . $this->config->viewext;
+			$path = $this->config->views . DIRECTORY_SEPARATOR . $template . $this->config->get('view extension');
 			if(!stream_resolve_include_path($path)) throw new \Exception("template $template($path) not found");
 			$closure = $closure->bindTo($this);
 			return $closure($path);

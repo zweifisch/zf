@@ -7,18 +7,20 @@ return [
 	'pretty'      => false,
 	'dist'        => false,
 	'extract'     => false,
+	'mockup'      => false,
 
 	'charset'     => 'utf-8',
-	'viewext'     => '.php',
 	'views'       => 'views',
 	'handlers'    => 'handlers',
 	'helpers'     => 'helpers',
 	'middlewares' => 'middlewares',
 	'params'      => 'params',
+	'mockups'     => 'mockups',
 	'mappers'     => 'mappers',
 	'schemas'     => 'schemas',
 	'validators'  => 'validators',
 	'view engine' => 'default',
+	'view extension' => '.php',
 
 	'components' => [
 		'helper:\zf\ClosureSet'          => [$this, Delayed::property($this->config, 'helpers')],

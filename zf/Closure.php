@@ -12,7 +12,7 @@ class Closure
 		if($context) $closure = $closure->bindTo($context);
 		if($params)
 		{
-			return call_user_func_array($closure, is_assoc($params)
+			return call_user_func_array($closure, Data::is_assoc($params)
 				? self::keywordArgs($closure, $params)
 				: $params);
 		}

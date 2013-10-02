@@ -234,7 +234,7 @@ class App extends Laziness
 				$constructArgs = array_map(function($arg){
 					return $arg instanceof \Closure ? $arg() : $arg;
 				}, $constructArgs);
-				return is_array($constructArgs) && !is_assoc($constructArgs)
+				return is_array($constructArgs) && !Data::is_assoc($constructArgs)
 					? (new ReflectionClass($component))->newInstanceArgs($constructArgs)
 					: (new ReflectionClass($component))->newInstance($constructArgs);
 			};
@@ -358,9 +358,9 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function path()
+	public function resolvePath()
 	{
-		return $this->config->basedir.DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, func_get_args());
+		return $this->config->basedir.DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, Data::flatten(func_get_args()));
 	}
 
 	private function runHandler($handler, $params)
@@ -457,9 +457,3 @@ class App extends Laziness
 	}
 
 }
-
-function is_assoc($array)
-{
-	return (bool)count(array_filter(array_keys($array), 'is_string'));
-}
-
