@@ -11,7 +11,14 @@ return [
 		}
 	},
 	'mockup' => function($mockup){
-		if($this->config->get('mockup'))
-			return file_get_contents($this->resolvePath(explode('.', $mockup)));
+		if($this->config->mockup)
+		{
+			$content = file_get_contents($this->resolvePath($this->config->mockups, explode('/', $mockup)));
+			if('.json' == substr($mockup, -5))
+			{
+				return json_decode($content);
+			}
+			return $content;
+		}
 	},
 ];

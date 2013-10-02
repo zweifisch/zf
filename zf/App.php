@@ -264,7 +264,7 @@ class App extends Laziness
 		$this->post($path, function() use ($closureSet){
 			$jsonRpc = new JsonRpc(isset($this->config->{'jsonrpc codes'}) ? $this->get('jsonrpc codes') : null);
 			$_SERVER['HTTP_CONTENT_TYPE'] = 'application/json';
-			if($jsonRpc->parse($this->body->asArray(null)))
+			if($jsonRpc->parse($this->body->asRaw(null)))
 			{
 				$closureSet = new ClosureSet($this, $closureSet);
 				$this->helper->register('error', function($code, $data=null) use ($jsonRpc){
@@ -277,7 +277,12 @@ class App extends Laziness
 						list($method, $params, $id) = $call;
 						if($closureSet->exists($method))
 						{
-							$result = $closureSet->__apply($method, $params);
+							$handler = $closureSet->__get($method);
+							$result = $this->processDocString($handler);
+							if(!$result)
+							{
+								$result = Closure::apply($handler, $params, $this);
+							}
 							if($id) $jsonRpc->result($id, $result);
 						}
 						else
@@ -334,7 +339,10 @@ class App extends Laziness
 					}
 					$middlewares[$middleware] = $_params;
 				}
-				$this->runMiddlewares($middlewares);
+				if($response = $this->runMiddlewares($middlewares))
+				{
+					return $this->end($response);
+				}
 			}
 
 			try
@@ -369,14 +377,22 @@ class App extends Laziness
 		{
 			$handler = $this->handlers->__get($handler);
 		}
+		if($response = $this->processDocString($handler))
+		{
+			return $response;
+		}
+		return Closure::apply($handler, $params, $this);
+	}
 
+	private function processDocString($handler)
+	{
 		$doc = Closure::parseDoc($handler);
 		foreach($doc as $key => $lines)
 		{
 			$middlewares[$key] = explode(',', $lines[0]);
 		}
-		if(isset($middlewares)) $this->runMiddlewares($middlewares);
-		return Closure::apply($handler, $params, $this);
+		if(isset($middlewares))
+			return $this->runMiddlewares($middlewares);
 	}
 
 	private function runMiddlewares($middlewares)
@@ -385,7 +401,7 @@ class App extends Laziness
 		{
 			if($response = $this->middlewares->__call($middleware, $params))
 			{
-				$this->end($response);
+				return $response;
 			}
 		}
 	}
