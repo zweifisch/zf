@@ -10,7 +10,7 @@ class ClosureSet
 	private $_lookupPath;
 	private $_context;
 	public $delayed;
-	public $_path;
+	public $_fullname;
 
 	public function __construct($context, $lookupPath, $closures = null)
 	{
@@ -20,27 +20,28 @@ class ClosureSet
 		if($closures) $this->register($closures);
 	}
 
-	private function _getPath($append, $preserve=false)
+	private function _getPath($fullname)
 	{
-		$path = $this->_path
-			? $this->_lookupPath.DIRECTORY_SEPARATOR.implode('DIRECTORY_SEPARATOR', $this->_path)
-			: $this->_lookupPath;
-		$preserve or $this->_path = null;
-		return $path.DIRECTORY_SEPARATOR.$append;
+		return $this->_lookupPath.DIRECTORY_SEPARATOR.$fullname;
 	}
 
-	private function _load($closureName)
+	private function _getFullname($append)
 	{
-		$closureName = str_replace(['.','/'], DIRECTORY_SEPARATOR, $closureName);
-		$filename = $this->_getPath($closureName.'.php');
+		return ($this->_fullname ? $this->_fullname . DIRECTORY_SEPARATOR : '') . $append;
+	}
+
+	private function _load($fullname)
+	{
+		$filename = $this->_getPath(str_replace(['.','/'], DIRECTORY_SEPARATOR, $fullname) . '.php');
+		$this->_fullname = null;
 		$closure = stream_resolve_include_path($filename) ? require $filename: null;
-		if (!$closure)
+		if(!$closure)
 		{
-			throw new Exception("closure \"$closureName\" not found under \"$this->_lookupPath\"");
+			throw new Exception("closure '$fullname' not found under '$this->_lookupPath'");
 		}
 		elseif (1 === $closure)
 		{
-			throw new Exception("invalid closure in \"$filename\", forgot to return the closure?");
+			throw new Exception("invalid closure in '$filename', forgot to return the closure?");
 		}
 		return $closure;
 	}
@@ -55,21 +56,25 @@ class ClosureSet
 			{
 				$closure = $this->_load($closure);
 			}
+			else if(!$closure instanceof \Closure)
+			{
+				throw new Exception("invalid closure \"$name\"");
+			}
 		}
 		else
 		{
+			$name = $this->_getFullname($name);
 			if(is_dir($this->_getPath($name, true)))
 			{
-				$this->_path[] = $name;
+				$this->_fullname = $name;
 				return  $this;
 			}
 			$closure = $this->_load($name);
 		}
-		if (!$closure instanceof \Closure)
+		if($this->_context)
 		{
-			throw new Exception("invalid closure \"$name\"");
+			$closure = $closure->bindTo($this->_context);
 		}
-		is_null($this->_context) or $closure = $closure->bindTo($this->_context);
 		return $this->{$name} = $closure;
 	}
 
