@@ -41,6 +41,11 @@ class JsonRpc
 		return $this->error(-32601);
 	}
 
+	public function internalError($data)
+	{
+		return $this->error(-32603, $data);
+	}
+
 	public function parse($request)
 	{
 		if(!$request || !(is_array($request) || is_object($request)))

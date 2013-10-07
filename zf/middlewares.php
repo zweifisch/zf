@@ -13,7 +13,12 @@ return [
 	'mockup' => function($mockup){
 		if($this->config->mockup)
 		{
-			$content = file_get_contents($this->resolvePath($this->config->mockups, explode('/', $mockup)));
+			$path = $this->resolvePath($this->config->mockups, explode('/', $mockup));
+			if(!is_readable($path))
+			{
+				throw new Exception("failed to load mockup from '$path'");
+			}
+			$content = file_get_contents($path);
 			if('.json' == substr($mockup, -5))
 			{
 				return json_decode($content);

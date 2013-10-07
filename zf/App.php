@@ -277,11 +277,18 @@ class App extends Laziness
 						list($method, $params, $id) = $call;
 						if($closureSet->exists($method))
 						{
-							$handler = $closureSet->__get($method);
-							$result = $this->processDocString($handler);
-							if(!$result)
+							try
 							{
-								$result = Closure::apply($handler, $params, $this);
+								$handler = $closureSet->__get($method);
+								$result = $this->processDocString($handler);
+								if(!$result)
+								{
+									$result = Closure::apply($handler, $params, $this);
+								}
+							}
+							catch (Exception $e)
+							{
+								$result = $jsonRpc->internalError((string)$e);
 							}
 							if($id) $jsonRpc->result($id, $result);
 						}
