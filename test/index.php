@@ -53,7 +53,7 @@ $app->put('/dump', function(){
 	return $this->pass('dump');
 });
 
-$app->on(zf\EVENT_VALIDATION_ERROR, function($message){
+$app->onValidationFailed(function($message){
 	$this->header(400);
 	$this->end($message);
 });

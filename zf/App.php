@@ -8,11 +8,6 @@ use ReflectionClass;
 use FilesystemIterator;
 use InvalidArgumentException;
 
-const EVENT_EXCEPTION = 'event_exception';
-const EVENT_ERROR = 'event_error';
-const EVENT_SHUTDOWN = 'event_shutdown';
-const EVENT_VALIDATION_ERROR = 'event_validation_error';
-
 class App extends Laziness
 {
 	use Request;
@@ -50,18 +45,18 @@ class App extends Laziness
 		$this->_router = $this->isCli ? new CliRouter() : new Router();
 
 		$on_exception = function($exception) {
-			if(!$this->emit(EVENT_EXCEPTION, $exception)) throw $exception;
+			if(!$this->emit('exception', $exception)) throw $exception;
 		};
 		set_exception_handler($on_exception->bindTo($this));
 
 		$on_shutdown = function(){
-			$this->emit(EVENT_SHUTDOWN);
+			$this->emit('shutdown');
 		};
 		register_shutdown_function($on_shutdown->bindTo($this));
 
 		$on_error = function(){
 			$this->stderr();
-			return $this->emit(EVENT_ERROR, (object)array_combine(
+			return $this->emit('error', (object)array_combine(
 				['no','str','file','line','context'], func_get_args()));
 		};
 		set_error_handler($on_error->bindTo($this));
@@ -73,28 +68,53 @@ class App extends Laziness
 		{
 			$pattern = array_shift($args);
 			$this->_router->append($name, $pattern, $args);
+			return $this;
 		}
-		elseif($this->helper->registered($name))
+
+		if($this->helper->registered($name))
 		{
 			return $this->helper->__call($name, $args);
 		}
-		elseif($this->isCli && !strncmp('sig', $name, 3))
+
+		foreach(['on', 'emit', 'sig'] as $prefix)
 		{
-			$name = strtoupper($name);
-			if(defined($name))
+			if(!strncmp($prefix, $name, strlen($prefix)))
 			{
-				pcntl_signal(constant($name), $args[0]->bindTo($this));
-			}
-			else
-			{
-				throw new Exception("signal \"$name\" not found");
+				return $this->{'_' . $prefix}(substr($name, strlen($prefix)), $args);
 			}
 		}
-		else
+
+		throw new Exception("method '$name' not found");
+	}
+
+	private function _sig($signal, $args)
+	{
+		$signal = strtoupper($signal);
+		if(!defined($signal))
 		{
-			throw new Exception("method \"$name\" not found");
+			throw new Exception("signal '$signal' not found");
 		}
-		return $this;
+		return pcntl_signal(constant($signal), $args[0]->bindTo($this));
+	}
+
+	private function _on($event, $args)
+	{
+		$event = strtolower($event);
+		if(!isset($this->config->events[$event]))
+		{
+			throw new Exception("event '$event' not defined");
+		}
+		return $this->on($event, $args[0]);
+	}
+
+	private function _emit($event, $args)
+	{
+		$event = strtolower($event);
+		if(!isset($this->config->events[$event]))
+		{
+			throw new Exception("event '$event' not defined");
+		}
+		return $this->emit($event, $args[0]);
 	}
 
 	public function __get($name)

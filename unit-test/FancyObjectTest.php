@@ -38,7 +38,7 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 	{
 		$triggered = false;
 		$that = $this;
-		$this->fancy->on(zf\EVENT_VALIDATION_ERROR, function($data) use (&$triggered, $that){
+		$this->fancy->on('validationfailed', function($data) use (&$triggered, $that){
 			$triggered = true;
 			$that->assertSame($data['key'], 'key');
 		});
@@ -54,7 +54,7 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 	{
 		$triggered = false;
 		$that = $this;
-		$this->fancy->on(zf\EVENT_VALIDATION_ERROR, function($data) use (&$triggered, $that){
+		$this->fancy->on('validationfailed', function($data) use (&$triggered, $that){
 			$triggered = true;
 			$that->assertSame($data['key'], 'key2.key5');
 		});
@@ -70,7 +70,7 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 	{
 		$triggered = false;
 		$that = $this;
-		$this->fancy->on(zf\EVENT_VALIDATION_ERROR, function($data) use (&$triggered, $that){
+		$this->fancy->on('validationfailed', function($data) use (&$triggered, $that){
 			$triggered = true;
 			$that->assertSame($data['key'], 'key');
 		});
@@ -94,7 +94,7 @@ class FancyObjectTest extends PHPUnit_Framework_TestCase
 		$fancy = new FancyObject([], $this->validators, $this->mappers);
 		$failed = false;
 		$that = $this;
-		$fancy->on(zf\EVENT_VALIDATION_ERROR, function($message) use (&$failed, $that){
+		$fancy->on('validationfailed', function($message) use (&$failed, $that){
 			$failed = true;
 			$that->assertSame(json_encode($message), json_encode(['validator'=>'required', 'input'=>null, 'key'=>'key0.key1']));
 		});

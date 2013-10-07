@@ -22,6 +22,14 @@ return [
 	'view engine' => 'default',
 	'view extension' => '.php',
 
+	'events' => [
+		'response' => 'about to send the response',
+		'exception' => 'an uncaught exception was thrown',
+		'error' => 'error occoured',
+		'shutdown' => 'shutting down',
+		'validationfailed' => 'input validation failed',
+	],
+
 	'components' => [
 		'helper:\zf\ClosureSet'          => [$this, Delayed::property($this->config, 'helpers')],
 		'engines:\zf\ClosureSet'         => [$this, Delayed::property($this->config, 'view engine'), require __DIR__ . DIRECTORY_SEPARATOR . 'engines.php'],

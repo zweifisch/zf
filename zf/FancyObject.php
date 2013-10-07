@@ -96,7 +96,7 @@ class FancyObject implements JsonSerializable
 		$mappedValue = $this->mapperSet->__call($type, [$value, implode('.', $this->_path)]);
 		if(is_null($mappedValue))
 		{
-			$this->emit(EVENT_VALIDATION_ERROR, ['validator'=> $type, 'input'=> $value, 'key'=> implode('.', $this->_path)]);
+			$this->emit('validationfailed', ['validator'=> $type, 'input'=> $value, 'key'=> implode('.', $this->_path)]);
 			return $this->_done(null);
 		}
 		return $this->_validate($mappedValue) ? $this->_done($mappedValue): $this->_done(null);
@@ -126,7 +126,7 @@ class FancyObject implements JsonSerializable
 			{
 				if ($required)
 				{
-					$this->emit(EVENT_VALIDATION_ERROR, ['validator'=> 'required', 'input'=>null, 'key'=> implode('.', $this->_path)]);
+					$this->emit('validationfailed', ['validator'=> 'required', 'input'=>null, 'key'=> implode('.', $this->_path)]);
 				}
 				$this->_path = [];
 				return [false, null];
@@ -142,7 +142,7 @@ class FancyObject implements JsonSerializable
 			if(!$validator($value))
 			{
 				$preserveRules or $this->_validators = [];
-				$this->emit(EVENT_VALIDATION_ERROR, ['validator'=> $name, 'input'=> $value, 'key'=> implode('.', $this->_path)]);
+				$this->emit('validationfailed', ['validator'=> $name, 'input'=> $value, 'key'=> implode('.', $this->_path)]);
 				return false;
 			}
 		}
