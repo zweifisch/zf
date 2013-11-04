@@ -113,7 +113,7 @@ trait Response
 	public function stderr()
 	{
 		$buffer = ob_get_contents();
-		ob_end_clean();
+		@ob_end_clean();
 		file_put_contents('php://stderr', $buffer, FILE_APPEND);
 	}
 
