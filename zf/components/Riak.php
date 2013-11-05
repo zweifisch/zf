@@ -35,6 +35,19 @@ class Riak implements \ArrayAccess
 			throw new \Exception('no bucket specified');
 		}
 		$this->_bucket->newObject($key, $value)->store();
+		$this->_bucket = null;
+	}
+
+	public function __call($method, $args)
+	{
+		if ($this->_bucket)
+		{
+			return call_user_func_array([$this->_bucket, $method], $args);
+		}
+		else
+		{
+			return call_user_func_array([$this->_client, $method], $args);
+		}
 	}
 
 	public function offsetGet($offset)
@@ -42,7 +55,14 @@ class Riak implements \ArrayAccess
 		return $this->__get($offset);
 	}
 
-	public function offsetExists($offset) { }
+	public function offsetExists($offset)
+	{
+		if (!$this->_bucket)
+		{
+			throw new \Exception('no bucket specified');
+		}
+		return $this->__get($offset)->exists();
+	}
 
 	public function offsetSet($offset, $value)
 	{
@@ -55,6 +75,6 @@ class Riak implements \ArrayAccess
 		{
 			throw new \Exception('no bucket specified');
 		}
-		$this->__get(offsetSet)->delete();
+		return $this->__get($offset)->delete();
 	}
 }
