@@ -74,42 +74,6 @@ trait Response
 		$this->_status = $code;
 	}
 
-	public function send($code, $body='', $options=null)
-	{
-		is_int($code) or list($code, $body, $options) = [$this->_status, $code, $body];
-
-		if(is_null($body)) $body = '';
-
-		$options or $options = [];
-
-		if(!is_string($body) && empty($options['type']))
-		{
-			$body = $this->config->pretty
-				? json_encode($body, JSON_PRETTY_PRINT)
-				: json_encode($body);
-			$options['type'] = 'application/json';
-			$options['charset'] = $this->config->charset;
-		}
-
-		if(empty($options['type']))
-		{
-			$options['type'] = 'text/html';
-			$options['charset'] = $this->config->charset;
-		}
-
-		$options['body'] = $body;
-		$options['code'] = $code;
-
-		if(isset($this->config->jsonp) && !empty($_GET[$this->config->jsonp]))
-		{
-			$callback = $_GET[$this->config->jsonp];
-			$options['body'] = "$callback && $callback({$options['body']})";
-			$options['type'] = 'text/javascript';
-		}
-
-		$this->response($options);
-	}
-
 	public function stderr()
 	{
 		$buffer = ob_get_contents();
@@ -117,22 +81,24 @@ trait Response
 		file_put_contents('php://stderr', $buffer, FILE_APPEND);
 	}
 
-	public function end($code, $body='', $options=null)
+	public function end($code, $body='')
 	{
 		$this->stderr();
-		$this->send($code, $body, $options);
+		if (!is_int($code))
+		{
+			$body = $code;
+			$code = 200;
+		}
+		$this->send(['code'=>$code, 'body'=>$body]);
 	}
 
-	public function response($response)
+	public function send($response)
 	{
-		$code = $response['code'];
+		$contentType = isset($response['type']) ? $response['type'] : 'text/html';
+		$code = isset($response['code']) ? $response['code'] : 200;
 		header('HTTP/1.1 ' . $code . ' ' . $this->statuses[$code]);
 		header('Status: ' . $code);
-		header('Content-Type: ' . (empty($response['charset']) ? $response['type'] : $response['type'] . '; charset=' . $response['charset']));
-		if($this->config->debug && is_array($this->debug))
-		{
-			header('X-ZF-Debug: ' . json_encode($this->debug));
-		}
+		header('Content-Type: ' . (empty($response['charset']) ? $contentType : $contentType . '; charset=' . $response['charset']));
 		$this->sendHeader();
 		exit($response['body']);
 	}
@@ -216,20 +182,6 @@ trait Response
 		header('Content-Disposition: attachment; filename="'.$name.'"');
 		header("Content-Transfer-Encoding: binary\n");
 		exit($content);
-	}
-
-	public function debug($msg, $object)
-	{
-		if($this->config->debug){
-			list($bt) = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,1);
-			$this->debug[] = [
-				$msg,
-				$object,
-				basename($bt['file']),
-				$bt['line'],
-			];
-		}
-		return $this;
 	}
 
 	public function log($msg)

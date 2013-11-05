@@ -2,7 +2,6 @@
 
 namespace zf;
 
-use Phar;
 use Exception;
 use ReflectionClass;
 use FilesystemIterator;
@@ -17,6 +16,7 @@ class App extends Laziness
 	private $_router;
 	private $_eagerParams = [];
 	private $_lastComponent;
+	private $_middlewares;
 
 	function __construct()
 	{
@@ -60,6 +60,8 @@ class App extends Laziness
 				['no','str','file','line','context'], func_get_args()));
 		};
 		set_error_handler($on_error->bindTo($this));
+
+		$this->useMiddleware($this->get('use middlewares'));
 	}
 
 	function __call($name, $args)
@@ -223,6 +225,36 @@ class App extends Laziness
 		return $this;
 	}
 
+	public function useMiddleware($middlewares)
+	{
+		if (!is_array($middlewares))
+		{
+			$middlewares = func_get_args();
+
+			if (2 == count($middlewares) && $middlewares[1] instanceof \Closure) {
+				$this->middlewares->register($middlewares[0], $middlewares[1]);
+				$this->_middlewares[$middlewares[0]] = [];
+				return $this;
+			}
+
+		}
+		$this->_middlewares or $this->_middlewares = [];
+		foreach($middlewares as $middleware)
+		{
+			$exploded = explode(':', $middleware);
+			if (count($exploded) > 1)
+			{
+				list($middleware, $args) = $exploded;
+				$this->_middlewares[$middleware] = explode(',', $args);
+			}
+			else
+			{
+				$this->_middlewares[$middleware] = [];
+			}
+		}
+		return $this;
+	}
+
 	public function validator($name, $closure)
 	{
 		$this->validators->register($name, $closure);
@@ -331,12 +363,8 @@ class App extends Laziness
 	{
 		$this->requestMethod = $this->isCli ? 'CLI' : strtoupper($_SERVER['REQUEST_METHOD']);
 
-		if($this->isCli)
-		{
-			$this->phar();
-		}
-
 		list($handlers, $params) = $this->_router->run();
+
 		if($handlers)
 		{
 			$this->params = new Laziness($params, $this);
@@ -349,37 +377,23 @@ class App extends Laziness
 					$this->processParamsHandlers($_GET);
 					$params = $params ? $params + $_GET : $_GET;
 				}
-				$this->processRequestBody();
 			}
 
 			$handler = array_pop($handlers);
 
-			if($handlers)
-			{
-				foreach($handlers as $middleware)
+			$this->useMiddleware($handlers);
+			$this->useMiddleware('handler', function() use ($handler, $params) {
+				try
 				{
-					$_params= [];
-					if(2 == count($exploded = explode(':', $middleware)))
-					{
-						list($middleware, $_params) = $exploded;
-						$_params = explode(',', $_params);
-					}
-					$middlewares[$middleware] = $_params;
+					return $this->runHandler($handler, $params);
 				}
-				if($response = $this->runMiddlewares($middlewares))
+				catch(InvalidArgumentException $e)
 				{
-					return $this->end($response);
+					$this->notFound();
 				}
-			}
+			});
 
-			try
-			{
-				$this->end($this->runHandler($handler, $params));
-			}
-			catch(InvalidArgumentException $e)
-			{
-				$this->notFound();
-			}
+			$this->runMiddlewares($this->_middlewares);
 		}
 		else
 		{
@@ -424,12 +438,27 @@ class App extends Laziness
 
 	private function runMiddlewares($middlewares)
 	{
+		$_middlewares = [];
+		$response = [];
 		foreach($middlewares as $middleware => $params)
 		{
-			if($response = $this->middlewares->__call($middleware, $params))
+			if(!is_null($result = $this->middlewares->__call($middleware, $params)))
 			{
-				return $response;
+				if($result instanceof \Closure)
+				{
+					$_middlewares[] = $result;
+				}
+				else
+				{
+					$response['body'] = $result;
+					break;
+				}
 			}
+		}
+		if (!isset($response['body'])) $response['body'] = '';
+		while($middleware = array_pop($_middlewares))
+		{
+			$middleware($response);
 		}
 	}
 
@@ -444,31 +473,6 @@ class App extends Laziness
 					? $this->paramHandlers->__call($name, $args)
 					: $this->paramHandlers->delayed->__call($name, $args);
 			}
-		}
-	}
-
-	private function phar()
-	{
-		if('.phar' == substr($_SERVER['SCRIPT_FILENAME'], -5) && $this->config->extract)
-		{
-			$this->cmd('extract <path>', function(){
-				try {
-					$phar = new Phar($_SERVER['SCRIPT_FILENAME']);
-					$phar->extractTo($this->params->path, null, true);
-				} catch (Exception $e) {
-					echo $e->getMessage();
-					exit(1);
-				}
-			});
-		}
-		elseif($this->config->dist)
-		{
-			$this->cmd('dist <name>', function(){
-				$entryScript = basename($_SERVER['SCRIPT_FILENAME']);
-				$phar = new Phar($this->params->name, FilesystemIterator::CURRENT_AS_FILEINFO | FilesystemIterator::KEY_AS_FILENAME, $this->params->name);
-				$phar->buildFromDirectory($this->config->basedir, '/\.php$/');
-				$phar->setStub($phar->createDefaultStub($entryScript));
-			});
 		}
 	}
 

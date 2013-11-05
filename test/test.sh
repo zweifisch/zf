@@ -48,10 +48,10 @@ assert 'curl -sH "Content-Type: application/json" -d '\''{"thing":{"key":"value"
 assert_raises 'curl -siH "Content-Type: application/json" -d '\''{"thin":{"key":"value"}}'\'' $host/thing | grep 400'
 
 assert_raises "curl -siI $host/cache-control | grep max-age"
-assert_raises "curl -si -d a=b $host/debug | grep -i x-zf-debug"
-assert "curl -si -d a=b $host/debug | sed -n '/X-ZF-Debug/ s/.* // p' | json 0.1.a" b
-
+assert_raises "curl -si -d a=b $host/debug | grep -i x-debug"
+assert "curl -si -d a=b $host/debug | sed -n '/X-Debug/ s/.* // p' | json 0.1.a" b
 assert_end misc
+
 
 assert "curl -s $host/foo/bar | json compact.bar" bar
 assert "curl -s $host/foo/bar?offset=100 | json compact.offset" 100

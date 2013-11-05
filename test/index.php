@@ -4,16 +4,15 @@ require '../vendor/autoload.php';
 
 $app = new \zf\App();
 
-$app->set('pretty');
+$app->useMiddleware('jsonp', 'json:pretty', 'inputParser', 'debug');
 
 $app->param('ids', function($ids){
 	if($ids) return explode(',', $ids);
 });
 
-$app->get('/users/:ids?', function(){
-	$this->set('jsonp', 'callback');
+$app->get('/users/:ids?', function($ids = null) {
 	$criteria = [];
-	if ($this->params->ids){
+	if ($ids) {
 		$criteria = ['_id' => ['$in' => $this->params->ids]];
 	}
 	$users = $this->mongo->users->find($criteria);
@@ -54,8 +53,7 @@ $app->put('/dump', function(){
 });
 
 $app->onValidationFailed(function($message){
-	$this->header(400);
-	$this->end($message);
+	$this->end(400, json_encode($message));
 });
 
 class Thing
@@ -87,7 +85,7 @@ $app->post('/debug', function(){
 	$this->set('debug');
 	$this->debug('input', $this->body);
 	$this->debug('ip', $this->clientIP());
-	return 200;
+	return '';
 });
 
 $app->get('/foo/:bar/:opt?', function($bar, $opt='', $q='', $offset=0, $limit=10){

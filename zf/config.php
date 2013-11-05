@@ -9,7 +9,6 @@ return [
 	'extract'     => false,
 	'mockup'      => false,
 
-	'charset'     => 'utf-8',
 	'views'       => 'views',
 	'handlers'    => 'handlers',
 	'helpers'     => 'helpers',
@@ -19,8 +18,21 @@ return [
 	'mappers'     => 'mappers',
 	'schemas'     => 'schemas',
 	'validators'  => 'validators',
+
 	'view engine' => 'default',
 	'view extension' => '.php',
+
+	'pathes' => [
+		'views'       => 'views',
+		'handlers'    => 'handlers',
+		'helpers'     => 'helpers',
+		'middlewares' => 'middlewares',
+		'params'      => 'params',
+		'mockups'     => 'mockups',
+		'mappers'     => 'mappers',
+		'schemas'     => 'schemas',
+		'validators'  => 'validators',
+	],
 
 	'events' => [
 		'response' => 'about to send the response',
@@ -29,6 +41,8 @@ return [
 		'shutdown' => 'shutting down',
 		'validationfailed' => 'input validation failed',
 	],
+
+	'use middlewares' => ['response'],
 
 	'components' => [
 		'helper:\zf\ClosureSet'          => [$this, Delayed::property($this->config, 'helpers')],
