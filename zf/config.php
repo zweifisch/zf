@@ -42,7 +42,7 @@ return [
 		'validationfailed' => 'input validation failed',
 	],
 
-	'use middlewares' => ['response'],
+	'use middlewares' => ['response', 'json', 'inputParser'],
 
 	'components' => [
 		'helper:\zf\ClosureSet'          => [$this, Delayed::property($this->config, 'helpers')],

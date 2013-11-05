@@ -4,7 +4,7 @@ require '../vendor/autoload.php';
 
 $app = new \zf\App();
 
-$app->useMiddleware('jsonp', 'json:pretty', 'inputParser', 'debug');
+$app->useMiddleware('debug');
 
 $app->param('ids', function($ids){
 	if($ids) return explode(',', $ids);
