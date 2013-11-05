@@ -367,32 +367,33 @@ class App extends Laziness
 
 		if($handlers)
 		{
+			if(!$this->isCli && $_GET)
+			{
+				$params = $params ? $params + $_GET : $_GET;
+			}
 			$this->params = new Laziness($params, $this);
 			if($params) $this->processParamsHandlers($params);
 
-			if(!$this->isCli)
-			{
-				if($_GET)
-				{
-					$this->processParamsHandlers($_GET);
-					$params = $params ? $params + $_GET : $_GET;
-				}
-			}
-
 			$handler = array_pop($handlers);
-
 			$this->useMiddleware($handlers);
-			$this->useMiddleware('handler', function() use ($handler, $params) {
+			$this->useMiddleware('handler', function() use ($handler) {
+				if(is_string($handler))
+				{
+					$handler = $this->handlers->__get($handler);
+				}
+				if($response = $this->processDocString($handler))
+				{
+					return $response;
+				}
 				try
 				{
-					return $this->runHandler($handler, $params);
+					return Closure::apply($handler, $this->params, $this);
 				}
 				catch(InvalidArgumentException $e)
 				{
 					$this->notFound();
 				}
 			});
-
 			$this->runMiddlewares($this->_middlewares);
 		}
 		else
@@ -410,19 +411,6 @@ class App extends Laziness
 	public function resolvePath()
 	{
 		return $this->config->basedir.DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, Data::flatten(func_get_args()));
-	}
-
-	private function runHandler($handler, $params)
-	{
-		if(is_string($handler))
-		{
-			$handler = $this->handlers->__get($handler);
-		}
-		if($response = $this->processDocString($handler))
-		{
-			return $response;
-		}
-		return Closure::apply($handler, $params, $this);
 	}
 
 	private function processDocString($handler)

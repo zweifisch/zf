@@ -13,7 +13,7 @@ $app->param('ids', function($ids){
 $app->get('/users/:ids?', function($ids = null) {
 	$criteria = [];
 	if ($ids) {
-		$criteria = ['_id' => ['$in' => $this->params->ids]];
+		$criteria = ['_id' => ['$in' => $ids]];
 	}
 	$users = $this->mongo->users->find($criteria);
 	return array_values(iterator_to_array($users));

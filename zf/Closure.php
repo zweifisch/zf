@@ -12,22 +12,28 @@ class Closure
 		if($context) $closure = $closure->bindTo($context);
 		if($params)
 		{
-			return call_user_func_array($closure, Data::is_assoc($params)
-				? self::keywordArgs($closure, $params)
-				: $params);
+			if (is_object($params) || Data::is_assoc($params))
+			{
+				$params = self::keywordArgs($closure, $params);
+			}
+			return call_user_func_array($closure, $params);
 		}
 		return $closure();
 	}
 
 	public static function keywordArgs($closure, $args)
 	{
+		if (is_array($args))
+		{
+			$args = (object)$args;
+		}
 		$reflection = new ReflectionFunction($closure);
 		$ret= [];
 		foreach($reflection->getParameters() as $param)
 		{
-			if(isset($args[$param->name]))
+			if(isset($args->{$param->name}))
 			{
-				$ret[] = $args[$param->name];
+				$ret[] = $args->{$param->name};
 			}
 			else
 			{
