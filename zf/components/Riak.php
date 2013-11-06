@@ -14,7 +14,7 @@ class Riak implements \ArrayAccess
 
 	public function __get($key)
 	{
-		$this->_client or $this->_client = new \Basho\Riak\Riak($this->_config['ip'], $this->_config['port']);
+		$this->_client or $this->_client = new \Basho\Riak\Riak($this->_config['host'], $this->_config['port']);
 		if ($this->_bucket)
 		{
 			$ret = $this->_bucket->get($key);

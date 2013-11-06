@@ -30,7 +30,7 @@ return [
 
 	'components' => [
 		'riak:\zf\components\Riak' => [
-			'ip' => '127.0.0.1',
+			'host' => '127.0.0.1',
 			'port' => 8098,
 		],
 		'redis:\zf\Redis' => [
