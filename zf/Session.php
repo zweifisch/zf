@@ -48,4 +48,18 @@ class Session
 		$this->start();
 		return session_destroy();
 	}
+
+	public function flash($key, $value=null)
+	{
+		if(is_null($value))
+		{
+			$ret = $this->__get($key);
+			$this->__set($key, null);
+			return $ret;
+		}
+		else
+		{
+			$this->__set($key, $value);
+		}
+	}
 }
