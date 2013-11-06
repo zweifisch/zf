@@ -230,26 +230,23 @@ class App extends Laziness
 		if (!is_array($middlewares))
 		{
 			$middlewares = func_get_args();
-
 			if (2 == count($middlewares) && $middlewares[1] instanceof \Closure) {
 				$this->middlewares->register($middlewares[0], $middlewares[1]);
-				$this->_middlewares[$middlewares[0]] = [];
+				$this->_middlewares[] = [$middlewares[0], []];
 				return $this;
 			}
-
 		}
-		$this->_middlewares or $this->_middlewares = [];
 		foreach($middlewares as $middleware)
 		{
 			$exploded = explode(':', $middleware);
 			if (count($exploded) > 1)
 			{
 				list($middleware, $args) = $exploded;
-				$this->_middlewares[$middleware] = explode(',', $args);
+				$this->_middlewares[] = [$middleware, explode(',', $args)];
 			}
 			else
 			{
-				$this->_middlewares[$middleware] = [];
+				$this->_middlewares[] = [$middleware, []];
 			}
 		}
 		return $this;
@@ -381,20 +378,29 @@ class App extends Laziness
 				{
 					$handler = $this->handlers->__get($handler);
 				}
-				if($response = $this->processDocString($handler))
+
+				$realHandler = function() use ($handler) {
+					try
+					{
+						return Closure::apply($handler, $this->params, $this);
+					}
+					catch(InvalidArgumentException $e)
+					{
+						$this->notFound();
+					}
+				};
+
+				if($middlewares = $this->processDocString($handler))
 				{
-					return $response;
+					$this->useMiddleware($middlewares);
+					$this->useMiddleware('realHandler', $realHandler);
 				}
-				try
+				else
 				{
-					return Closure::apply($handler, $this->params, $this);
-				}
-				catch(InvalidArgumentException $e)
-				{
-					$this->notFound();
+					return $realHandler();
 				}
 			});
-			$this->runMiddlewares($this->_middlewares);
+			$this->runMiddlewares();
 		}
 		else
 		{
@@ -416,37 +422,41 @@ class App extends Laziness
 	private function processDocString($handler)
 	{
 		$doc = Closure::parseDoc($handler);
+		$middlewares = [];
 		foreach($doc as $key => $lines)
 		{
-			$middlewares[$key] = explode(',', $lines[0]);
+			$middlewares[] = $key . ':' . $lines[0];
 		}
-		if(isset($middlewares))
-			return $this->runMiddlewares($middlewares);
+		return $middlewares;
 	}
 
-	private function runMiddlewares($middlewares)
+	private function runMiddlewares()
 	{
-		$_middlewares = [];
-		$response = [];
-		foreach($middlewares as $middleware => $params)
+		$response = '';
+		$middlewares = [];
+		while($middleware = array_shift($this->_middlewares))
 		{
+			list($middleware, $params) = $middleware;
 			if(!is_null($result = $this->middlewares->__call($middleware, $params)))
 			{
 				if($result instanceof \Closure)
 				{
-					$_middlewares[] = $result;
+					$middlewares[] = $result;
 				}
 				else
 				{
-					$response['body'] = $result;
+					$response = $result;
 					break;
 				}
 			}
 		}
-		if (!isset($response['body'])) $response['body'] = '';
-		while($middleware = array_pop($_middlewares))
+		$response = ['body' => $response];
+		if ($middlewares)
 		{
-			$middleware($response);
+			while($middleware = array_pop($middlewares))
+			{
+				$middleware($response);
+			}
 		}
 	}
 
