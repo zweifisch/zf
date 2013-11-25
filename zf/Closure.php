@@ -53,24 +53,13 @@ class Closure
 	public static function parseDoc($fn)
 	{
 		$ret = [];
-		$key = null;
 		$reflection = new ReflectionFunction($fn);
 		foreach(explode("\n", $reflection->getDocComment()) as $line){
 			$line = trim($line, "* \t/");
 			if($line && $line{0} == '@')
 			{
 				$line = substr($line, 1);
-				if(2 == count($exploded = explode(' ', $line)))
-				{
-					list($key, $line) = $exploded;
-				}
-				else
-				{
-					list($key, $line) = [$line, null];
-				}
-			}
-			if($key && $line)
-			{
+				list($key, $line) = strpos($line, ' ') ? explode(' ', $line) : [$line, ''];
 				$ret[$key][] = $line;
 			}
 		}

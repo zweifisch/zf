@@ -91,6 +91,7 @@ class JsonRpc
 		$this->results[] = $result instanceof JsonRpcError
 			? ['jsonrpc'=> $this->version, 'error'=> $result, 'id'=> $id]
 			: ['jsonrpc'=> $this->version, 'result'=> $result, 'id'=> $id];
+		return $this;
 	}
 
 	public function response()

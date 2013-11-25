@@ -130,7 +130,7 @@ class App extends Laziness
 
 	public function resource($name, $subResources=null)
 	{
-		$pass = function() use ($name){
+		$pass = function() use ($name) {
 			$this->pass($name.'/'.$this->params->action);
 		};
 
@@ -236,20 +236,23 @@ class App extends Laziness
 				return $this;
 			}
 		}
-		foreach($middlewares as $middleware)
-		{
-			$exploded = explode(':', $middleware);
-			if (count($exploded) > 1)
-			{
-				list($middleware, $args) = $exploded;
-				$this->_middlewares[] = [$middleware, explode(',', $args)];
-			}
-			else
-			{
-				$this->_middlewares[] = [$middleware, []];
-			}
-		}
+
+		$this->_middlewares = $this->_middlewares
+			? array_merge($this->_middlewares, $this->prepareMiddlewares($middlewares))
+			: $this->prepareMiddlewares($middlewares);
 		return $this;
+	}
+
+	private function prepareMiddlewares($middlewares)
+	{
+		return array_map(function($middleware) {
+			if (strpos($middleware, ':')) // false or larger than 0
+			{
+				list($middleware, $params) = explode(':', $middleware);
+				return [$middleware, explode(',', $params)];
+			}
+			return [$middleware, []];
+		}, $middlewares);
 	}
 
 	public function validator($name, $closure)
@@ -313,44 +316,50 @@ class App extends Laziness
 		$this->post($path, function() use ($closureSet){
 			$jsonRpc = new JsonRpc(isset($this->config->{'jsonrpc codes'}) ? $this->get('jsonrpc codes') : null);
 			$_SERVER['HTTP_CONTENT_TYPE'] = 'application/json';
-			if($jsonRpc->parse($this->body->asRaw(null)))
+
+			if(!$jsonRpc->parse($this->body->asRaw(null)))
 			{
-				$closureSet = new ClosureSet($this, $closureSet);
-				$this->helper->register('error', function($code, $data=null) use ($jsonRpc){
-					return $jsonRpc->error($code, $data);
-				});
-				foreach($jsonRpc->calls as $call)
+				return $jsonRpc->response();
+			}
+
+			$closureSet = new ClosureSet($this, $closureSet);
+			$this->helper->register('error', function($code, $data=null) use ($jsonRpc){
+				return $jsonRpc->error($code, $data);
+			});
+
+			foreach($jsonRpc->calls as $call)
+			{
+				if(!is_array($call))
 				{
-					if(is_array($call))
+					return $jsonRpc->result(null, $call)->response();
+				}
+
+				list($method, $params, $id) = $call;
+
+				if(!$closureSet->exists($method))
+				{
+					return $jsonRpc->result($id, $jsonRpc->methodNotFound())->response();
+				}
+
+				try
+				{
+					$handler = $closureSet->__get($method);
+					$middlewares = $this->processDocString($handler);
+					$result = null;
+					if($middlewares)
 					{
-						list($method, $params, $id) = $call;
-						if($closureSet->exists($method))
-						{
-							try
-							{
-								$handler = $closureSet->__get($method);
-								$result = $this->processDocString($handler);
-								if(!$result)
-								{
-									$result = Closure::apply($handler, $params, $this);
-								}
-							}
-							catch (Exception $e)
-							{
-								$result = $jsonRpc->internalError((string)$e);
-							}
-							if($id) $jsonRpc->result($id, $result);
-						}
-						else
-						{
-							$jsonRpc->result($id, $jsonRpc->methodNotFound());
-						}
+						$result = $this->runMiddlewares($this->prepareMiddlewares($middlewares));
 					}
-					else
+					if (!isset($result))
 					{
-						$jsonRpc->result(null, $call);
+						$result = Closure::apply($handler, $params, $this);
 					}
 				}
+				catch (Exception $e)
+				{
+					$result = $jsonRpc->internalError((string)$e);
+				}
+				if($id) $jsonRpc->result($id, $result);
 			}
 			return $jsonRpc->response();
 		});
@@ -400,7 +409,7 @@ class App extends Laziness
 					return $realHandler();
 				}
 			});
-			$this->runMiddlewares();
+			$this->runAllMiddlewares();
 		}
 		else
 		{
@@ -430,7 +439,7 @@ class App extends Laziness
 		return $middlewares;
 	}
 
-	private function runMiddlewares()
+	private function runAllMiddlewares()
 	{
 		$response = '';
 		$middlewares = [];
@@ -456,6 +465,18 @@ class App extends Laziness
 			while($middleware = array_pop($middlewares))
 			{
 				$middleware($response);
+			}
+		}
+	}
+
+	private function runMiddlewares($middlewares)
+	{
+		foreach($middlewares as $middleware)
+		{
+			list($middleware, $params) = $middleware;
+			if(!is_null($result = $this->middlewares->__call($middleware, $params)))
+			{
+				return $result;
 			}
 		}
 	}
