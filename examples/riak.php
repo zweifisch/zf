@@ -16,16 +16,16 @@ $app->cmd('set2 <key> <value>', function($key, $value) {
 });
 
 $app->cmd('get2 <key>', function($key) {
-	return $this->riak['bucket'][$key]->getData();
+	return $this->riak['bucket'][$key];
 });
 
 $app->cmd('set3', function() {
 	$this->riak['bucket']['key'] = ['k'=>date('Y-m-d H:i:s')];
-	return $this->riak['bucket']['key']->getData();
+	return $this->riak['bucket']['key'];
 });
 
 $app->cmd('get3', function() {
-	return [$this->riak['bucket9']['key']->exists()];
+	return [$this->riak->bucket9->key->exists()];
 });
 
 $app->cmd('get3', function() {
@@ -37,7 +37,7 @@ $app->cmd('keys', function() {
 });
 
 $app->cmd('keys2', function() {
-	$this->riak['bucket9']['key']->getData();
+	$this->riak['bucket9']['key'];
 	$this->riak['bucket9']['key2'] = null;
 	return $this->riak->bucket9->getKeys();
 });

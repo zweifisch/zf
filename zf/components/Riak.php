@@ -52,7 +52,7 @@ class Riak implements \ArrayAccess
 
 	public function offsetGet($offset)
 	{
-		return $this->__get($offset);
+		return $this->_bucket ? $this->__get($offset)->getData() : $this->__get($offset);
 	}
 
 	public function offsetExists($offset)
