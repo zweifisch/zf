@@ -3,7 +3,6 @@
 namespace zf;
 
 use Exception;
-use ReflectionClass;
 use FilesystemIterator;
 use InvalidArgumentException;
 
@@ -267,28 +266,29 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function register($name, $component=null)
+	public function register($name, $className=null, $constructArgs=null)
 	{
 		$this->_lastComponent = $name;
-		if($component instanceof \Closure)
+		if($className && $className instanceof \Closure)
 		{
-			$this->$name = $component;
+			$this->$name = $className;
 		}
 		else
 		{
-			$constructArgs = array_slice(func_get_args(), 2);
-			$this->$name = function() use ($component, $constructArgs, $name){
-				if(empty($constructArgs) && isset($this->config->components) && isset($this->config->components[$name]))
+			$this->$name = function() use ($className, $constructArgs, $name) {
+				$constructArgs or $constructArgs = [];
+				if(isset($this->config->components) && isset($this->config->components[$name]))
 				{
-					$constructArgs = $this->config->components[$name]['constructArgs'];
-					$component = $this->config->components[$name]['class'];
+					$defaultArgs = $this->config->components[$name]['constructArgs'];
+					$constructArgs = $constructArgs ? array_merge($defaultArgs, $constructArgs) : $defaultArgs;
+					$className = $this->config->components[$name]['class'];
 				}
-				$constructArgs = array_map(function($arg){
+
+				$constructArgs = array_map(function($arg) {
 					return $arg instanceof \Closure ? $arg() : $arg;
 				}, $constructArgs);
-				return is_array($constructArgs) && !Data::is_assoc($constructArgs)
-					? (new ReflectionClass($component))->newInstanceArgs($constructArgs)
-					: (new ReflectionClass($component))->newInstance($constructArgs);
+
+				return Closure::instance($className, $constructArgs, $this);
 			};
 		}
 		return $this;

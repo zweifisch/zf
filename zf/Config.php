@@ -68,4 +68,11 @@ class Config
 	{
 		$this->_configs[$name] = $value;
 	}
+
+	public function delayed($name)
+	{
+		return function() use ($name) {
+			return $this->__get($name);
+		};
+	}
 }

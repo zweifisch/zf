@@ -8,10 +8,10 @@ class Validator
 	private $schemaFolder;
 	private $schemas;
 
-	public function __construct($schemaFolder)
+	public function __construct($schemaPath)
 	{
 		$this->validator = new \jsonschema\Validator;
-		$this->schemaFolder = $schemaFolder;
+		$this->schemaFolder = $schemaPath;
 		$this->schemas = [];
 	}
 

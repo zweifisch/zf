@@ -4,6 +4,7 @@ namespace zf;
 
 use InvalidArgumentException;
 use ReflectionFunction;
+use ReflectionClass;
 
 class Closure
 {
@@ -75,5 +76,27 @@ class Closure
 			if(!array_key_exists($key, $results)) $results[$key] = call_user_func_array($fn, $params);
 			return $results;
 		};
+	}
+
+	public static function instance($className, $params, $moreParams)
+	{
+		$constructArgs = [];
+		$reflectionClass = new ReflectionClass($className);
+		foreach($reflectionClass->getConstructor()->getParameters() as $param)
+		{
+			if(isset($params[$param->name]))
+			{
+				$constructArgs[] = $params[$param->name];
+			}
+			elseif(isset($moreParams->{$param->name}))
+			{
+				$constructArgs[] = $moreParams->{$param->name};
+			}
+			elseif(!$param->isOptional())
+			{
+				throw new InvalidArgumentException("\"$param->name\" is required");
+			}
+		}
+		return $reflectionClass->newInstanceArgs($constructArgs);
 	}
 }

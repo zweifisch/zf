@@ -12,10 +12,10 @@ class ClosureSet
 	public $delayed;
 	public $_fullname;
 
-	public function __construct($context, $lookupPath, $closures = null)
+	public function __construct($context, $path, $closures = null)
 	{
 		$this->_context = $context;
-		$this->_lookupPath = $lookupPath;
+		$this->_lookupPath = $path;
 		$this->delayed = new _Delayed($this);
 		if($closures) $this->register($closures);
 	}

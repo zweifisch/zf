@@ -45,14 +45,41 @@ return [
 	'use middlewares' => ['response', 'json', 'inputParser'],
 
 	'components' => [
-		'helper:\zf\ClosureSet'          => [$this, Delayed::property($this->config, 'helpers')],
-		'engines:\zf\ClosureSet'         => [$this, Delayed::property($this->config, 'view engine'), require __DIR__ . DIRECTORY_SEPARATOR . 'engines.php'],
-		'handlers:\zf\ClosureSet'        => [$this, Delayed::property($this->config, 'handlers')],
-		'middlewares:\zf\ClosureSet'     => [$this, Delayed::property($this->config, 'middlewares'), require __DIR__ . DIRECTORY_SEPARATOR . 'middlewares.php'],
-		'paramHandlers:\zf\ClosureSet'   => [$this, Delayed::property($this->config, 'params')],
-		'validators:\zf\ClosureSet'      => [$this, Delayed::property($this->config, 'validators'), require __DIR__ . DIRECTORY_SEPARATOR . 'validators.php'],
-		'mappers:\zf\ClosureSet'         => [$this, Delayed::property($this->config, 'mappers'), require __DIR__ . DIRECTORY_SEPARATOR . 'mappers.php'],
-		'validator:\zf\Validator'        => [Delayed::property($this->config, 'schemas')],
+		'helper:\zf\ClosureSet' => [
+			'context' => $this,
+			'path' => $this->config->delayed('helpers')
+		],
+		'engines:\zf\ClosureSet' => [
+			'context' => $this,
+			'path' => $this->config->delayed('view engine'),
+			'closures' => require __DIR__ . DIRECTORY_SEPARATOR . 'engines.php'
+		],
+		'handlers:\zf\ClosureSet' => [
+			'context' => $this,
+			'path' => $this->config->delayed('handlers')
+		],
+		'middlewares:\zf\ClosureSet' => [
+			'context' => $this,
+			'path' => $this->config->delayed('middlewares'),
+			'closures' => require __DIR__ . DIRECTORY_SEPARATOR . 'middlewares.php'
+		],
+		'paramHandlers:\zf\ClosureSet' => [
+			'context' => $this,
+			'path' => $this->config->delayed('params')
+		],
+		'validators:\zf\ClosureSet' => [
+			'context' => $this,
+			'path' => $this->config->delayed('validators'),
+			'closures' => require __DIR__ . DIRECTORY_SEPARATOR . 'validators.php'
+		],
+		'mappers:\zf\ClosureSet' => [
+			'context' => $this,
+			'path' => $this->config->delayed('mappers'),
+			'closures' => require __DIR__ . DIRECTORY_SEPARATOR . 'mappers.php'
+		],
+		'validator:\zf\Validator' => [
+			'schemaPath' => $this->config->delayed('schemas')
+		],
 		'session:\zf\Session',
 	],
 ];

@@ -6,9 +6,13 @@ class SomeComponent
 {
 	private $config;
 
-	public function __construct($config=null)
+	public function __construct($key, $key2=null)
 	{
-		$this->config = $config;
+		$this->config = ['key' => $key];
+		if ($key2)
+		{
+			$this->config['key2'] = $key2;
+		}
 	}
 
 	public function config($config)
@@ -43,7 +47,7 @@ class AppTest extends PHPUnit_Framework_TestCase
 	{
 		$config = ['key'=>'value'];
 		$this->app->register('sc', function() use ($config){
-			$component = new SomeComponent;
+			$component = new SomeComponent('');
 			$component->config($config);
 			return $component;
 		});
@@ -59,12 +63,13 @@ class AppTest extends PHPUnit_Framework_TestCase
 
 	public function testRegisterComponentFromConfig()
 	{
-		$config = ['key'=>'value'];
+		$config = ['key'=>'value', 'key2'=>'value2'];
 		$this->app->set('components', [
 				'sc'=> [
 					'class' => 'SomeComponent',
 					'constructArgs' => $config,
-				]]);
+				],
+			]);
 		$this->app->register('sc');
 		$this->assertSame($config,$this->app->sc->getConfig());
 	}
@@ -78,7 +83,7 @@ class AppTest extends PHPUnit_Framework_TestCase
 	public function testComponentInitialized()
 	{
 		$called = false;
-		$this->app->register('sc', 'SomeComponent')->initialized(function($sc) use (&$called){
+		$this->app->register('sc', 'SomeComponent', ['key'=>''])->initialized(function($sc) use (&$called) {
 			$called = true;
 		});
 		$this->assertFalse($called);
