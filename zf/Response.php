@@ -105,7 +105,7 @@ trait Response
 
 	public function notFound()
 	{
-		if($this->isCli)
+		if(IS_CLI)
 		{
 			$this->_router->cmds() or exit(1);
 			echo "Usage:\n\n";

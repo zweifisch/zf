@@ -82,7 +82,12 @@ class Closure
 	{
 		$constructArgs = [];
 		$reflectionClass = new ReflectionClass($className);
-		foreach($reflectionClass->getConstructor()->getParameters() as $param)
+		$constructor = $reflectionClass->getConstructor();
+		if (!$constructor)
+		{
+			return $reflectionClass->newInstance();
+		}
+		foreach($constructor->getParameters() as $param)
 		{
 			if(isset($params[$param->name]))
 			{

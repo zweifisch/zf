@@ -1,13 +1,10 @@
 <?php
 
 return [
-	'body' => function($schema){
-		if($errors = $this->validator->validate($this->body->asRaw(), $schema)){
-			$this->emit('validationfailed', ['errors'=> $errors]);
+	'schema' => function($schema) {
+		if($errors = $this->validator->validate($this->body, $schema)) {
 			$this->errors = $errors;
-			$this->body = null;
-		}else{
-			$this->body = $this->body->asRaw();
+			$this->emit('validationfailed', ['errors'=> $errors]);
 		}
 	},
 	'mockup' => function($mockup) {
@@ -69,7 +66,7 @@ return [
 		};
 	},
 	'phar' => function(){
-		if(!$this->isCli) return;
+		if(!$this->request->isCli) return;
 		if('.phar' == substr($_SERVER['SCRIPT_FILENAME'], -5) && $this->config->extract)
 		{
 			$this->cmd('extract <path>', function(){
@@ -92,40 +89,36 @@ return [
 			});
 		}
 	},
-	'inputParser' => function(){
-		$this->query = function(){
-			return (new \zf\FancyObject($_GET, $this->validators, $this->mappers))->setParent($this);
-		};
-		if ('GET' == $this->requestMethod) return;
-
-		$this->body = function(){
-			$contentType = isset($_SERVER['HTTP_CONTENT_TYPE']) ? $_SERVER['HTTP_CONTENT_TYPE'] : '';
-			$ret = '';
-			if (!strncmp($contentType,'application/json', 16))
+	'bodyParser' => function() {
+		$this->body = function() {
+			if ('GET' == $this->request->method)
 			{
-				$ret = json_decode(file_get_contents('php://input'));
+				$ret = null;
 			}
-			elseif ($contentType == 'application/x-www-form-urlencoded')
+			elseif ($this->request->contentTypeMatches('application/json', 16))
 			{
-				'POST' == $this->requestMethod ? $ret = $_POST : parse_str(file_get_contents('php://input'), $ret);
+				$ret = json_decode($this->request->body);
 			}
-			elseif (!strncmp($contentType, 'multipart/form-data', 19))
+			elseif ($this->request->contentTypeMatches('application/x-www-form-urlencoded', 33))
+			{
+				'POST' == $this->request->method ? $ret = $_POST : parse_str($this->request->body, $ret);
+			}
+			elseif ($this->request->contentTypeMatches('multipart/form-data', 19))
 			{
 				$ret = array_merge($_POST, $_FILES);
 			}
 			else
 			{
-				$ret = file_get_contents('php://input');
+				$ret = $this->request->body;
 			}
-			return (new \zf\FancyObject($ret, $this->validators, $this->mappers))->setParent($this);
+			return $ret;
 		};
 	},
-	'msgpackParser' => function($header = 'application/x-msgpack'){
+	'msgpack' => function($header = 'application/x-msgpack'){
 		$this->body = function() {
-			$contentType = isset($_SERVER['HTTP_CONTENT_TYPE']) ? $_SERVER['HTTP_CONTENT_TYPE'] : '';
-			if ($contentType == $header)
+			if ($this->request->contentTypeMatches($header))
 			{
-				return msgpack_unpack(file_get_contents('php://input'));
+				return msgpack_unpack($this->request->body);
 			}
 		};
 	},

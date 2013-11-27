@@ -42,7 +42,7 @@ return [
 		'validationfailed' => 'input validation failed',
 	],
 
-	'use middlewares' => ['response', 'json', 'inputParser'],
+	'use middlewares' => ['response', 'json', 'bodyParser'],
 
 	'components' => [
 		'helper:\zf\ClosureSet' => [
@@ -67,19 +67,13 @@ return [
 			'context' => $this,
 			'path' => $this->config->delayed('params')
 		],
-		'validators:\zf\ClosureSet' => [
-			'context' => $this,
-			'path' => $this->config->delayed('validators'),
-			'closures' => require __DIR__ . DIRECTORY_SEPARATOR . 'validators.php'
-		],
-		'mappers:\zf\ClosureSet' => [
-			'context' => $this,
-			'path' => $this->config->delayed('mappers'),
-			'closures' => require __DIR__ . DIRECTORY_SEPARATOR . 'mappers.php'
-		],
 		'validator:\zf\Validator' => [
 			'schemaPath' => $this->config->delayed('schemas')
 		],
+		'request:\zf\components\Request',
+		'params:\zf\components\Params',
 		'session:\zf\Session',
+		'user:\zf\components\User',
+		IS_CLI ? 'router:\zf\CliRouter' : 'router:\zf\Router',
 	],
 ];

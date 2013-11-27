@@ -8,12 +8,9 @@ use InvalidArgumentException;
 
 class App extends Laziness
 {
-	use Request;
 	use Response;
 	use EventEmitter;
 
-	private $_router;
-	private $_eagerParams = [];
 	private $_lastComponent;
 	private $_middlewares;
 
@@ -22,8 +19,9 @@ class App extends Laziness
 		ob_start();
 		parent::__construct();
 
-		$this->isCli = 'cli' == PHP_SAPI;
-		$basedir = $this->isCli ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT'];
+		defined('IS_CLI') or define('IS_CLI', 'cli' == PHP_SAPI);
+
+		$basedir = IS_CLI ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT'];
 		set_include_path($basedir . PATH_SEPARATOR . get_include_path());
 
 		$this->config = new Config;
@@ -40,8 +38,6 @@ class App extends Laziness
 		}
 		$this->set('basedir', $basedir);
 		$this->rewriteConfig();
-
-		$this->_router = $this->isCli ? new CliRouter() : new Router();
 
 		$on_exception = function($exception) {
 			if(!$this->emit('exception', $exception)) throw $exception;
@@ -68,7 +64,7 @@ class App extends Laziness
 		if(in_array($name, ['post', 'put', 'delete', 'patch', 'head', 'cmd'], true))
 		{
 			$pattern = array_shift($args);
-			$this->_router->append($name, $pattern, $args);
+			$this->router->append($name, $pattern, $args);
 			return $this;
 		}
 
@@ -133,7 +129,7 @@ class App extends Laziness
 			$this->pass($name.'/'.$this->params->action);
 		};
 
-		$this->_router->bulk([
+		$this->router->bulk([
 			['GET'    , "/$name"                , ["$name/index"]],
 			['GET'    , "/$name/new"            , ["$name/new"]],
 			['POST'   , "/$name"                , ["$name/create"]],
@@ -149,7 +145,7 @@ class App extends Laziness
 		{
 			foreach($subResources as $res)
 			{
-				$this->_router->bulk([
+				$this->router->bulk([
 					['GET'    , "/$name/:$name/$res"               , ["$name/$res/index"]],
 					['GET'    , "/$name/:$name/$res/new"           , ["$name/$res/new"]],
 					['POST'   , "/$name/:$name/$res"               , ["$name/$res/create"]],
@@ -184,25 +180,14 @@ class App extends Laziness
 		{
 			$args = func_get_args();
 			$pattern = array_shift($args);
-			$this->_router->append('GET', $pattern, $args);
+			$this->router->append('GET', $pattern, $args);
 			return $this;
 		}
 	}
 
 	public function param($name, $handler=null)
 	{
-		$this->_paramsTmp = $this->paramHandlers->register($name, $handler);
-		return $this;
-	}
-
-	public function eager()
-	{
-		if(is_array($this->_paramsTmp))
-		{
-			1 == count($this->_paramsTmp)
-				? $this->_eagerParams[] = $this->_paramsTmp[0]
-				: $this->_eagerParams = array_merge($this->_eagerParams, $this->_paramsTmp);
-		}
+		$this->paramHandlers->register($name, $handler);
 		return $this;
 	}
 
@@ -367,19 +352,10 @@ class App extends Laziness
 
 	public function run()
 	{
-		$this->requestMethod = $this->isCli ? 'CLI' : strtoupper($_SERVER['REQUEST_METHOD']);
-
-		list($handlers, $params) = $this->_router->run();
+		$handlers = $this->request->route();
 
 		if($handlers)
 		{
-			if(!$this->isCli && $_GET)
-			{
-				$params = $params ? $params + $_GET : $_GET;
-			}
-			$this->params = new Laziness($params, $this);
-			if($params) $this->processParamsHandlers($params);
-
 			$handler = array_pop($handlers);
 			$this->useMiddleware($handlers);
 			$this->useMiddleware('handler', function() use ($handler) {
@@ -419,7 +395,7 @@ class App extends Laziness
 
 	public function options($options)
 	{
-		if($this->isCli) $this->_router->options($options);
+		IS_CLI and $this->router->options($options);
 		return $this;
 	}
 
@@ -477,20 +453,6 @@ class App extends Laziness
 			if(!is_null($result = $this->middlewares->__call($middleware, $params)))
 			{
 				return $result;
-			}
-		}
-	}
-
-	private function processParamsHandlers($input)
-	{
-		foreach($input as $name => $value)
-		{
-			if ($this->paramHandlers->registered($name))
-			{
-				$args = [$value];
-				$this->params->$name = in_array($name, $this->_eagerParams, true)
-					? $this->paramHandlers->__call($name, $args)
-					: $this->paramHandlers->delayed->__call($name, $args);
 			}
 		}
 	}
