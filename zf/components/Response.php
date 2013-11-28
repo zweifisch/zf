@@ -1,13 +1,12 @@
 <?php
 
-namespace zf;
+namespace zf\components;
 
 use JsonSerializable;
 use stdClass;
 
-trait Response
+class Response
 { 
-	private $debug;
 	private $statuses = [
 		200 => 'OK',
 		201 => 'Created',
@@ -46,8 +45,22 @@ trait Response
 		504 => 'Gateway Timeout',
 		505 => 'HTTP Version Not Supported'
 	];
-	private $_status = 200;
-	private $_headers = [];
+	private $headers = [];
+	private $viewEngine;
+	private $router;
+
+	public $status = 200;
+	public $body = '';
+	public $contentType = 'text/html';
+	public $charset = 'utf-8';
+
+	public $debug;
+
+	public function __construct($engine, $router)
+	{
+		$this->viewEngine = $engine;
+		$this->router = $router;
+	}
 
 	public function lastModified($time)
 	{
@@ -69,11 +82,6 @@ trait Response
 		$this->header('Cache-Control', $args);
 	}
 
-	public function status($code)
-	{
-		$this->_status = $code;
-	}
-
 	public function stderr()
 	{
 		$buffer = ob_get_contents();
@@ -81,35 +89,22 @@ trait Response
 		file_put_contents('php://stderr', $buffer, FILE_APPEND);
 	}
 
-	public function end($code, $body='')
+	public function send()
 	{
-		$this->stderr();
-		if (!is_int($code))
-		{
-			$body = $code;
-			$code = 200;
-		}
-		$this->send(['code'=>$code, 'body'=>$body]);
-	}
-
-	public function send($response)
-	{
-		$contentType = isset($response['type']) ? $response['type'] : 'text/html';
-		$code = isset($response['code']) ? $response['code'] : 200;
-		header('HTTP/1.1 ' . $code . ' ' . $this->statuses[$code]);
-		header('Status: ' . $code);
-		header('Content-Type: ' . (empty($response['charset']) ? $contentType : $contentType . '; charset=' . $response['charset']));
+		header('HTTP/1.1 ' . $this->status. ' ' . $this->statuses[$this->status]);
+		header('Status: ' . $this->status);
+		header('Content-Type: ' . $this->contentType . '; charset=' . $this->charset);
 		$this->sendHeader();
-		exit($response['body']);
+		exit($this->body);
 	}
 
 	public function notFound()
 	{
 		if(IS_CLI)
 		{
-			$this->_router->cmds() or exit(1);
+			$this->router->cmds() or exit(1);
 			echo "Usage:\n\n";
-			foreach($this->_router->cmds() as $cmd)
+			foreach($this->router->cmds() as $cmd)
 			{
 				list($cmd, $options) = $cmd;
 				echo '  php ', $_SERVER['argv'][0], ' ' , $cmd, "\n";
@@ -130,7 +125,8 @@ trait Response
 		}
 		else
 		{
-			$this->end(404);
+			$this->status = 404;
+			$this->send();
 		}
 	}
 
@@ -144,17 +140,17 @@ trait Response
 	{
 		if(is_int($name))
 		{
-			$this->_status = $name;
+			$this->status = $name;
 		}
 		else
 		{
-			$this->_headers[$name] = $value;
+			$this->headers[$name] = $value;
 		}
 	}
 
 	public function sendHeader()
 	{
-		foreach($this->_headers as $name => $value)
+		foreach($this->headers as $name => $value)
 		{
 			if(is_array($value))
 			{
@@ -168,9 +164,16 @@ trait Response
 		}
 	}
 
+	public function body($body, $contentType=null, $charset=null)
+	{
+		$this->body = $body;
+		if ($contentType) $this->contentType = $contentType;
+		if ($charset) $this->charset = $charset;
+	}
+
 	public function render($template, $vars=null)
 	{
-		return $this->engines->__call($this->get('view engine'), [$template, $vars]);
+		return $this->viewEngine->render($template, $vars);
 	}
 
 	public function download($content, $name, $size=null)

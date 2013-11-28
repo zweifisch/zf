@@ -8,11 +8,12 @@ use InvalidArgumentException;
 
 class App extends Laziness
 {
-	use Response;
 	use EventEmitter;
 
 	private $_lastComponent;
 	private $_middlewares;
+
+	public $config;
 
 	function __construct()
 	{
@@ -50,7 +51,7 @@ class App extends Laziness
 		register_shutdown_function($on_shutdown->bindTo($this));
 
 		$on_error = function(){
-			$this->stderr();
+			$this->response->stderr();
 			return $this->emit('error', (object)array_combine(
 				['no','str','file','line','context'], func_get_args()));
 		};
@@ -114,13 +115,18 @@ class App extends Laziness
 		return $this->emit($event, $args[0]);
 	}
 
-	public function __get($name)
+	public function __get($key)
 	{
-		if(!isset($this->$name) && isset($this->config->components) && isset($this->config->components[$name]))
+		if(!parent::__isset($key) && isset($this->config->components) && isset($this->config->components[$key]))
 		{
-			$this->register($name); 
+			$this->register($key); 
 		}
-		return parent::__get($name);
+		return parent::__get($key);
+	}
+
+	public function __isset($key)
+	{
+		return parent::__isset($key) || isset($this->config->components[$key]);
 	}
 
 	public function resource($name, $subResources=null)
@@ -224,30 +230,6 @@ class App extends Laziness
 		$this->_middlewares = $this->_middlewares
 			? array_merge($this->_middlewares, $this->prepareMiddlewares($middlewares))
 			: $this->prepareMiddlewares($middlewares);
-		return $this;
-	}
-
-	private function prepareMiddlewares($middlewares)
-	{
-		return array_map(function($middleware) {
-			if (strpos($middleware, ':')) // false or larger than 0
-			{
-				list($middleware, $params) = explode(':', $middleware);
-				return [$middleware, explode(',', $params)];
-			}
-			return [$middleware, []];
-		}, $middlewares);
-	}
-
-	public function validator($name, $closure)
-	{
-		$this->validators->register($name, $closure);
-		return $this;
-	}
-
-	public function map($type, $closure=null)
-	{
-		$this->mappers->register($type, $closure);
 		return $this;
 	}
 
@@ -371,7 +353,7 @@ class App extends Laziness
 					}
 					catch(InvalidArgumentException $e)
 					{
-						$this->notFound();
+						$this->response->notFound();
 					}
 				};
 
@@ -389,7 +371,7 @@ class App extends Laziness
 		}
 		else
 		{
-			$this->notFound();
+			$this->response->notFound();
 		}
 	}
 
@@ -435,12 +417,12 @@ class App extends Laziness
 				}
 			}
 		}
-		$response = ['body' => $response];
+		$this->response->body = $response;
 		if ($middlewares)
 		{
 			while($middleware = array_pop($middlewares))
 			{
-				$middleware($response);
+				$middleware($this->response);
 			}
 		}
 	}
@@ -455,6 +437,18 @@ class App extends Laziness
 				return $result;
 			}
 		}
+	}
+
+	private function prepareMiddlewares($middlewares)
+	{
+		return array_map(function($middleware) {
+			if (strpos($middleware, ':')) // false or larger than 0
+			{
+				list($middleware, $params) = explode(':', $middleware);
+				return [$middleware, explode(',', $params)];
+			}
+			return [$middleware, []];
+		}, $middlewares);
 	}
 
 	private function rewriteConfig()

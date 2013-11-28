@@ -33,8 +33,8 @@ $app->get('/time/:format', function(){
 $app->get('/git/:cmd', 'git');
 
 $app->get('/', function(){
-	$this->log('%s %s', $this->request->ip, date('H:i:s'));
-	return $this->render('index',['now'=> date('H:i:s')]);
+	$this->response->log('%s %s', $this->request->ip, date('H:i:s'));
+	return $this->response->render('index', ['now'=> date('H:i:s')], $this);
 });
 
 $app->handler('dump', function(){
@@ -50,11 +50,13 @@ $app->put('/dump', function(){
 });
 
 $app->onValidationFailed(function($message){
-	$this->end(400, json_encode($message));
+	$this->response->status = 400;
+	$this->response->body = json_encode($message);
+	$this->response->send();
 });
 
 $app->head('/cache-control', function(){
-	$this->cacheControl('public', ['max-age'=>120]);
+	$this->response->cacheControl('public', ['max-age'=>120]);
 });
 
 $app->post('/debug', function(){

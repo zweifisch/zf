@@ -3,7 +3,6 @@
 return [
 	'schema' => function($schema) {
 		if($errors = $this->validator->validate($this->body, $schema)) {
-			$this->errors = $errors;
 			$this->emit('validationfailed', ['errors'=> $errors]);
 		}
 	},
@@ -21,27 +20,24 @@ return [
 			return $content;
 		}
 	},
-	'jsonp' => function($callback='callback'){
-		if(!empty($_GET[$callback])){
+	'jsonp' => function($callback='callback') {
+		if(!empty($_GET[$callback])) {
 			return function($response) use ($callback) {
 				$callback = $_GET[$callback];
-				$response['body'] = "$callback && $callback({$response['body']})";
-				$response['type'] = 'text/javascript';
+				$response->body("$callback && $callback({$response->body})", 'text/javascript');
 			};
 		}
 	},
-	'json' => function($pretty='false',$encoding='utf-8'){
-		return function(&$response) use ($pretty, $encoding) {
-			if(!is_string($response['body']) && empty($response['type'])){
-				$response['body'] = 'true' === $pretty ? json_encode($response['body'], JSON_PRETTY_PRINT) : json_encode($response['body']);
-				$response['type'] = 'application/json';
-				$response['charset'] = $encoding;
+	'json' => function($pretty='false',$encoding='utf-8') {
+		return function($response) use ($pretty, $encoding) {
+			if(!is_string($response->body)) {
+				$response->body('true' === $pretty ? json_encode($response->body, JSON_PRETTY_PRINT) : json_encode($response->body), 'application/json', $encoding);
 			}
 		};
 	},
 	'response' => function($charset='utf-8'){
 		return function($response){
-			$this->send($response);
+			$response->send();
 		};
 	},
 	'debug' => function($header='X-Debug'){
@@ -49,7 +45,7 @@ return [
 		$this->helper('debug', function($msg, $object){
 			if($this->config->debug){
 				list($bt) = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,1);
-				$this->debug[] = [
+				$this->response->debug[] = [
 					$msg,
 					$object,
 					basename($bt['file']),
@@ -60,8 +56,8 @@ return [
 		});
 
 		return function() use ($header) {
-			if(is_array($this->debug)){
-				$this->header($header, json_encode($this->debug));
+			if(is_array($this->response->debug)){
+				$this->response->header($header, json_encode($this->response->debug));
 			}
 		};
 	},

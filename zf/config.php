@@ -9,29 +9,20 @@ return [
 	'extract'     => false,
 	'mockup'      => false,
 
-	'views'       => 'views',
 	'handlers'    => 'handlers',
 	'helpers'     => 'helpers',
 	'middlewares' => 'middlewares',
 	'params'      => 'params',
 	'mockups'     => 'mockups',
-	'mappers'     => 'mappers',
 	'schemas'     => 'schemas',
-	'validators'  => 'validators',
-
-	'view engine' => 'default',
-	'view extension' => '.php',
 
 	'pathes' => [
-		'views'       => 'views',
 		'handlers'    => 'handlers',
 		'helpers'     => 'helpers',
 		'middlewares' => 'middlewares',
 		'params'      => 'params',
 		'mockups'     => 'mockups',
-		'mappers'     => 'mappers',
 		'schemas'     => 'schemas',
-		'validators'  => 'validators',
 	],
 
 	'events' => [
@@ -49,11 +40,6 @@ return [
 			'context' => $this,
 			'path' => $this->config->delayed('helpers')
 		],
-		'engines:\zf\ClosureSet' => [
-			'context' => $this,
-			'path' => $this->config->delayed('view engine'),
-			'closures' => require __DIR__ . DIRECTORY_SEPARATOR . 'engines.php'
-		],
 		'handlers:\zf\ClosureSet' => [
 			'context' => $this,
 			'path' => $this->config->delayed('handlers')
@@ -70,7 +56,13 @@ return [
 		'validator:\zf\Validator' => [
 			'schemaPath' => $this->config->delayed('schemas')
 		],
+		'engine:\zf\components\ViewEngine' => [
+			'path' => 'views',
+			'extension' => '.php',
+			'context' => $this,
+		],
 		'request:\zf\components\Request',
+		'response:\zf\components\Response',
 		'params:\zf\components\Params',
 		'session:\zf\Session',
 		'user:\zf\components\User',

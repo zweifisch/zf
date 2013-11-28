@@ -19,44 +19,44 @@ class Laziness implements JsonSerializable
 		$this->_context = $context ? $context : $this;
 	}
 
-	public function __get($name)
+	public function __get($key)
 	{
-		if(array_key_exists($name, $this->_container))
+		if(array_key_exists($key, $this->_container))
 		{
-			if($this->_container[$name] instanceof Closure)
-			{
-				$closure = $this->_container[$name]->bindTo($this->_context);
-				$this->_container[$name] = $closure();
-				$this->emit('computed', ['key'=>$name, 'value'=>$this->_container[$name]]);
-			}
-			return $this->_container[$name];
+			$closure = $this->_container[$key]->bindTo($this->_context);
+			$this->$key = $closure();
+			$this->emit('computed', ['key'=>$key, 'value'=>$this->$key]);
+			return $this->$key;
 		}
 		else
 		{
-			throw new Exception("attribute \"$name\" not found");
+			throw new Exception("attribute \"$key\" not found");
 		}
 	}
 
-	public function __isset($name)
+	public function __isset($key)
 	{
-		return isset($this->_container[$name]);
+		return isset($this->_container[$key]);
 	}
 
-	public function __set($name, $value)
+	public function __set($key, $value)
 	{
-		$this->_container[$name] = $value;
+		if ($value instanceof \Closure)
+		{
+			$this->_container[$key] = $value;
+		}
+		else
+		{
+			$this->$key = $value;
+		}
 	}
 
 	public function jsonSerialize()
 	{
-		foreach($this->_container as $key=>$value)
+		foreach($this->_container as $key=>$_)
 		{
-			if($value instanceof Closure)
-			{
-				$binded = $value->bindTo($this->_context);
-				$this->_container[$key] = $binded();
-			}
+			$this->$key;
 		}
-		return $this->_container;
+		return $this;
 	}
 }
