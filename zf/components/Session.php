@@ -1,16 +1,23 @@
 <?php
 
-namespace zf;
+namespace zf\components;
 
 use Exception;
 
 class Session
 {
-	public function __construct()
+	public function __construct($store=null)
 	{
-		if(PHP_SESSION_DISABLED == session_status())
+		if($store)
 		{
-			throw new Exception('sessions are disabled');
+			session_set_save_handler($store);
+		}
+		else
+		{
+			if(PHP_SESSION_DISABLED == session_status())
+			{
+				throw new Exception('sessions are disabled');
+			}
 		}
 		$this->start();
 		session_write_close();
@@ -33,7 +40,7 @@ class Session
 		session_write_close();
 	}
 
-	public function set($values)
+	public function mset($values)
 	{
 		$this->start();
 		foreach($values as $key => $value)

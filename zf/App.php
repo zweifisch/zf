@@ -129,13 +129,9 @@ class App extends Laziness
 		return parent::__isset($key) || isset($this->config->components[$key]);
 	}
 
-	public function resource($name, $subResources=null)
+	public function resource($name, $customMethods=null)
 	{
-		$pass = function() use ($name) {
-			$this->pass($name.'/'.$this->params->action);
-		};
-
-		$this->router->bulk([
+		$routes = [
 			['GET'    , "/$name"                , ["$name/index"]],
 			['GET'    , "/$name/new"            , ["$name/new"]],
 			['POST'   , "/$name"                , ["$name/create"]],
@@ -144,27 +140,15 @@ class App extends Laziness
 			['PUT'    , "/$name/:$name"         , ["$name/update"]],
 			['PATCH'  , "/$name/:$name"         , ["$name/modify"]],
 			['DELETE' , "/$name/:$name"         , ["$name/destroy"]],
-			['POST'   , "/$name/:$name/:action" , [$pass]],
-		]);
-
-		if($subResources)
+		];
+		if ($customMethods)
 		{
-			foreach($subResources as $res)
+			foreach($customMethods as $method)
 			{
-				$this->router->bulk([
-					['GET'    , "/$name/:$name/$res"               , ["$name/$res/index"]],
-					['GET'    , "/$name/:$name/$res/new"           , ["$name/$res/new"]],
-					['POST'   , "/$name/:$name/$res"               , ["$name/$res/create"]],
-					['GET'    , "/$name/:$name/$res/:$res"         , ["$name/$res/show"]],
-					['GET'    , "/$name/:$name/$res/:$res/edit"    , ["$name/$res/edit"]],
-					['PUT'    , "/$name/:$name/$res/:$res"         , ["$name/$res/update"]],
-					['PATCH'  , "/$name/:$name/$res/:$res"         , ["$name/$res/modify"]],
-					['DELETE' , "/$name/:$name/$res/:$res"         , ["$name/$res/destroy"]],
-					['POST'   , "/$name/:$name/$res/:$res/:action" , [$pass]],
-				]);
+				$routes[] = ['POST', "/$name/:$name/$method", ["$name/$method"]];
 			}
 		}
-
+		$this->router->bulk($routes);
 		return $this;
 	}
 
@@ -289,7 +273,7 @@ class App extends Laziness
 				return $jsonRpc->response();
 			}
 
-			$closureSet = new ClosureSet($this, $closureSet);
+			$closureSet = new components\ClosureSet($this, $closureSet);
 			$this->helper->register('error', function($code, $data=null) use ($jsonRpc){
 				return $jsonRpc->error($code, $data);
 			});
@@ -467,6 +451,10 @@ class App extends Laziness
 				{
 					list($name, $class) = explode(':', $key);
 					$components[$name] = ['class'=> $class, 'constructArgs'=> $constructArgs];
+				}
+				if('\\' != $components[$name]['class']{0})
+				{
+					 $components[$name]['class'] = '\\zf\\components\\' . $components[$name]['class'];
 				}
 			}
 			$this->config->set('components', $components);

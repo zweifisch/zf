@@ -1,6 +1,6 @@
 <?php
 
-use \zf\CliRouter;
+use \zf\components\CliRouter;
 
 class CliRouterTest extends PHPUnit_Framework_TestCase
 {

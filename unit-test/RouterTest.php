@@ -1,6 +1,6 @@
 <?php
 
-use \zf\Router;
+use \zf\components\Router;
 
 class RouterTest extends PHPUnit_Framework_TestCase
 {

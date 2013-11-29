@@ -10,7 +10,7 @@ return [
 	'permissions' => ['ReadPost', 'WritePost', 'DeletePost'],
 
 	'components' => [
-		'redis:zf\Redis' => [
+		'redis:Redis' => [
 			'config' => [
 				'default' => [
 					'host'     => 'localhost',
@@ -18,7 +18,7 @@ return [
 				]
 			]
 		],
-		'mongo:zf\Mongo' => [
+		'mongo:Mongo' => [
 			'config' => [
 				'users','posts','files:GridFS' => [
 					'url'        => 'mongodb://localhost:27017',
@@ -27,7 +27,7 @@ return [
 				]
 			]
 		],
-		'db:zf\PDO' => [
+		'db:PDO' => [
 			'config' => [
 				'dsn' => 'mysql:host=localhost;dbname=mysql;charset=utf8',
 				'username' => 'root',
@@ -40,9 +40,8 @@ return [
 				],
 			]
 		],
-		'sessionStore:\zf\components\RedisSessionHandler',
-		'session:zf\Session',
-		'user:zf\User' => [
+		'sessionStore:RedisSessionHandler',
+		'user:User' => [
 			'secret' => 'secret'
 		]
 	],

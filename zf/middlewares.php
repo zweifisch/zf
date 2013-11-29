@@ -2,8 +2,8 @@
 
 return [
 	'schema' => function($schema) {
-		if($errors = $this->validator->validate($this->body, $schema)) {
-			$this->emit('validationfailed', ['errors'=> $errors]);
+		if($this->errors = $this->validator->validate($this->body, $schema)) {
+			$this->emit('validationfailed', ['errors'=> $this->errors]);
 		}
 	},
 	'mockup' => function($mockup) {

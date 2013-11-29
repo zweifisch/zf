@@ -16,15 +16,6 @@ return [
 	'mockups'     => 'mockups',
 	'schemas'     => 'schemas',
 
-	'pathes' => [
-		'handlers'    => 'handlers',
-		'helpers'     => 'helpers',
-		'middlewares' => 'middlewares',
-		'params'      => 'params',
-		'mockups'     => 'mockups',
-		'schemas'     => 'schemas',
-	],
-
 	'events' => [
 		'response' => 'about to send the response',
 		'exception' => 'an uncaught exception was thrown',
@@ -36,36 +27,36 @@ return [
 	'use middlewares' => ['response', 'json', 'bodyParser'],
 
 	'components' => [
-		'helper:\zf\ClosureSet' => [
+		'helper:ClosureSet' => [
 			'context' => $this,
 			'path' => $this->config->delayed('helpers')
 		],
-		'handlers:\zf\ClosureSet' => [
+		'handlers:ClosureSet' => [
 			'context' => $this,
 			'path' => $this->config->delayed('handlers')
 		],
-		'middlewares:\zf\ClosureSet' => [
+		'middlewares:ClosureSet' => [
 			'context' => $this,
 			'path' => $this->config->delayed('middlewares'),
 			'closures' => require __DIR__ . DIRECTORY_SEPARATOR . 'middlewares.php'
 		],
-		'paramHandlers:\zf\ClosureSet' => [
+		'paramHandlers:ClosureSet' => [
 			'context' => $this,
 			'path' => $this->config->delayed('params')
 		],
-		'validator:\zf\Validator' => [
+		'validator:Validator' => [
 			'schemaPath' => $this->config->delayed('schemas')
 		],
-		'engine:\zf\components\ViewEngine' => [
+		'engine:ViewEngine' => [
 			'path' => 'views',
 			'extension' => '.php',
 			'context' => $this,
 		],
-		'request:\zf\components\Request',
-		'response:\zf\components\Response',
-		'params:\zf\components\Params',
-		'session:\zf\Session',
-		'user:\zf\components\User',
-		IS_CLI ? 'router:\zf\CliRouter' : 'router:\zf\Router',
+		'request:Request',
+		'response:Response',
+		'params:Params',
+		'session:Session',
+		'user:User',
+		IS_CLI ? 'router:CliRouter' : 'router:Router',
 	],
 ];

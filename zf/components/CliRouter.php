@@ -1,6 +1,6 @@
 <?php
 
-namespace zf;
+namespace zf\components;
 
 class CliRouter
 {

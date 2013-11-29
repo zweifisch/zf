@@ -1,6 +1,6 @@
 <?php
 
-namespace zf;
+namespace zf\components;
 
 use Exception;
 
@@ -94,7 +94,7 @@ class ClosureSet
 
 	public function __apply($name, $args)
 	{
-		return $this->__call($name, Data::is_assoc($args) ? Closure::keywordArgs($this->$name, $args) : $args);
+		return $this->__call($name, \zf\Data::is_assoc($args) ? \zf\Closure::keywordArgs($this->$name, $args) : $args);
 	}
 
 	public function register($name, $closure=null)

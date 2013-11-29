@@ -1,6 +1,6 @@
 <?php
 
-use \zf\ClosureSet;
+use \zf\components\ClosureSet;
 
 class ClosureSetTest extends PHPUnit_Framework_TestCase
 {
