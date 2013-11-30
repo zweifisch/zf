@@ -1,17 +1,10 @@
 <?php
 
-use zf\Delayed;
-
 return [
-
-	'roles' => [
-		'Admin', 'Writer',
-	],
-	'permissions' => ['ReadPost', 'WritePost', 'DeletePost'],
 
 	'components' => [
 		'redis:Redis' => [
-			'config' => [
+			'dbs' => [
 				'default' => [
 					'host'     => 'localhost',
 					'pconnect' => true,
@@ -40,9 +33,5 @@ return [
 				],
 			]
 		],
-		'sessionStore:RedisSessionHandler',
-		'user:User' => [
-			'secret' => 'secret'
-		]
 	],
 ];

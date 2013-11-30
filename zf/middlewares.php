@@ -28,10 +28,10 @@ return [
 			};
 		}
 	},
-	'json' => function($pretty='false',$encoding='utf-8') {
-		return function($response) use ($pretty, $encoding) {
+	'json' => function($encoding='utf-8') {
+		return function($response) use ($encoding) {
 			if(!is_string($response->body)) {
-				$response->body('true' === $pretty ? json_encode($response->body, JSON_PRETTY_PRINT) : json_encode($response->body), 'application/json', $encoding);
+				$response->body($this->config->pretty ? json_encode($response->body, JSON_PRETTY_PRINT) : json_encode($response->body), 'application/json', $encoding);
 			}
 		};
 	},

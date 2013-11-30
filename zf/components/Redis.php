@@ -2,109 +2,98 @@
 
 namespace zf\components;
 
+use Exception;
+
 class Redis
 {
-
-	private $_config;
+	private $_dbs;
 	private $_cachedConnections = [];
-	private $_keys;
 	private $_key;
-	private $_type;
 	private $_connection;
 
-	public function __construct($config)
+	public function __construct($dbs)
 	{
-		$this->_config = $config;
+		$this->_dbs = $dbs;
 	}
 
-	public function __get($name)
+	public function __get($key)
 	{
-		if($this->_key)
+		if ($this->_connection)
 		{
-			if('hash' !== $this->_type) throw new \Exception("$this->_key is not declared as a hash");
-
-			$key = $this->_key;
-			$this->_key = null;
-			return $this->_connection->hget($key, $name);
+			$this->_key = $key;
 		}
-
-		if(empty($this->_config[$name]))
-			throw new \Exception("redis config \"$name\" not defined");
-
-		$config = $this->_config[$name];
-		$host = isset($config['host']) ? $config['host'] : '127.0.0.1';
-		$port = isset($config['port']) ? $config['port'] : 6379;
-		$timeout = isset($config['timeout']) ? $config['timeout'] : 0;
-		$pconnect = isset($config['pconnect']) ? $config['pconnect'] : false;
-
-		if(empty($this->_cachedConnections["$host:$port"]))
+		else
 		{
-			$redis = new \Redis();
-			$pconnect
-				? $redis->pconnect($host, $port, $timeout)
-				: $redis->connect($host, $port, $timeout);
-			$this->_cachedConnections["$host:$port"] = $redis;
-		}
-		return $this->$name = $this->_cachedConnections["$host:$port"];
-	}
-
-	private function _parseConfig()
-	{
-		foreach($this->_config as $alias=>$conf)
-		{
-			if(empty($conf['keys'])) continue;
-
-			foreach($conf['keys'] as $key=>$pattern)
+			if (empty($this->_dbs[$key]))
 			{
-				if(is_int($key))
-				{
-					if(empty($lastkey)) throw new \Exception("unexpected \"$pattern\" in redis config \"$alias\"");
-					$this->_keys[$lastkey.':t'] = $pattern;
-				}
-				else
-				{
-					$this->_keys[$lastkey = $key] = $pattern;
-					$this->_keys[$key.':c'] = $alias;
-				}
+				$this->_key = $key;
+			}
+			else
+			{
+				$this->getConnection($key);
 			}
 		}
-	}
-
-	public function __call($name, $args)
-	{
-		$this->_keys or $this->_parseConfig();
-
-		if($this->_key)
-		{
-			array_unshift($args, $this->_key);
-			$this->_key = null;
-			return call_user_func_array([$this->_connection, $name], $args);
-		}
-
-		if(empty($this->_keys[$name])) throw new \Exception("key \"$name\" not defined");
-
-		$this->_connection = $this->{$this->_keys[$name.':c']};
-		$this->_type = isset($this->_keys[$name.':t']) ? isset($this->_keys[$name.':t']) : null; 
-		$this->_key = vsprintf($this->_keys[$name], $args);
 		return $this;
 	}
 
-	public function __set($name, $value)
+	private function useDefaultConnection()
 	{
-		if($this->_key)
+		if (isset($this->_dbs['default']))
 		{
-			if('hash' !== $this->_type) throw new \Exception("$this->_key is not declared as a hash");
+			$this->getConnection('default');
+		}
+		else
+		{
+			throw new \Exception("redis db \"$key\" not defined");
+		}
+	}
 
-			$key = $this->_key;
+	private function getConnection($key)
+	{
+		if(!array_key_exists($key, $this->_cachedConnections))
+		{
+			$config = $this->_dbs[$key] + [
+				'host' => '127.0.0.1',
+				'port' => 6379,
+				'index' => 0,
+				'prefix' => '',
+				'timeout' => 0,
+				'pconnect' => false,
+			];
+			$this->_cachedConnections[$key] = $redis = new \Redis();
+			$config['pconnect']
+				? $redis->pconnect($config['host'], $config['port'], $config['timeout'])
+				: $redis->connect($config['host'], $config['port'], $config['timeout']);
+			$config['index'] && $redis->select($config['index']);
+			$config['prefix'] && $redis->setOption(\Redis::OPT_PREFIX, $config['prefix']);
+		}
+		return $this->_connection = $this->_cachedConnections[$key];
+	}
+
+	public function __call($method, $args)
+	{
+		$this->_connection or $this->useDefaultConnection();
+		if ($this->_key)
+		{
+			array_unshift($args, $this->_key);
 			$this->_key = null;
-			return $this->_connection->hset($key, $name, $value);
 		}
+		$ret = call_user_func_array([$this->_connection, $method], $args);
+		$this->_connection = null;
+		return $ret;
+	}
 
-		if(isset($this->_config[$name]))
+	public function __set($key, $value)
+	{
+		$this->_connection or $this->useDefaultConnection();
+		if ($this->_key)
 		{
-			return $this->$name = $value;
+			$this->_connection->hset($this->_key, $key, $value);
+			$this->_key = null;
 		}
-
-		throw new \Exception("can't set '$name'");
+		else
+		{
+			$this->_connection->set($key, $value);
+		}
 	}
 }
