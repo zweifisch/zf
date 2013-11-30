@@ -6,7 +6,6 @@ trait EventEmitter
 {
 	private $listeners;
 	private $eventsIndex;
-	private $parent;
 	private $lastHandler;
 
 	public function on($event, $callback, $once=false)
@@ -101,12 +100,6 @@ trait EventEmitter
 			$listener = $listener->bindTo($this);
 			if($listener($data, $event)) return true;
 		}
-		return is_null($this->parent) ? (bool)$listeners : $this->parent->emit($event, $data);
-	}
-
-	public function setParent($parent)
-	{
-		$this->parent = $parent;
-		return $this;
+		return (bool)$listeners;
 	}
 }
