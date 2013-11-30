@@ -2,49 +2,91 @@
 
 namespace zf;
 
+use Exception;
+
 class Config
 {
 	private $_configs = [];
+	private $_context;
 
-	public function __get($name)
+	public function __construct($context=null)
 	{
-		if(array_key_exists($name, $this->_configs))
+		$this->_context = $context;
+	}
+
+	public function __get($key)
+	{
+		if(array_key_exists($key, $this->_configs))
 		{
-			return $this->_configs[$name];
+			return $this->_configs[$key];
 		}
-		throw new \Exception("config key \"$name\" not found");
+		throw new Exception("config key '$key' not found");
+	}
+
+	public function __set($key, $value)
+	{
+		$this->_configs[$key] = $value;
+	}
+
+	public function get($key, $default=null)
+	{
+		return isset($this->_configs[$key]) ? $this->_configs[$key] : $default;
+	}
+
+	public function set($key, $value=null)
+	{
+		if(1 == func_num_args())
+		{
+			is_array($key) ? $this->mset($key) : $this->setBool($key);
+		}
+		else
+		{
+			$this->_configs[$key] = $value;
+		}
+	}
+
+	public function update($configs)
+	{
+		if($this->_configs)
+		{
+			foreach ($configs as $key => $value)
+			{
+				if (is_array($value) && isset($this->_configs[$key]))
+				{
+					$this->_configs[$key] = array_merge($this->_configs[$key], $value);
+				}
+				else
+				{
+					$this->_configs[$key] = $value;
+				}
+			}
+		}
+		else
+		{
+			$this->_configs = $configs;
+		}
 	}
 
 	public function load($path, $quiet=false)
 	{
+		$requireWithContext = function($path) {
+			return require($path);
+		};
+		if($this->_context)
+		{
+			$requireWithContext = $requireWithContext->bindTo($this->_context);
+		}
 		if(stream_resolve_include_path($path))
 		{
-			$this->_configs = array_merge($this->_configs, require $path);
+			$this->update($requireWithContext($path));
 		}
 		else
 		{
-			if(!$quiet) throw new \Exception("config \"$path\" not loaded");
+			if(!$quiet) throw new Exception("config '$path' can't be loaded");
 		}
 	}
 
-	public function set($name, $value=null)
-	{
-		if(1 == func_num_args())
-		{
-			is_array($name) ? $this->multiSet($name) : $this->setBool($name);
-		}
-		else
-		{
-			$this->_configs[$name] = $value;
-		}
-	}
-
-	public function get($name, $default=null)
-	{
-		return isset($this->_configs[$name]) ? $this->_configs[$name] : $default;
-	}
-
-	private function multiSet($options)
+	private function mset($options)
 	{
 		foreach($options as $key=>$value)
 		{
@@ -52,27 +94,48 @@ class Config
 		}
 	}
 
-	private function setBool($name)
+	private function setBool($key)
 	{
-		strncmp('no', $name, 2)
-			? $this->_configs[$name] = true
-			: $this->_configs[substr($name, 2)] = false;
+		strncmp('no', $key, 2)
+			? $this->_configs[$key] = true
+			: $this->_configs[substr($key, 2)] = false;
 	}
 
-	public function __isset($name)
+	public function __isset($key)
 	{
-		return isset($this->_configs[$name]);
+		return isset($this->_configs[$key]);
 	}
 
-	public function __set($name, $value)
+	public function delayed($key)
 	{
-		$this->_configs[$name] = $value;
-	}
-
-	public function delayed($name)
-	{
-		return function() use ($name) {
-			return $this->__get($name);
+		return function() use ($key) {
+			return $this->__get($key);
 		};
+	}
+
+	public function parse()
+	{
+		if(isset($this->_configs['components']))
+		{
+			$components = [];
+			foreach($this->_configs['components'] as $key => $constructArgs)
+			{
+				if(is_int($key))
+				{
+					list($name, $class) = explode(':', $constructArgs);
+					$components[$name] = ['class'=> $class, 'constructArgs'=> []];
+				}
+				else
+				{
+					list($name, $class) = explode(':', $key);
+					$components[$name] = ['class'=> $class, 'constructArgs'=> $constructArgs];
+				}
+				if('\\' != $components[$name]['class']{0})
+				{
+					 $components[$name]['class'] = '\\zf\\components\\' . $components[$name]['class'];
+				}
+			}
+			$this->_configs['components'] = $components;
+		}
 	}
 }

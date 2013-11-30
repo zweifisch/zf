@@ -25,20 +25,12 @@ class App extends Laziness
 		$basedir = IS_CLI ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT'];
 		set_include_path($basedir . PATH_SEPARATOR . get_include_path());
 
-		$this->config = new Config;
-		$this->config->set(require __DIR__ . DIRECTORY_SEPARATOR . 'config.php');
-		$components = $this->config->components;
+		$this->config = new Config($this);
+		$this->config->load(__DIR__ . DIRECTORY_SEPARATOR . 'defaults.php');
 		$this->config->load('configs.php', true);
-		if(getenv('ENV'))
-		{
-			$this->config->load('configs-'.getenv('ENV').'.php', true);
-		}
-		if(isset($this->config->components))
-		{
-			$this->set('components', $components + $this->config->components);
-		}
-		$this->set('basedir', $basedir);
-		$this->rewriteConfig();
+		getenv('ENV') && $this->config->load('configs-'.getenv('ENV').'.php', true);
+		$this->config->basedir = $basedir;
+		$this->config->parse();
 
 		$on_exception = function($exception) {
 			if(!$this->emit('exception', $exception)) throw $exception;
@@ -57,7 +49,7 @@ class App extends Laziness
 		};
 		set_error_handler($on_error->bindTo($this));
 
-		$this->useMiddleware($this->get('use middlewares'));
+		$this->useMiddleware($this->config->use);
 	}
 
 	function __call($name, $args)
@@ -435,35 +427,8 @@ class App extends Laziness
 		}, $middlewares);
 	}
 
-	private function rewriteConfig()
-	{
-		if(isset($this->config->components))
-		{
-			$components = [];
-			foreach($this->config->components as $key => $constructArgs)
-			{
-				if(is_int($key))
-				{
-					list($name, $class) = explode(':', $constructArgs);
-					$components[$name] = ['class'=> $class, 'constructArgs'=> []];
-				}
-				else
-				{
-					list($name, $class) = explode(':', $key);
-					$components[$name] = ['class'=> $class, 'constructArgs'=> $constructArgs];
-				}
-				if('\\' != $components[$name]['class']{0})
-				{
-					 $components[$name]['class'] = '\\zf\\components\\' . $components[$name]['class'];
-				}
-			}
-			$this->config->set('components', $components);
-		}
-	}
-
 	public function __toString()
 	{
 		return 'App';
 	}
-
 }
