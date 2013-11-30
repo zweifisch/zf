@@ -2,34 +2,17 @@
 
 namespace zf\components;
 
+use zf\Data;
+
 class Mongo implements \ArrayAccess
 {
 
 	private $_config;
 	private $_cachedConnections = [];
 
-	public function __construct($config)
+	public function __construct($collections)
 	{
-		$this->_config = $config;
-	}
-
-	private function _rewriteConfig($config)
-	{
-		$ret = [];
-		$collections = [];
-		foreach($config as $collection=>$conf)
-		{
-			if(is_int($collection))
-			{
-				$collections[] = $conf;
-			}
-			else
-			{
-				while($collections) $ret[array_pop($collections)] = $conf;
-				$ret[$collection] = $conf;
-			}
-		}
-		return $ret;
+		$this->_config = $collections;
 	}
 
 	public function __get($collection)
@@ -37,7 +20,7 @@ class Mongo implements \ArrayAccess
 		$isGridFS = false;
 		if(empty($this->_config[$collection]))
 		{
-			$this->_config = $this->_rewriteConfig($this->_config);
+			$this->_config = Data::pushRight($this->_config);
 			$isGridFS = isset($this->_config[$collection.':GridFS']);
 			if(!$isGridFS && empty($this->_config[$collection]))
 			{

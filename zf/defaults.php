@@ -9,13 +9,6 @@ return [
 	'extract'     => false,
 	'mockup'      => false,
 
-	'handlers'    => 'handlers',
-	'helpers'     => 'helpers',
-	'middlewares' => 'middlewares',
-	'params'      => 'params',
-	'mockups'     => 'mockups',
-	'schemas'     => 'schemas',
-
 	'events' => [
 		'response' => 'about to send the response',
 		'exception' => 'an uncaught exception was thrown',
@@ -27,36 +20,36 @@ return [
 	'use' => ['response', 'json', 'bodyParser'],
 
 	'components' => [
-		'helper:ClosureSet' => [
+		'helper' => 'ClosureSet', [
 			'context' => $this,
-			'path' => $this->config->delayed('helpers')
+			'path' => 'helpers'
 		],
-		'handlers:ClosureSet' => [
+		'handlers' => 'ClosureSet', [
 			'context' => $this,
-			'path' => $this->config->delayed('handlers')
+			'path' => 'handlers',
 		],
-		'middlewares:ClosureSet' => [
+		'middlewares' => 'ClosureSet', [
 			'context' => $this,
-			'path' => $this->config->delayed('middlewares'),
+			'path' => 'middlewares',
 			'closures' => require __DIR__ . DIRECTORY_SEPARATOR . 'middlewares.php'
 		],
-		'paramHandlers:ClosureSet' => [
+		'paramHandlers' => 'ClosureSet', [
 			'context' => $this,
-			'path' => $this->config->delayed('params')
+			'path' => 'params',
 		],
-		'validator:Validator' => [
-			'schemaPath' => $this->config->delayed('schemas')
+		'validator' => 'Validator', [
+			'schemaPath' => 'schemas',
 		],
-		'engine:ViewEngine' => [
+		'engine' => 'ViewEngine' , [
 			'path' => 'views',
 			'extension' => '.php',
 			'context' => $this,
 		],
-		'request:Request',
-		'response:Response',
-		'params:Params',
-		'session:Session',
-		'cookie:Cookie',
-		IS_CLI ? 'router:CliRouter' : 'router:Router',
+		'request' => 'Request',
+		'response' => 'Response',
+		'params' => 'Params',
+		'session' => 'Session',
+		'cookie' => 'Cookie',
+		'router' => IS_CLI ? 'CliRouter' : 'Router',
 	],
 ];

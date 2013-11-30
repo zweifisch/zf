@@ -47,13 +47,22 @@ class Config
 
 	public function update($configs)
 	{
+		if (isset($configs['components']))
+		{
+			$configs['components'] = array_map(function($value) {
+				return [
+					'class' => '\\' == $value[0]{0} ? $value[0] : '\\zf\\components\\' . $value[0],
+					'constructArgs' => isset($value[1]) ? $value[1] : [],
+				];
+			}, Data::pushLeft($configs['components']));
+		}
 		if($this->_configs)
 		{
 			foreach ($configs as $key => $value)
 			{
 				if (is_array($value) && isset($this->_configs[$key]))
 				{
-					$this->_configs[$key] = array_merge($this->_configs[$key], $value);
+					$this->_configs[$key] = $value + $this->_configs[$key];
 				}
 				else
 				{
@@ -111,31 +120,5 @@ class Config
 		return function() use ($key) {
 			return $this->__get($key);
 		};
-	}
-
-	public function parse()
-	{
-		if(isset($this->_configs['components']))
-		{
-			$components = [];
-			foreach($this->_configs['components'] as $key => $constructArgs)
-			{
-				if(is_int($key))
-				{
-					list($name, $class) = explode(':', $constructArgs);
-					$components[$name] = ['class'=> $class, 'constructArgs'=> []];
-				}
-				else
-				{
-					list($name, $class) = explode(':', $key);
-					$components[$name] = ['class'=> $class, 'constructArgs'=> $constructArgs];
-				}
-				if('\\' != $components[$name]['class']{0})
-				{
-					 $components[$name]['class'] = '\\zf\\components\\' . $components[$name]['class'];
-				}
-			}
-			$this->_configs['components'] = $components;
-		}
 	}
 }

@@ -28,9 +28,8 @@ class App extends Laziness
 		$this->config = new Config($this);
 		$this->config->load(__DIR__ . DIRECTORY_SEPARATOR . 'defaults.php');
 		$this->config->load('configs.php', true);
-		getenv('ENV') && $this->config->load('configs-'.getenv('ENV').'.php', true);
+		getenv('ZF_ENV') && $this->config->load('configs-'.getenv('ZF_ENV').'.php', true);
 		$this->config->basedir = $basedir;
-		$this->config->parse();
 
 		$on_exception = function($exception) {
 			if(!$this->emit('exception', $exception)) throw $exception;
@@ -237,12 +236,15 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function initialized($callback)
+	public function initialized($componentName, $callback=null)
 	{
-		$component = $this->_lastComponent;
-		$this->on('computed', function($data) use ($component, $callback){
-			if($data['key'] == $component)
+		if (!$callback) {
+			list($componentName, $callback) = [$this->_lastComponent, $componentName];
+		} 
+		$this->on('computed', function($data) use ($componentName, $callback) {
+			if($data['key'] == $componentName)
 			{
+				$callback = $callback->bindTo($this);
 				$callback($data['value']);
 				return true;
 			}

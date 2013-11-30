@@ -97,7 +97,11 @@ class Closure
 			{
 				$constructArgs[] = $moreParams->{$param->name};
 			}
-			elseif(!$param->isOptional())
+			elseif($param->isOptional())
+			{
+				$constructArgs[] = $param->getDefaultValue();
+			}
+			else
 			{
 				throw new InvalidArgumentException("\"$param->name\" is required");
 			}

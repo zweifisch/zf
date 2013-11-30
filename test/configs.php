@@ -3,7 +3,7 @@
 return [
 
 	'components' => [
-		'redis:Redis' => [
+		'redis' => 'Redis', [
 			'dbs' => [
 				'default' => [
 					'host'     => 'localhost',
@@ -11,8 +11,8 @@ return [
 				]
 			]
 		],
-		'mongo:Mongo' => [
-			'config' => [
+		'mongo' => 'Mongo', [
+			'collections' => [
 				'users','posts','files:GridFS' => [
 					'url'        => 'mongodb://localhost:27017',
 					'database'   => 'project',
@@ -20,7 +20,7 @@ return [
 				]
 			]
 		],
-		'db:PDO' => [
+		'db' => 'PDO', [
 			'config' => [
 				'dsn' => 'mysql:host=localhost;dbname=mysql;charset=utf8',
 				'username' => 'root',
