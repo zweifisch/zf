@@ -97,7 +97,7 @@ return [
 			}
 			elseif ($this->request->contentTypeMatches('application/x-www-form-urlencoded', 33))
 			{
-				'POST' == $this->request->method ? $ret = $_POST : parse_str($this->request->body, $ret);
+				'POST' == $this->request->method ? $ret = (object)$_POST : (object)parse_str($this->request->body, $ret);
 			}
 			elseif ($this->request->contentTypeMatches('multipart/form-data', 19))
 			{

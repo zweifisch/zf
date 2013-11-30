@@ -6,18 +6,11 @@ use Exception;
 
 class Session
 {
-	public function __construct($store=null)
+	public function __construct()
 	{
-		if($store)
+		if(PHP_SESSION_DISABLED == session_status())
 		{
-			session_set_save_handler($store);
-		}
-		else
-		{
-			if(PHP_SESSION_DISABLED == session_status())
-			{
-				throw new Exception('sessions are disabled');
-			}
+			throw new Exception('sessions are disabled');
 		}
 		$this->start();
 		session_write_close();

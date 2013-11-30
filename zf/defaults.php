@@ -56,7 +56,7 @@ return [
 		'response:Response',
 		'params:Params',
 		'session:Session',
-		'user:User',
+		'cookie:Cookie',
 		IS_CLI ? 'router:CliRouter' : 'router:Router',
 	],
 ];

@@ -7,9 +7,12 @@ class Riak implements \ArrayAccess
 	private $_client;
 	private $_bucket;
 	private $_config;
-	public function __construct($config)
+	public function __construct($host, $port)
 	{
-		$this->_config = $config;
+		$this->_config = [
+			'host'=> $host,
+			'port' => $port,
+		];
 	}
 
 	public function __get($key)

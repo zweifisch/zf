@@ -308,6 +308,11 @@ class App extends Laziness
 		});
 	}
 
+	public function render($viewName, $vars=null)
+	{
+		return $this->response->render($viewName, $vars);
+	}
+
 	public function run()
 	{
 		$handlers = $this->request->route();

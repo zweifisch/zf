@@ -25,7 +25,7 @@ class ViewEngine
 		if(!stream_resolve_include_path($path)) throw new Exception("template $template($path) not found");
 
 		$closure = function($_path, $_vars) {
-			if($vars) extract($_vars);
+			if($_vars) extract($_vars);
 			ob_start();
 			include $_path;
 			$ret = ob_get_contents();
