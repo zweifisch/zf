@@ -17,7 +17,7 @@ return [
 		'validationfailed' => 'input validation failed',
 	],
 
-	'use' => ['response', 'json', 'bodyParser'],
+	'use' => ['response', 'json', 'status', 'bodyParser'],
 
 	'components' => [
 		'helper' => 'ClosureSet', [

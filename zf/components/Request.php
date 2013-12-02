@@ -75,8 +75,4 @@ class Request
 		return !strncmp($this->getContentType(), $type, $length);
 	}
 
-	public function server($key, $default=null)
-	{
-		return isset($_SERVER[$key]) ? $_SERVER[$key] : $default;
-	}
 }

@@ -82,15 +82,26 @@ class Response
 		$this->header('Cache-Control', $args);
 	}
 
-	public function stderr()
+	public function stderr($content=null)
 	{
-		$buffer = ob_get_contents();
-		@ob_end_clean();
-		file_put_contents('php://stderr', $buffer, FILE_APPEND);
+		if (is_null($content))
+		{
+			$content = ob_get_contents();
+			@ob_end_clean();
+		}
+		if($content)
+		{
+			if (IS_CLI)
+			{
+				$content = "\033[01;31m$content\033[0m";
+			}
+			file_put_contents('php://stderr', $content, FILE_APPEND);
+		}
 	}
 
 	public function send()
 	{
+		$this->stderr();
 		header('HTTP/1.1 ' . $this->status. ' ' . $this->statuses[$this->status]);
 		header('Status: ' . $this->status);
 		header('Content-Type: ' . $this->contentType . '; charset=' . $this->charset);
@@ -138,14 +149,14 @@ class Response
 
 	public function header($name, $value=null)
 	{
-		if(is_int($name))
-		{
-			$this->status = $name;
-		}
-		else
-		{
-			$this->headers[$name] = $value;
-		}
+		$this->headers[$name] = $value;
+		return $this;
+	}
+
+	public function status($code)
+	{
+		$this->status = $code;
+		return $this;
 	}
 
 	public function sendHeader()
@@ -187,32 +198,4 @@ class Response
 		exit($content);
 	}
 
-	public function log($msg)
-	{
-		$toString = function($object)
-		{
-			if(is_string($object))
-			{
-				return $object;
-			}
-			elseif(is_array($object) || $object instanceof JsonSerializable || $object instanceof stdClass)
-			{
-				return json_encode($object, JSON_UNESCAPED_UNICODE);
-			}
-			else
-			{
-				return var_export($object, true);
-			}
-		};
-
-		if(func_num_args() > 1)
-		{
-			$msg = vsprintf($msg, array_map($toString, array_slice(func_get_args(), 1)));
-		}
-		else
-		{
-			$msg = $toString($msg);
-		}
-		echo $msg, PHP_EOL;
-	}
 }

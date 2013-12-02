@@ -33,7 +33,7 @@ $app->get('/time/:format', function(){
 $app->get('/git/:cmd', 'git');
 
 $app->get('/', function(){
-	$this->response->log('%s %s', $this->request->ip, date('H:i:s'));
+	$this->log('%s %s', $this->request->ip, date('H:i:s'));
 	return $this->response->render('index', ['now'=> date('H:i:s')], $this);
 });
 
@@ -85,9 +85,9 @@ $app->get('/foo', function(){
 });
 
 $app->middleware('auth', function($user,$passwd){
-	if($this->server('PHP_AUTH_USER') != $user || $this->server('PHP_AUTH_PW') != $passwd){
+	if($this->get('PHP_AUTH_USER') != $user || $this->get('PHP_AUTH_PW') != $passwd){
 		$this->header('WWW-Authenticate', ['Basic realm'=> 'Login Required']);
-		$this->header(401);
+		$this->status(401);
 		return 'Unauthorized';
 	}
 });
@@ -98,6 +98,10 @@ $app->get('/admin', 'auth:admin,secret', function(){
 
 $app->get('/console', 'console');
 
-$app->resource('posts', ['comments']);
+$app->resource('posts', ['trash']);
+
+$app->get('/status', function() {
+	return 404;
+});
 
 $app->run();

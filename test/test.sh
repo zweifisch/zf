@@ -74,4 +74,8 @@ assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":
 
 assert_end schema 
 
+assert_raises 'curl -si $host/status | grep "Status: 404"'
+
+assert_end numeric_return
+
 kill $pid

@@ -78,7 +78,7 @@ class App extends Laziness
 
 	private function _sig($signal, $args)
 	{
-		$signal = strtoupper($signal);
+		$signal = 'SIG' . strtoupper($signal);
 		if(!defined($signal))
 		{
 			throw new Exception("signal '$signal' not found");
@@ -120,23 +120,29 @@ class App extends Laziness
 		return parent::__isset($key) || isset($this->config->components[$key]);
 	}
 
-	public function resource($name, $customMethods=null)
+	public function resource()
 	{
+		$customMethods = is_array(end($args = func_get_args())) ? array_pop($args) : null;
+		$fsPath = implode('/', $args);
+		$name = array_pop($args);
+		$path = implode('', array_map(function($segment) {
+			return '/' . $segment . '/:' . $segment;
+		}, $args)) . '/' . $name;
 		$routes = [
-			['GET'    , "/$name"                , ["$name/index"]],
-			['GET'    , "/$name/new"            , ["$name/new"]],
-			['POST'   , "/$name"                , ["$name/create"]],
-			['GET'    , "/$name/:$name"         , ["$name/show"]],
-			['GET'    , "/$name/:$name/edit"    , ["$name/edit"]],
-			['PUT'    , "/$name/:$name"         , ["$name/update"]],
-			['PATCH'  , "/$name/:$name"         , ["$name/modify"]],
-			['DELETE' , "/$name/:$name"         , ["$name/destroy"]],
+			['GET'    , "$path"             , ["$fsPath/index"]],
+			['GET'    , "$path/new"         , ["$fsPath/new"]],
+			['POST'   , "$path"             , ["$fsPath/create"]],
+			['GET'    , "$path/:$name"      , ["$fsPath/show"]],
+			['GET'    , "$path/:$name/edit" , ["$fsPath/edit"]],
+			['PUT'    , "$path/:$name"      , ["$fsPath/update"]],
+			['PATCH'  , "$path/:$name"      , ["$fsPath/modify"]],
+			['DELETE' , "$path/:$name"      , ["$fsPath/destroy"]],
 		];
 		if ($customMethods)
 		{
 			foreach($customMethods as $method)
 			{
-				$routes[] = ['POST', "/$name/:$name/$method", ["$name/$method"]];
+				$routes[] = ['POST', "/$path/:$name/$method", ["$fsPath/$method"]];
 			}
 		}
 		$this->router->bulk($routes);
@@ -151,11 +157,18 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function get($name)
+	public function get($key)
 	{
 		if(1 == func_num_args())
 		{
-			return $this->config->$name;
+			if (ucfirst($key) == $key)
+			{
+				return isset($_SERVER[$key]) ? $_SERVER[$key] : null;
+			}
+			else
+			{
+				return isset($this->config->$key) ? $this->config->$key : null;
+			}
 		}
 		else
 		{
@@ -432,6 +445,56 @@ class App extends Laziness
 			}
 			return [$middleware, []];
 		}, $middlewares);
+	}
+
+	public function header($key, $value=null)
+	{
+		$this->response->header($key, $value);
+		return $this;
+	}
+
+	public function status($code)
+	{
+		$this->response->status($code);
+		return $this;
+	}
+
+	public function send($body=null)
+	{
+		if($body)
+		{
+			$this->response->body = $body;
+		}
+		$this->response->send();
+	}
+
+	public function log($msg)
+	{
+		$toString = function($object)
+		{
+			if(is_string($object))
+			{
+				return $object;
+			}
+			elseif(is_array($object) || $object instanceof JsonSerializable || $object instanceof stdClass)
+			{
+				return json_encode($object, JSON_UNESCAPED_UNICODE);
+			}
+			else
+			{
+				return var_export($object, true);
+			}
+		};
+
+		if(func_num_args() > 1)
+		{
+			$msg = vsprintf($msg, array_map($toString, array_slice(func_get_args(), 1)));
+		}
+		else
+		{
+			$msg = $toString($msg);
+		}
+		$this->response->stderr($msg . PHP_EOL);
 	}
 
 	public function __toString()

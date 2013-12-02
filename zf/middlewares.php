@@ -24,7 +24,8 @@ return [
 		if(!empty($_GET[$callback])) {
 			return function($response) use ($callback) {
 				$callback = $_GET[$callback];
-				$response->body("$callback && $callback({$response->body})", 'text/javascript');
+				$body = is_string($response->body) ? $response->body : json_encode($response->body);
+				$response->body("$callback && $callback({$body})", 'text/javascript');
 			};
 		}
 	},
@@ -32,6 +33,14 @@ return [
 		return function($response) use ($encoding) {
 			if(!is_string($response->body)) {
 				$response->body($this->config->pretty ? json_encode($response->body, JSON_PRETTY_PRINT) : json_encode($response->body), 'application/json', $encoding);
+			}
+		};
+	},
+	'status' => function() {
+		return function($response) {
+			if(is_int($response->body)) {
+				$response->status = $response->body;
+				$response->body = '';
 			}
 		};
 	},
@@ -110,7 +119,7 @@ return [
 			return $ret;
 		};
 	},
-	'msgpack' => function($header = 'application/x-msgpack'){
+	'msgpack' => function($header = 'application/x-msgpack') {
 		$this->body = function() {
 			if ($this->request->contentTypeMatches($header))
 			{
