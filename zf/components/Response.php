@@ -109,7 +109,7 @@ class Response
 		exit($this->body);
 	}
 
-	public function notFound()
+	public function notFound($message='')
 	{
 		if(IS_CLI)
 		{
@@ -137,6 +137,7 @@ class Response
 		else
 		{
 			$this->status = 404;
+			$this->body = $message;
 			$this->send();
 		}
 	}

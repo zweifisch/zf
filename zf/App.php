@@ -4,7 +4,6 @@ namespace zf;
 
 use Exception;
 use FilesystemIterator;
-use InvalidArgumentException;
 
 class App extends Laziness
 {
@@ -347,9 +346,9 @@ class App extends Laziness
 					{
 						return Closure::apply($handler, $this->params, $this);
 					}
-					catch(InvalidArgumentException $e)
+					catch(ArgumentMissingException $e)
 					{
-						$this->response->notFound();
+						$this->response->notFound($e->getMessage());
 					}
 				};
 

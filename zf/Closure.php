@@ -10,8 +10,8 @@ class Closure
 {
 	public static function apply($closure, $params=null, $context=null)
 	{
-		if($context) $closure = $closure->bindTo($context);
-		if($params)
+		if ($context) $closure = $closure->bindTo($context);
+		if ($params)
 		{
 			if (is_object($params) || Data::is_assoc($params))
 			{
@@ -44,7 +44,7 @@ class Closure
 				}
 				else
 				{
-					throw new InvalidArgumentException("\"$param->name\" is required");
+					throw new ArgumentMissingException("'$param->name' is required");
 				}
 			}
 		}
@@ -103,9 +103,13 @@ class Closure
 			}
 			else
 			{
-				throw new InvalidArgumentException("\"$param->name\" is required");
+				throw new InvalidArgumentException("'$param->name' is required when initialize '$className'");
 			}
 		}
 		return $reflectionClass->newInstanceArgs($constructArgs);
 	}
+}
+
+class ArgumentMissingException extends \Exception
+{
 }
