@@ -149,6 +149,21 @@ class App extends Laziness
 		return $this;
 	}
 
+	public function module($name)
+	{
+		return $this;
+	}
+
+	public function useModule()
+	{
+		$modules = func_get_args();
+		foreach($modules as $module)
+		{
+			$this->router->module($module);
+			require 'modules'.DIRECTORY_SEPARATOR.$module.DIRECTORY_SEPARATOR.'index.php';
+		}
+	}
+
 	public function set($name, $value=null)
 	{
 		1 == func_num_args()
@@ -330,10 +345,11 @@ class App extends Laziness
 
 	public function run()
 	{
-		$handlers = $this->request->route();
+		list($handlers, $module) = $this->request->route();
 
 		if($handlers)
 		{
+			set_include_path($this->resolvePath('modules', $module) . PATH_SEPARATOR . get_include_path());
 			$handler = array_pop($handlers);
 			$this->useMiddleware($handlers);
 			$this->useMiddleware('handler', function() use ($handler) {

@@ -5,10 +5,16 @@ namespace zf\components;
 class Router
 {
 	private $rules = [];
+	private $module;
+
+	public function module($module)
+	{
+		$this->module = $module;
+	}
 
 	public function append($method, $pattern, $handlers)
 	{
-		$this->rules[strtoupper($method)][] = [$pattern, $handlers];
+		$this->rules[strtoupper($method)][] = [$pattern, $handlers, $this->module];
 	}
 
 	public function bulk($rules)
@@ -46,13 +52,13 @@ class Router
 
 		foreach($this->rules[$method] as $rule)
 		{
-			list($pattern, $handlers) = $rule;
+			list($pattern, $handlers, $module) = $rule;
 
 			if(false === strpos($pattern, '/:')) # static pattern
 			{
 				if($path === $pattern)
 				{
-					return [$handlers, null];
+					return [$handlers, null, $module];
 				}
 			}
 			else
@@ -62,12 +68,12 @@ class Router
 				{
 					if($params = $this->match($pattern, $path))
 					{
-						return [$handlers, $params];
+						return [$handlers, $params, $module];
 					}
 				}
 			}
 		}
-		return [null, null];
+		return [null, null, null];
 	}
 
 	public function run()

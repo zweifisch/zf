@@ -4,17 +4,18 @@ namespace zf\components;
 
 class CliRouter
 {
-	private $rules;
+	private $rules = [];
 	private $options;
+	private $module;
 
-	public function __construct()
+	public function module($module)
 	{
-		$this->rules = [];
+		$this->module = $module;
 	}
 
 	public function append($method, $pattern, $handlers)
 	{
-		if('cmd' == $method) $this->rules[] = [$pattern, $handlers];
+		if('cmd' == $method) $this->rules[] = [$pattern, $handlers, $this->module];
 	}
 
 	public function options($options)
@@ -81,13 +82,13 @@ class CliRouter
 
 		foreach($this->rules as $idx => $rule)
 		{
-			list($pattern, $handlers) = $rule;
+			list($pattern, $handlers, $module) = $rule;
 			$params = $this->match($positionalArgs, $pattern);
 			if($params !== false)
 			{
 				return isset($this->options[$idx])
-					? [$handlers, array_merge($this->options[$idx], $params, $options)]
-					: [$handlers, array_merge($params, $options)];
+					? [$handlers, array_merge($this->options[$idx], $params, $options), $module]
+					: [$handlers, array_merge($params, $options), $module];
 			}
 		}
 	}

@@ -60,13 +60,13 @@ class Request
 
 	public function route()
 	{
-		list($handlers, $params) = $this->router->run();
+		list($handlers, $params, $module) = $this->router->run();
 		if($_GET)
 		{
 			$params = $params ? array_merge($_GET, $params) : $_GET;
 		}
 		$this->params = (object)$params;
-		return $handlers;
+		return [$handlers, $module];
 	}
 
 	public function contentTypeMatches($type, $length=null)
