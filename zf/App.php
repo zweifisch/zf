@@ -125,23 +125,24 @@ class App extends Laziness
 		$fsPath = implode('/', $args);
 		$name = array_pop($args);
 		$path = implode('', array_map(function($segment) {
-			return '/' . $segment . '/:' . $segment;
+			return '/' . $segment . '/:' . $segment . 'Id';
 		}, $args)) . '/' . $name;
+		$id = $name . 'Id';
 		$routes = [
 			['GET'    , "$path"             , ["$fsPath/index"]],
 			['GET'    , "$path/new"         , ["$fsPath/new"]],
 			['POST'   , "$path"             , ["$fsPath/create"]],
-			['GET'    , "$path/:$name"      , ["$fsPath/show"]],
-			['GET'    , "$path/:$name/edit" , ["$fsPath/edit"]],
-			['PUT'    , "$path/:$name"      , ["$fsPath/update"]],
-			['PATCH'  , "$path/:$name"      , ["$fsPath/modify"]],
-			['DELETE' , "$path/:$name"      , ["$fsPath/destroy"]],
+			['GET'    , "$path/:$id"      , ["$fsPath/show"]],
+			['GET'    , "$path/:$id/edit" , ["$fsPath/edit"]],
+			['PUT'    , "$path/:$id"      , ["$fsPath/update"]],
+			['PATCH'  , "$path/:$id"      , ["$fsPath/modify"]],
+			['DELETE' , "$path/:$id"      , ["$fsPath/destroy"]],
 		];
 		if ($customMethods)
 		{
 			foreach($customMethods as $method)
 			{
-				$routes[] = ['POST', "/$path/:$name/$method", ["$fsPath/$method"]];
+				$routes[] = ['POST', "/$path/:$id/$method", ["$fsPath/$method"]];
 			}
 		}
 		$this->router->bulk($routes);
