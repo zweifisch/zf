@@ -4,6 +4,7 @@ namespace zf;
 
 use Exception;
 use FilesystemIterator;
+use \zf\exceptions\ArgumentMissingException;
 
 class App extends Laziness
 {

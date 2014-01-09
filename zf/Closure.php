@@ -2,6 +2,7 @@
 
 namespace zf;
 
+use Exception;
 use InvalidArgumentException;
 use ReflectionFunction;
 use ReflectionClass;
@@ -44,7 +45,7 @@ class Closure
 				}
 				else
 				{
-					throw new ArgumentMissingException("'$param->name' is required");
+					throw new exceptions\ArgumentMissingException("'$param->name' is required");
 				}
 			}
 		}
@@ -108,8 +109,4 @@ class Closure
 		}
 		return $reflectionClass->newInstanceArgs($constructArgs);
 	}
-}
-
-class ArgumentMissingException extends \Exception
-{
 }

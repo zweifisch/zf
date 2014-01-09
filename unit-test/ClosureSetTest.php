@@ -56,7 +56,7 @@ class ClosureSetTest extends PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * @expectedException InvalidArgumentException
+	 * @expectedException \zf\exceptions\ArgumentMissingException
 	 */
 	public function testKeywordArgumentsException()
 	{
