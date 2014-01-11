@@ -48,6 +48,7 @@ class Response
 	private $headers = [];
 	private $viewEngine;
 	private $router;
+	private $buffer;
 
 	public $status = 200;
 	public $body = '';
@@ -82,30 +83,39 @@ class Response
 		$this->header('Cache-Control', $args);
 	}
 
-	public function stderr($content=null)
+	public function stderr($content)
 	{
-		if (is_null($content))
+		if (IS_CLI)
 		{
-			$content = ob_get_contents();
-			@ob_end_clean();
+			$content = "\033[01;31m$content\033[0m".PHP_EOL;
 		}
-		if($content)
-		{
-			if (IS_CLI)
-			{
-				$content = "\033[01;31m$content\033[0m";
-			}
-			file_put_contents('php://stderr', $content, FILE_APPEND);
-		}
+		file_put_contents('php://stderr', $content, FILE_APPEND);
+	}
+
+	public function capture()
+	{
+		$this->buffer = ob_get_clean();
+		return $this;
 	}
 
 	public function send()
 	{
-		$this->stderr();
+		if (!array_key_exists($this->status, $this->statuses))
+		{
+			throw new \Exception("invalid status code '$this->status'");
+		}
+
+		$this->capture();
+
 		header('HTTP/1.1 ' . $this->status. ' ' . $this->statuses[$this->status]);
 		header('Status: ' . $this->status);
 		header('Content-Type: ' . $this->contentType . '; charset=' . $this->charset);
 		$this->sendHeader();
+
+		if ($this->buffer)
+		{
+			$this->stderr($this->buffer);
+		}
 		exit($this->body);
 	}
 

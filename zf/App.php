@@ -18,6 +18,7 @@ class App extends Laziness
 	function __construct()
 	{
 		ob_start();
+		ob_implicit_flush(false);
 		parent::__construct();
 
 		defined('IS_CLI') or define('IS_CLI', 'cli' == PHP_SAPI);
@@ -41,8 +42,7 @@ class App extends Laziness
 		};
 		register_shutdown_function($on_shutdown->bindTo($this));
 
-		$on_error = function(){
-			$this->response->stderr();
+		$on_error = function() {
 			return $this->emit('error', (object)array_combine(
 				['no','str','file','line','context'], func_get_args()));
 		};
