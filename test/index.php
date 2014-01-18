@@ -33,7 +33,7 @@ $app->get('/time/:format', function(){
 $app->get('/git/:cmd', 'git');
 
 $app->get('/', function(){
-	$this->log('%s %s', $this->request->ip, date('H:i:s'));
+	$this->trace($this->request->ip .' '. date('H:i:s'));
 	return $this->response->render('index', ['now'=> date('H:i:s')], $this);
 });
 
@@ -106,6 +106,13 @@ $app->get('/status', function() {
 
 $app->get('/path', function() {
 	return $this->request->path;
+});
+
+$app->get('/buffer', function() {
+	echo $this->request->ip;
+	$this->trace($this->request->ip);
+	die();
+	return 'echo to log';
 });
 
 $app->run();

@@ -87,15 +87,20 @@ class Response
 	{
 		if (IS_CLI)
 		{
-			$content = "\033[01;31m$content\033[0m".PHP_EOL;
+			$content = "\033[01;31m$content\033[0m";
 		}
 		file_put_contents('php://stderr', $content, FILE_APPEND);
 	}
 
-	public function capture()
+	public function trace($object)
 	{
-		$this->buffer = ob_get_clean();
-		return $this;
+		$this->stderr($this->repr($object).PHP_EOL);
+		ob_flush();
+	}
+
+	public function flush()
+	{
+		ob_flush();
 	}
 
 	public function send()
@@ -105,16 +110,16 @@ class Response
 			throw new \Exception("invalid status code '$this->status'");
 		}
 
-		$this->capture();
+		$buffer = ob_get_clean();
 
 		header('HTTP/1.1 ' . $this->status. ' ' . $this->statuses[$this->status]);
 		header('Status: ' . $this->status);
 		header('Content-Type: ' . $this->contentType . '; charset=' . $this->charset);
 		$this->sendHeader();
 
-		if ($this->buffer)
+		if ($buffer)
 		{
-			$this->stderr($this->buffer);
+			$this->stderr($buffer);
 		}
 		exit($this->body);
 	}
@@ -209,4 +214,19 @@ class Response
 		exit($content);
 	}
 
+	private function repr($object)
+	{
+		if(is_string($object))
+		{
+			return $object;
+		}
+		elseif(is_array($object) || $object instanceof JsonSerializable || $object instanceof stdClass)
+		{
+			return json_encode($object, JSON_UNESCAPED_UNICODE);
+		}
+		else
+		{
+			return var_export($object, true);
+		}
+	}
 }
