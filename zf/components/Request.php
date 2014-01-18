@@ -2,7 +2,7 @@
 
 namespace zf\components;
 
-use zf\Getter;
+use zf\lazy\Getter;
 
 class Request
 {
@@ -19,6 +19,11 @@ class Request
 	public function getIp()
 	{
 		return isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+	}
+
+	public function getPath()
+	{
+		return parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 	}
 
 	public function getStdin()
@@ -41,9 +46,14 @@ class Request
 		return isset($_SERVER['HTTP_CONTENT_TYPE']) ? $_SERVER['HTTP_CONTENT_TYPE'] : '';
 	}
 
+	public function getReferer()
+	{
+		return isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : null;
+	}
+
 	public function getMethod()
 	{
-		return $this->method = IS_CLI ? 'CLI' : strtoupper($_SERVER['REQUEST_METHOD']);
+		return $this->method = IS_CLI ? 'CLI' : $_SERVER['REQUEST_METHOD'];
 	}
 
 	public function getIsCli()

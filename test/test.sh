@@ -78,4 +78,8 @@ assert_raises 'curl -si $host/status | grep "Status: 404"'
 
 assert_end numeric_return
 
+assert "curl -s $host/path?key=val" "/path"
+
+assert_end request
+
 kill $pid

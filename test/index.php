@@ -104,4 +104,8 @@ $app->get('/status', function() {
 	return 404;
 });
 
+$app->get('/path', function() {
+	return $this->request->path;
+});
+
 $app->run();
