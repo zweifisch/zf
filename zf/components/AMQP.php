@@ -9,8 +9,12 @@ use AMQPChannel;
 use AMQPExchange;
 use AMQPConnection;
 
+use zf\Getter;
+
 class AMQP implements ArrayAccess
 {
+	use Getter;
+
 	private $_config;
 	private $_queues;
 	private $_exchanges;
@@ -59,18 +63,16 @@ class AMQP implements ArrayAccess
 		return $this->_connection;
 	}
 
-	public function __get($key)
+	public function getQueue($key)
 	{
-		if ('queue' == $key || 'exchange' == $key)
-		{
-			$this->_type = $key;
-			return $this;
-		}
-		else
-		{
-			$type = $this->getType($key);
-			return $this->$type($key);
-		}
+		$this->_type = $key;
+		return $this;
+	}
+
+	public function getExchange($key)
+	{
+		$this->_type = $key;
+		return $this;
 	}
 
 	public function __call($name, $args)

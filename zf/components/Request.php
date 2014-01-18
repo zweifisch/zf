@@ -2,8 +2,11 @@
 
 namespace zf\components;
 
+use zf\Getter;
+
 class Request
 {
+	use Getter;
 
 	private $params;
 	private $router;
@@ -11,11 +14,6 @@ class Request
 	public function __construct($router)
 	{
 		$this->router = $router;
-	}
-
-	public function __get($key)
-	{
-		return call_user_func([$this, 'get' . ucfirst($key)]);
 	}
 
 	public function getIp()
