@@ -78,11 +78,6 @@ class Router
 
 	public function run()
 	{
-		$path = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : $_SERVER['REQUEST_URI'];
-		if($pos = strpos($path, '?'))
-		{
-			$path = substr($path,0,$pos);
-		}
-		return $this->dispatch(strtoupper($_SERVER['REQUEST_METHOD']), $path);
+		return $this->dispatch($_SERVER['REQUEST_METHOD'], parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 	}
 }
