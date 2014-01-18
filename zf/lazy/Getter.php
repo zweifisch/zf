@@ -6,22 +6,14 @@ use Exception;
 
 trait Getter
 {
-	private $_caches;
 	public function __get($key)
 	{
-		if (!isset($this->_caches[$key]))
+		$getter = 'get' . ucfirst($key);
+		if (method_exists($this, $getter))
 		{
-			$getter = 'get' . ucfirst($key);
-			if (method_exists($this, $getter))
-			{
-				$this->_caches[$key] = $this->$getter();
-			}
-			else
-			{
-				throw new Exception("can't get '$key', '$getter' not defined on ".__CLASS__);
-			}
+			return $this->$key = $this->$getter();
 		}
-		return $this->_caches[$key];
+		throw new Exception("can't get '$key', '$getter' not defined on ".__CLASS__);
 	}
 
 	public function __isset($key)
