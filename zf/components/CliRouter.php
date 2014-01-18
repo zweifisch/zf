@@ -99,7 +99,7 @@ class CliRouter
 		{
 			return $this->dispatch(array_slice($_SERVER['argv'], 1));
 		}
-		return [false, false];
+		return [null, null, null];
 	}
 
 	public function cmds()
