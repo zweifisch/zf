@@ -54,7 +54,7 @@ class App extends Laziness
 
 	function __call($name, $args)
 	{
-		if(in_array($name, ['post', 'put', 'delete', 'patch', 'head', 'cmd'], true))
+		if(in_array($name, ['post', 'put', 'delete', 'patch', 'head', 'any', 'cmd'], true))
 		{
 			$pattern = array_shift($args);
 			$this->router->append($name, $pattern, $args);
@@ -263,7 +263,7 @@ class App extends Laziness
 
 	public function run()
 	{
-		list($handlers, $module) = $this->request->route();
+		list($handlers, $params, $module) = $this->router->dispatch();
 
 		if($handlers)
 		{

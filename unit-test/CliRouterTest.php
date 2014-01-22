@@ -2,55 +2,78 @@
 
 use \zf\components\CliRouter;
 
+class CliRequest
+{
+	public $argv;
+
+	function __construct($argv)
+	{
+		$this->argv = $argv;
+	}
+}
+
 class CliRouterTest extends PHPUnit_Framework_TestCase
 {
 
-	public function setUp()
-	{
-		$this->router = new CliRouter;
-	}
-
 	public function testStaticPattern()
 	{
-		$this->router->append('cmd','ls',['cb0']);
-		$this->router->append('cmd','rm',['cb1']);
+		$router = new CliRouter(new CliRequest(['ls']));
+		$router->append('cmd','ls',['cb0']);
+		$router->append('cmd','rm',['cb1']);
 
-		list($cb,$params) = $this->router->dispatch(['ls']);
+		list($cb, $params) = $router->dispatch();
 		$this->assertEquals($cb, ['cb0']);
 		$this->assertSame($params, []);
 
-		list($cb,$params) = $this->router->dispatch(['rm']);
+		$router = new CliRouter(new CliRequest(['rm']));
+		$router->append('cmd','ls',['cb0']);
+		$router->append('cmd','rm',['cb1']);
+
+		list($cb, $params) = $router->dispatch();
 		$this->assertEquals($cb, ['cb1']);
 		$this->assertSame($params, []);
 
-		list($cb,$params) = $this->router->dispatch(['cd']);
+		$router = new CliRouter(new CliRequest(['cd']));
+		$router->append('cmd','ls',['cb0']);
+		$router->append('cmd','rm',['cb1']);
+
+		list($cb, $params) = $router->dispatch();
 		$this->assertEquals($cb, null);
 		$this->assertSame($params, null);
 	}
 
 	public function testPositionalParams()
 	{
-		$this->router->append('cmd','show <id>',['cb0']);
+		$router = new CliRouter(new CliRequest(['show']));
+		$router->append('cmd','show <id>',['cb0']);
 
-		list($cb,$params) = $this->router->dispatch(['show']);
+		list($cb,$params) = $router->dispatch();
 		$this->assertEquals($cb, null);
 		$this->assertSame($params, null);
 
-		list($cb,$params) = $this->router->dispatch(['show', '12']);
+		$router = new CliRouter(new CliRequest(['show', '12']));
+		$router->append('cmd','show <id>',['cb0']);
+
+		list($cb,$params) = $router->dispatch();
 		$this->assertEquals($cb, ['cb0']);
 		$this->assertSame($params, ['id'=>'12']);
 	}
 
 	public function testOptions()
 	{
-		$this->router->append('cmd','list <path>',['cb0']);
-		$this->router->options(['offset'=>'0', 'limit'=>'20', 'verbose']);
+		$router = new CliRouter(new CliRequest(['list', '/var/log']));
+		$router->append('cmd','list <path>',['cb0']);
+		$router->options(['offset'=>'0', 'limit'=>'20', 'verbose']);
 
-		list($cb,$params) = $this->router->dispatch(['list', '/var/log']);
+		list($cb,$params) = $router->dispatch();
 		$this->assertEquals($cb, ['cb0']);
 		$this->assertSame($params, ['offset'=>'0', 'limit'=>'20', 'verbose'=>false, 'path'=>'/var/log']);
 
-		list($cb,$params) = $this->router->dispatch(['list', '--verbose', '--offset=100', '/var/log']);
+		$router = new CliRouter(new CliRequest(['list', '--verbose', '--offset=100', '/var/log']));
+		$router->append('cmd','list <path>',['cb0']);
+		$router->options(['offset'=>'0', 'limit'=>'20', 'verbose']);
+
+		list($cb,$params) = $router->dispatch();
 		$this->assertEquals($cb, ['cb0']);
 		$this->assertSame($params, ['offset'=>'100', 'limit'=>'20', 'verbose'=>true, 'path'=>'/var/log']);
 	}

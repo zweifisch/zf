@@ -8,6 +8,11 @@ class CliRouter
 	private $options;
 	private $module;
 
+	public function __construct($request)
+	{
+		$this->argv = $request->argv;
+	}
+
 	public function module($module)
 	{
 		$this->module = $module;
@@ -76,9 +81,9 @@ class CliRouter
 		return count($positionalArgs) == $pos ? $ret : false;
 	}
 
-	public function dispatch($args)
+	public function dispatch()
 	{
-		list($positionalArgs, $options) = $this->parse($args);
+		list($positionalArgs, $options) = $this->parse($this->argv);
 
 		foreach($this->rules as $idx => $rule)
 		{
@@ -86,20 +91,12 @@ class CliRouter
 			$params = $this->match($positionalArgs, $pattern);
 			if($params !== false)
 			{
-				return isset($this->options[$idx])
-					? [$handlers, array_merge($this->options[$idx], $params, $options), $module]
-					: [$handlers, array_merge($params, $options), $module];
+				$this->params = isset($this->options[$idx])
+					? array_merge($this->options[$idx], $params, $options)
+					: array_merge($params, $options);
+				return [$handlers, $this->params, $module];
 			}
 		}
-	}
-
-	public function run()
-	{
-		if(isset($_SERVER['argv']) && count($_SERVER['argv']) > 1)
-		{
-			return $this->dispatch(array_slice($_SERVER['argv'], 1));
-		}
-		return [null, null, null];
 	}
 
 	public function cmds()

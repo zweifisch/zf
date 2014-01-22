@@ -50,6 +50,6 @@ return [
 		'params' => 'Params',
 		'session' => 'Session',
 		'cookie' => 'Cookie',
-		'router' => IS_CLI ? 'CliRouter' : 'Router',
+		'router' => IS_CLI ? 'CliRouter' : 'WebRouter',
 	],
 ];

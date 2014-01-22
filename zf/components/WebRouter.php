@@ -2,19 +2,24 @@
 
 namespace zf\components;
 
-class Router
+class WebRouter
 {
 	private $rules = [];
 	private $module;
+	public $params = [];
+
+	public function __construct($request)
+	{
+		$this->method = $request->method;
+		$this->path = $request->path;
+		$this->segments = $request->segments;
+		$this->base = '/' . $request->segments[0];
+		$this->baseLength = strlen($this->base);
+	}
 
 	public function module($module)
 	{
 		$this->module = $module;
-	}
-
-	public function append($method, $pattern, $handlers)
-	{
-		$this->rules[strtoupper($method)][] = [$pattern, $handlers, $this->module];
 	}
 
 	public function bulk($rules)
@@ -23,6 +28,14 @@ class Router
 		{
 			list($method, $path, $handlers) = $rule;
 			$this->append($method, $path, $handlers);
+		}
+	}
+
+	public function append($method, $pattern, $handlers)
+	{
+		if (!strncmp('/:', $pattern, 2) || !strncmp($pattern, $this->base, $this->baseLength))
+		{
+			$this->rules[] = [strtoupper($method), $pattern, $handlers, $this->module];
 		}
 	}
 
@@ -46,28 +59,23 @@ class Router
 		}
 	}
 
-	public function dispatch($method, $path)
+	public function dispatch()
 	{
-		if(!isset($this->rules[$method])) return [null, null];
-
-		foreach($this->rules[$method] as $rule)
+		foreach ($this->rules as $rule)
 		{
-			list($pattern, $handlers, $module) = $rule;
+			list($method, $pattern, $handlers, $module) = $rule;
 
-			if(false === strpos($pattern, '/:')) # static pattern
+			if ($method === 'ANY' || $method === $this->method)
 			{
-				if($path === $pattern)
+				if ($this->path === $pattern)
 				{
 					return [$handlers, null, $module];
 				}
-			}
-			else
-			{
-				$staticPrefix = strstr($pattern, '/:', true);
-				if(!$staticPrefix || !strncmp($staticPrefix, $path, strlen($staticPrefix)))
+				elseif(false !== strpos($pattern, '/:'))
 				{
-					if($params = $this->match($pattern, $path))
+					if ($params = $this->match($pattern, $this->path))
 					{
+						$this->params = $params;
 						return [$handlers, $params, $module];
 					}
 				}
@@ -76,8 +84,4 @@ class Router
 		return [null, null, null];
 	}
 
-	public function run()
-	{
-		return $this->dispatch($_SERVER['REQUEST_METHOD'], parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
-	}
 }

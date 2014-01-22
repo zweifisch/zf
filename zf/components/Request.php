@@ -8,14 +8,6 @@ class Request
 {
 	use Getter;
 
-	private $params;
-	private $router;
-
-	public function __construct($router)
-	{
-		$this->router = $router;
-	}
-
 	public function getIp()
 	{
 		return isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
@@ -24,6 +16,11 @@ class Request
 	public function getPath()
 	{
 		return parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+	}
+
+	public function getSegments()
+	{
+		return explode('/', substr($this->path, 1));
 	}
 
 	public function getStdin()
@@ -61,20 +58,9 @@ class Request
 		return IS_CLI;
 	}
 
-	public function getParams()
+	public function getArgv()
 	{
-		return $this->params;
-	}
-
-	public function route()
-	{
-		list($handlers, $params, $module) = $this->router->run();
-		if($_GET)
-		{
-			$params = $params ? array_merge($_GET, $params) : $_GET;
-		}
-		$this->params = (object)$params;
-		return [$handlers, $module];
+		return array_slice($_SERVER['argv'], 1);
 	}
 
 	public function contentTypeMatches($type, $length=null)

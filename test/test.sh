@@ -29,6 +29,8 @@ assert_end mongo
 assert "curl -s $host/git/st" "st is not implemented"
 assert "curl -s $host/time/Y-m-d" "$(date +%Y-%m-%d)"
 assert_raises "curl -s $host | grep body"
+assert "curl -s $host/any" GET
+assert "curl -sd '' $host/any" POST
 
 assert_end routing
 

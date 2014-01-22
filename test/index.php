@@ -115,4 +115,8 @@ $app->get('/buffer', function() {
 	return 'echo to log';
 });
 
+$app->any('/any', function() {
+	return $this->request->method;
+});
+
 $app->run();

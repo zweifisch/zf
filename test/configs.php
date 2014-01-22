@@ -33,5 +33,12 @@ return [
 				],
 			]
 		],
+		'log' => 'Monolog', [
+			'channels' => [
+				'default' => [
+					'StreamHandler' => ['/tmp/zf-test.log', 'DEBUG'],
+				],
+			]
+		],
 	],
 ];
