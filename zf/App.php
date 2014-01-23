@@ -273,6 +273,12 @@ class App extends Laziness
 			$this->useMiddleware('handler', function() use ($handler) {
 				if(is_string($handler))
 				{
+					if (strpos(':', $handler))
+					{
+						$handler = preg_replace_callback('#:([^/]+)#', function($matches) {
+							return $this->router->params->{$matches[1]};
+						}, $handler);
+					}
 					$handler = $this->handlers->__get($handler);
 				}
 

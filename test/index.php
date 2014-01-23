@@ -98,7 +98,7 @@ $app->get('/admin', 'auth:admin,secret', function(){
 
 $app->get('/console', 'console');
 
-$app->resource('posts', ['trash']);
+$app->resource('posts');
 
 $app->get('/status', function() {
 	return 404;
