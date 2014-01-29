@@ -65,15 +65,15 @@ trait Restful
 		$id = $name . 'Id';
 
 		$this->router->bulk([
-			['GET'    , "$path"              , ["$fsPath/index"]],
-			['GET'    , "$path/new"          , ["$fsPath/new"]],
-			['POST'   , "$path"              , ["$fsPath/create"]],
-			['GET'    , "$path/:$id"         , ["$fsPath/show"]],
-			['GET'    , "$path/:$id/edit"    , ["$fsPath/edit"]],
-			['PUT'    , "$path/:$id"         , ["$fsPath/update"]],
-			['PATCH'  , "$path/:$id"         , ["$fsPath/modify"]],
-			['DELETE' , "$path/:$id"         , ["$fsPath/destroy"]],
-			['POST'   , "$path/:$id/:action" , ["$fsPath/:action"]],
+			['GET'    , "$path"              , "$fsPath/index"],
+			['GET'    , "$path/new"          , "$fsPath/new"],
+			['POST'   , "$path"              , "$fsPath/create"],
+			['GET'    , "$path/:$id"         , "$fsPath/show"],
+			['GET'    , "$path/:$id/edit"    , "$fsPath/edit"],
+			['PUT'    , "$path/:$id"         , "$fsPath/update"],
+			['PATCH'  , "$path/:$id"         , "$fsPath/modify"],
+			['DELETE' , "$path/:$id"         , "$fsPath/destroy"],
+			['POST'   , "$path/:$id/:action" , "$fsPath/:action"],
 		]);
 	}
 }

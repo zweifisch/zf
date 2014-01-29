@@ -27,14 +27,14 @@ class WebRouter
 	{
 		foreach($rules as $rule)
 		{
-			list($method, $path, $handlers) = $rule;
-			$this->append($method, $path, $handlers);
+			list($method, $path, $handler) = $rule;
+			$this->append($method, $path, $handler);
 		}
 	}
 
-	public function append($method, $pattern, $handlers)
+	public function append($method, $pattern, $handler)
 	{
-		$this->rules[] = [strtoupper($method), $pattern, $handlers, $this->module];
+		$this->rules[] = [strtoupper($method), $pattern, $handler, $this->module];
 	}
 
 	public function parse($pattern)
@@ -62,8 +62,7 @@ class WebRouter
 		$ret = [];
 		foreach ($this->rules as $rule)
 		{
-			list($method, $pattern, $handlers, $module) = $rule;
-			$handler = end($handlers);
+			list($method, $pattern, $handler, $module) = $rule;
 			$ret[] = "$method $pattern " . (($handler instanceof Closure) ? 'Closure' : $handler);
 		}
 		return $ret;
@@ -74,7 +73,7 @@ class WebRouter
 		$baseLength = count($this->base);
 		foreach ($this->rules as $rule)
 		{
-			list($method, $pattern, $handlers, $module) = $rule;
+			list($method, $pattern, $handler, $module) = $rule;
 
 			if (strncmp('/:', $pattern, 2) && strncmp($pattern, $this->base, $baseLength)) continue;
 
@@ -82,14 +81,14 @@ class WebRouter
 			{
 				if ($this->path === $pattern)
 				{
-					return [$handlers, null, $module];
+					return [$handler, null, $module];
 				}
 				elseif(false !== strpos($pattern, '/:'))
 				{
 					if ($params = $this->match($pattern, $this->path))
 					{
 						$this->params = $params;
-						return [$handlers, $params, $module];
+						return [$handler, $params, $module];
 					}
 				}
 			}

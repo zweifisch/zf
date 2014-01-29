@@ -55,8 +55,8 @@ class App extends Laziness
 	{
 		if(in_array($name, ['post', 'put', 'delete', 'patch', 'head', 'any', 'cmd'], true))
 		{
-			$pattern = array_shift($args);
-			$this->router->append($name, $pattern, $args);
+			list($pattern, $handler) = $args;
+			$this->router->append($name, $pattern, $handler);
 			return $this;
 		}
 
@@ -158,9 +158,8 @@ class App extends Laziness
 		}
 		else
 		{
-			$args = func_get_args();
-			$pattern = array_shift($args);
-			$this->router->append('GET', $pattern, $args);
+			list($pattern, $handler) = func_get_args();
+			$this->router->append('GET', $pattern, $handler);
 			return $this;
 		}
 	}
@@ -262,13 +261,10 @@ class App extends Laziness
 
 	public function run()
 	{
-		list($handlers, $params, $module) = $this->router->dispatch();
-
-		if($handlers)
+		list($handler, $params, $module) = $this->router->dispatch();
+		if($handler)
 		{
 			set_include_path($this->resolvePath('modules', $module) . PATH_SEPARATOR . get_include_path());
-			$handler = array_pop($handlers);
-			$this->useMiddleware($handlers);
 			$this->useMiddleware('handler', function() use ($handler) {
 				if(is_string($handler))
 				{

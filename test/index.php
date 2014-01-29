@@ -102,7 +102,10 @@ $app->middleware('auth', function($user,$passwd){
 	}
 });
 
-$app->get('/admin', 'auth:admin,secret', function(){
+/**
+ * @auth admin,secret
+ */
+$app->get('/admin', function(){
 	return 'admin';
 });
 

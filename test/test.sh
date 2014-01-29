@@ -83,4 +83,9 @@ assert "curl -s $host/path?key=val" "/path"
 
 assert_end request
 
+assert "curl -su admin:secret $host/admin" "admin"
+assert_raises 'curl -si $host/admin | grep 401'
+
+assert_end auth
+
 kill $pid
