@@ -37,6 +37,10 @@ return [
 			'context' => $this,
 			'path' => 'params',
 		],
+		'resource' => 'Resource', [
+			'path' => 'resources',
+			'namespace' => 'resources',
+		],
 		'validator' => 'Validator', [
 			'schemaPath' => 'schemas',
 		],

@@ -26,7 +26,6 @@ assert "curl -s $host/users | json" "[]"
 
 assert_end mongo
 
-assert "curl -s $host/git/st" "st is not implemented"
 assert "curl -s $host/time/Y-m-d" "$(date +%Y-%m-%d)"
 assert_raises "curl -s $host | grep body"
 assert "curl -s $host/any" GET
@@ -61,18 +60,18 @@ assert "curl -s $host/foo/bar/soft?offset=100 | json compact.opt" soft
 assert "curl -s $host/foo/bar/soft?opt=hard | json compact.opt" soft
 
 assert "curl -s $host/bar?q=1 | json compact.q" 1
-assert_raises "curl -i $host/bar | grep 404"
+assert_raises "curl -i $host/bar | grep 400"
 
 assert_end params
 
-assert 'curl -sH "Content-Type: application/json" -d '\''{"title":null}'\'' $host/posts | json errors.0.0' 'required'
-assert 'curl -sH "Content-Type: application/json" -d '\''{"title":null, "content":null}'\'' $host/posts | json errors.0.0' 'type'
-assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":""}'\'' $host/posts | json ok' 1
-assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "cat": "12345"}'\'' $host/posts | json ok' 1
-assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "cat": "123456"}'\'' $host/posts | json errors.0.0' 'maxLength'
-assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "tags": "123456"}'\'' $host/posts | json errors.0.0' 'type'
-assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "tags": []}'\'' $host/posts | json ok' 1
-assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "tags": [12]}'\'' $host/posts | json errors.0.0' 'type'
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":null}'\'' $host/post | json errors.0.0' 'required'
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":null, "content":null}'\'' $host/post | json errors.0.0' 'type'
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":""}'\'' $host/post | json ok' 1
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "cat": "12345"}'\'' $host/post | json ok' 1
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "cat": "123456"}'\'' $host/post | json errors.0.0' 'maxLength'
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "tags": "123456"}'\'' $host/post | json errors.0.0' 'type'
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "tags": []}'\'' $host/post | json ok' 1
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":"", "tags": [12]}'\'' $host/post | json errors.0.0' 'type'
 
 assert_end schema 
 

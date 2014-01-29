@@ -6,6 +6,21 @@ return [
 			$this->emit('validationfailed', ['errors'=> $this->errors]);
 		}
 	},
+	'param' => function($param) {
+		$exploded = explode(' ', $param, 3);
+		$type = $exploded[0];
+		$name = substr($exploded[1], 1);
+		$this->params->_enable($name);
+		if (isset($this->params->$name))
+		{
+			if($type === 'int')
+				$this->params->_swap($name, 'intval');
+			elseif($type === 'string')
+				$this->params->_swap($name, 'strval');
+			elseif($type === 'float')
+				$this->params->_swap($name, 'floatval');
+		}
+	},
 	'mockup' => function($mockup) {
 		if($this->config->mockup) {
 			$path = $this->resolvePath($this->config->mockups, explode('/', $mockup));

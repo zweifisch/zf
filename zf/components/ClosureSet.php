@@ -2,7 +2,7 @@
 
 namespace zf\components;
 
-use Exception;
+use Exception, Closure;
 
 class ClosureSet
 {
@@ -56,7 +56,7 @@ class ClosureSet
 			{
 				$closure = $this->_load($closure);
 			}
-			else if(!$closure instanceof \Closure)
+			else if(!$closure instanceof Closure)
 			{
 				throw new Exception("invalid closure \"$name\"");
 			}
@@ -94,7 +94,7 @@ class ClosureSet
 
 	public function __apply($name, $args)
 	{
-		return $this->__call($name, \zf\Data::is_assoc($args) ? \zf\Closure::keywordArgs($this->$name, $args) : $args);
+		return $this->__call($name, \zf\Data::is_assoc($args) ? \zf\Reflection::keyword2position($this->$name, $args) : $args);
 	}
 
 	public function register($name, $closure=null)

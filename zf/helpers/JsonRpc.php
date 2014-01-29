@@ -48,7 +48,7 @@ trait JsonRpc
 					}
 					if (!isset($result))
 					{
-						$result = Closure::apply($handler, $params, $this);
+						$result = Reflection::apply($handler, $params, $this);
 					}
 				}
 				catch (Exception $e)

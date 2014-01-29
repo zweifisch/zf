@@ -2,6 +2,8 @@
 
 namespace zf;
 
+use Closure;
+
 class Delayed
 {
 	public static function property($object, $property)
@@ -22,7 +24,7 @@ class Delayed
 	{
 		return function() use ($className, $constructArgs) {
 			$constructArgs = array_map(function($arg){
-				return $arg instanceof \Closure ? $arg() : $arg;
+				return $arg instanceof Closure ? $arg() : $arg;
 			}, $constructArgs);
 			return !Data::is_assoc($constructArgs)
 				? (new ReflectionClass($className))->newInstanceArgs($constructArgs)

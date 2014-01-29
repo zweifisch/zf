@@ -2,6 +2,8 @@
 
 namespace zf\components;
 
+use Closure;
+
 class WebRouter
 {
 	private $rules = [];
@@ -14,7 +16,6 @@ class WebRouter
 		$this->path = $request->path;
 		$this->segments = $request->segments;
 		$this->base = '/' . $request->segments[0];
-		$this->baseLength = strlen($this->base);
 	}
 
 	public function module($module)
@@ -33,10 +34,7 @@ class WebRouter
 
 	public function append($method, $pattern, $handlers)
 	{
-		if (!strncmp('/:', $pattern, 2) || !strncmp($pattern, $this->base, $this->baseLength))
-		{
-			$this->rules[] = [strtoupper($method), $pattern, $handlers, $this->module];
-		}
+		$this->rules[] = [strtoupper($method), $pattern, $handlers, $this->module];
 	}
 
 	public function parse($pattern)
@@ -59,11 +57,26 @@ class WebRouter
 		}
 	}
 
-	public function dispatch()
+	public function debug()
 	{
+		$ret = [];
 		foreach ($this->rules as $rule)
 		{
 			list($method, $pattern, $handlers, $module) = $rule;
+			$handler = end($handlers);
+			$ret[] = "$method $pattern " . (($handler instanceof Closure) ? 'Closure' : $handler);
+		}
+		return $ret;
+	}
+
+	public function dispatch()
+	{
+		$baseLength = count($this->base);
+		foreach ($this->rules as $rule)
+		{
+			list($method, $pattern, $handlers, $module) = $rule;
+
+			if (strncmp('/:', $pattern, 2) && strncmp($pattern, $this->base, $baseLength)) continue;
 
 			if ($method === 'ANY' || $method === $this->method)
 			{

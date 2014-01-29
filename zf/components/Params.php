@@ -9,6 +9,7 @@ class Params implements JsonSerializable
 
 	private $_paramHandlers;
 	private $_params;
+	private $_enabledParams;
 
 	public function __construct($router, $paramHandlers)
 	{
@@ -26,6 +27,11 @@ class Params implements JsonSerializable
 		}
 	}
 
+	public function _swap($key, $callable)
+	{
+		$this->_params[$key] = $callable($this->_params[$key]);
+	}
+
 	public function jsonSerialize()
 	{
 		$ret = [];
@@ -39,5 +45,15 @@ class Params implements JsonSerializable
 	public function __isset($key)
 	{
 		return isset($this->_params[$key]);
+	}
+
+	public function _enabled($key)
+	{
+		return !empty($this->_enabledParams[$key]);
+	}
+
+	public function _enable($key)
+	{
+		$this->_enabledParams[$key] = true;
 	}
 }

@@ -2,8 +2,7 @@
 
 namespace zf;
 
-use Exception;
-use FilesystemIterator;
+use Exception, Closure, FilesystemIterator;
 
 class App extends Laziness
 {
@@ -195,7 +194,7 @@ class App extends Laziness
 		if (!is_array($middlewares))
 		{
 			$middlewares = func_get_args();
-			if (2 == count($middlewares) && $middlewares[1] instanceof \Closure) {
+			if (2 == count($middlewares) && $middlewares[1] instanceof Closure) {
 				$this->middlewares->register($middlewares[0], $middlewares[1]);
 				$this->_middlewares[] = [$middlewares[0], []];
 				return $this;
@@ -211,7 +210,7 @@ class App extends Laziness
 	public function register($name, $className=null, $constructArgs=null)
 	{
 		$this->_lastComponent = $name;
-		if($className && $className instanceof \Closure)
+		if($className && $className instanceof Closure)
 		{
 			$this->$name = $className;
 		}
@@ -227,10 +226,10 @@ class App extends Laziness
 				}
 
 				$constructArgs = array_map(function($arg) {
-					return $arg instanceof \Closure ? $arg() : $arg;
+					return $arg instanceof Closure ? $arg() : $arg;
 				}, $constructArgs);
 
-				return Closure::instance($className, $constructArgs, $this);
+				return Reflection::instance($className, $constructArgs, $this);
 			};
 		}
 		return $this;
@@ -273,19 +272,45 @@ class App extends Laziness
 			$this->useMiddleware('handler', function() use ($handler) {
 				if(is_string($handler))
 				{
-					if (strpos(':', $handler))
+					if (strpos($handler, ':'))
 					{
 						$handler = preg_replace_callback('#:([^/]+)#', function($matches) {
 							return $this->router->params->{$matches[1]};
 						}, $handler);
 					}
-					$handler = $this->handlers->__get($handler);
+					$handler = $this->resource->resolve($handler);
 				}
 
 				$realHandler = function() use ($handler) {
 					try
 					{
-						return Closure::apply($handler, $this->params, $this);
+						$params = [];
+						foreach (Reflection::parameters($handler) as $param)
+						{
+							if ($this->params->_enabled($param->name))
+							{
+								if (isset($this->params->{$param->name}))
+								{
+									$params[$param->name] = $this->params->{$param->name};
+								}
+								elseif (!$param->isOptional())
+								{
+									return [400, "paramter \"{$param->name}\" is required"];
+								}
+							}
+							else
+							{
+								if (isset($this->{$param->name}))
+								{
+									$params[$param->name] = $this->{$param->name};
+								}
+								else
+								{
+									throw new Exception("component \"{$param->name}\" not available");
+								}
+							}
+						}
+						return Reflection::apply($handler, $params, $this);
 					}
 					catch(exceptions\ArgumentMissingException $e)
 					{
@@ -324,11 +349,11 @@ class App extends Laziness
 
 	private function processDocString($handler)
 	{
-		$doc = Closure::parseDoc($handler);
+		$doc = Reflection::parseDoc($handler);
 		$middlewares = [];
-		foreach($doc as $key => $lines)
+		foreach($doc as list($key, $value))
 		{
-			$middlewares[] = $key . ':' . $lines[0];
+			$middlewares[] = $key . ':' . $value;
 		}
 		return $middlewares;
 	}
@@ -337,12 +362,12 @@ class App extends Laziness
 	{
 		$response = '';
 		$middlewares = [];
-		while($middleware = array_shift($this->_middlewares))
+		while($this->_middlewares)
 		{
-			list($middleware, $params) = $middleware;
+			list($middleware, $params) = array_shift($this->_middlewares);
 			if(!is_null($result = $this->middlewares->__call($middleware, $params)))
 			{
-				if($result instanceof \Closure)
+				if($result instanceof Closure)
 				{
 					$middlewares[] = $result;
 				}

@@ -2,9 +2,7 @@
 
 namespace zf;
 
-use Closure;
-use Exception;
-use JsonSerializable;
+use Closure, Exception, JsonSerializable;
 
 class Laziness implements JsonSerializable
 {
@@ -41,7 +39,7 @@ class Laziness implements JsonSerializable
 
 	public function __set($key, $value)
 	{
-		if ($value instanceof \Closure)
+		if ($value instanceof Closure)
 		{
 			$this->_container[$key] = $value;
 		}

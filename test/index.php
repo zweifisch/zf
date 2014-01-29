@@ -10,43 +10,42 @@ $app->param('ids', function($ids){
 	if($ids) return explode(',', $ids);
 });
 
-$app->get('/users/:ids?', function($ids = null) {
+/**
+ * @param string $ids
+ */
+$app->get('/users/:ids?', function($ids=null) {
 	$criteria = $ids ? ['_id' => ['$in' => $ids]] : [];
 	$users = $this->mongo->users->find($criteria);
 	return array_values(iterator_to_array($users));
 });
 
-$app->post('/user', function(){
+$app->post('/user', function() {
 	$this->mongo->users->save($this->body);
 	return ['ok' => true];
 });
 
-$app->delete('/users/:ids', function(){
-	$this->mongo->users->remove(['_id' => ['$in' => $this->params->ids]]);
+/**
+ * @param string $ids
+ */
+$app->delete('/users/:ids', function($ids) {
+	$this->mongo->users->remove(['_id' => ['$in' => $ids]]);
 	return ['ok' => true];
 });
 
-$app->get('/time/:format', function(){
-	return $this->helper->getTime($this->params->format);
+/**
+ * @param string $format
+ */
+$app->get('/time/:format', function($format) {
+	return $this->helper->getTime($format);
 });
 
-$app->get('/git/:cmd', 'git');
-
-$app->get('/', function(){
-	$this->trace($this->request->ip .' '. date('H:i:s'));
-	return $this->response->render('index', ['now'=> date('H:i:s')], $this);
+$app->get('/', function($request, $response) {
+	$this->trace($request->ip .' '. date('H:i:s'));
+	return $response->render('index', ['now'=> date('H:i:s')], $this);
 });
 
-$app->handler('dump', function(){
-	return $this->body;
-});
-
-$app->post('/dump', function(){
-	return $this->pass('dump');
-});
-
-$app->put('/dump', function(){
-	return $this->pass('dump');
+$app->any('/dump', function($body) {
+	return $body;
 });
 
 $app->onValidationFailed(function($message){
@@ -66,6 +65,13 @@ $app->post('/debug', function(){
 	return '';
 });
 
+/**
+ * @param string $bar
+ * @param string $opt
+ * @param string $q
+ * @param string $offset
+ * @param string $limit
+ */
 $app->get('/foo/:bar/:opt?', function($bar, $opt='', $q='', $offset=0, $limit=10){
 	return [
 		'compact' => compact('bar', 'opt', 'q', 'offset', 'limit'),
@@ -73,6 +79,10 @@ $app->get('/foo/:bar/:opt?', function($bar, $opt='', $q='', $offset=0, $limit=10
 	];
 });
 
+/**
+ * @param string $q
+ * @param string $foo
+ */
 $app->get('/bar/:foo?', function($q, $foo=''){
 	return [
 		'compact' => compact('q', 'foo'),
@@ -96,9 +106,7 @@ $app->get('/admin', 'auth:admin,secret', function(){
 	return 'admin';
 });
 
-$app->get('/console', 'console');
-
-$app->resource('posts');
+$app->resource('post');
 
 $app->get('/status', function() {
 	return 404;
