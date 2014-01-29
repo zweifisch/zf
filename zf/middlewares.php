@@ -51,11 +51,21 @@ return [
 			}
 		};
 	},
-	'status' => function() {
+	'smartResponse' => function() {
 		return function($response) {
-			if(is_int($response->body)) {
-				$response->status = $response->body;
+			$body = $response->body;
+			if(is_int($body)) {
+				$response->status = $body;
 				$response->body = '';
+			}
+			elseif (is_array($body) && array_key_exists(0, $body) && array_key_exists(1, $body) && is_int($body[0]))
+			{
+				foreach ($body as $key => $value)
+				{
+					if (is_string($key)) $this->header($key, $value);
+				}
+				$response->status = $body[0];
+				$response->body = $body[1];
 			}
 		};
 	},

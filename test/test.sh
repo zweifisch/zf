@@ -76,6 +76,9 @@ assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":
 assert_end schema 
 
 assert_raises 'curl -si $host/status | grep "Status: 404"'
+assert_raises 'curl -si $host/status-and-body | grep "Status: 201"'
+assert_raises 'curl -si $host/status-and-body | grep "^X-RESOURCE-ID: 99"'
+assert_raises 'curl -si $host/status-and-body | grep "created"'
 
 assert_end numeric_return
 

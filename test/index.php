@@ -96,9 +96,9 @@ $app->get('/foo', function(){
 
 $app->middleware('auth', function($user,$passwd){
 	if($this->get('PHP_AUTH_USER') != $user || $this->get('PHP_AUTH_PW') != $passwd){
-		$this->header('WWW-Authenticate', ['Basic realm'=> 'Login Required']);
-		$this->status(401);
-		return 'Unauthorized';
+		return [401, 'Unauthorized', 'WWW-Authenticate'=>
+			['Basic realm'=> 'Login Required']
+		];
 	}
 });
 
@@ -113,6 +113,10 @@ $app->resource('post');
 
 $app->get('/status', function() {
 	return 404;
+});
+
+$app->get('/status-and-body', function() {
+	return [201, 'created', 'X-RESOURCE-ID' => 99];
 });
 
 $app->get('/path', function() {

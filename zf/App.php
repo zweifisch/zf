@@ -201,8 +201,8 @@ class App extends Laziness
 		}
 
 		$this->_middlewares = $this->_middlewares
-			? array_merge($this->_middlewares, $this->prepareMiddlewares($middlewares))
-			: $this->prepareMiddlewares($middlewares);
+			? array_merge($this->_middlewares, $middlewares)
+			: $middlewares;
 		return $this;
 	}
 
@@ -347,9 +347,10 @@ class App extends Laziness
 	{
 		$doc = Reflection::parseDoc($handler);
 		$middlewares = [];
-		foreach($doc as list($key, $value))
+		foreach($doc as $item)
 		{
-			$middlewares[] = $key . ':' . $value;
+			list($key, $value) = $item;
+			$middlewares[] = [$key, explode(',', $value)];
 		}
 		return $middlewares;
 	}
@@ -358,20 +359,17 @@ class App extends Laziness
 	{
 		$response = '';
 		$middlewares = [];
-		while($this->_middlewares)
+		while($this->_middlewares && !$response)
 		{
-			list($middleware, $params) = array_shift($this->_middlewares);
+			$middleware = array_shift($this->_middlewares);
+			is_array($middleware)
+				? list($middleware, $params) = $middleware
+				: $params = [];
 			if(!is_null($result = $this->middlewares->__call($middleware, $params)))
 			{
-				if($result instanceof Closure)
-				{
-					$middlewares[] = $result;
-				}
-				else
-				{
-					$response = $result;
-					break;
-				}
+				$result instanceof Closure
+					? $middlewares[] = $result
+					: $response = $result;
 			}
 		}
 		$this->response->body = $response;
@@ -394,18 +392,6 @@ class App extends Laziness
 				return $result;
 			}
 		}
-	}
-
-	private function prepareMiddlewares($middlewares)
-	{
-		return array_map(function($middleware) {
-			if (strpos($middleware, ':')) // false or larger than 0
-			{
-				list($middleware, $params) = explode(':', $middleware);
-				return [$middleware, explode(',', $params)];
-			}
-			return [$middleware, []];
-		}, $middlewares);
 	}
 
 	public function header($key, $value=null)
