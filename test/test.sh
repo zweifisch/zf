@@ -75,6 +75,21 @@ assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"", "content":
 
 assert_end schema 
 
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"1", "content":"1"}'\'' $host/post | json ok' 1
+postid=$(curl -sH "Content-Type: application/json" -d '{"title":"1", "content":"1"}' $host/post | json _id)
+assert 'curl -sH "Content-Type: application/json" -XPATCH -d '\''{"title":"2"}'\'' $host/post/$postid | json ok' 1
+assert 'curl -s $host/post/$postid | json title' 2
+assert 'curl -s $host/post/$postid | json content' 1
+assert 'curl -sH "Content-Type: application/json" -d '\''{"content":"2"}'\'' $host/post/$postid/modify | json ok' 1
+assert 'curl -s $host/post/$postid | json content' 2
+assert 'curl -sH "Content-Type: application/json" -XPUT -d '\''{"title":"3", "content":"3"}'\'' $host/post/$postid | json ok' 1
+assert 'curl -s $host/post/$postid | json title' 3
+assert 'curl -s $host/post/$postid | json content' 3
+assert 'curl -sH "Content-Type: application/json" -d '\''{"title":"4", "content":"4"}'\'' $host/post/$postid/update | json ok' 1
+assert 'curl -s $host/post/$postid | json content' 4
+
+assert_end resource
+
 assert_raises 'curl -si $host/status | grep "Status: 404"'
 assert_raises 'curl -si $host/status-and-body | grep "Status: 201"'
 assert_raises 'curl -si $host/status-and-body | grep "^X-RESOURCE-ID: 99"'

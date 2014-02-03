@@ -13,12 +13,15 @@ return [
 		],
 		'mongo' => 'Mongo', [
 			'collections' => [
-				'users','posts','files:GridFS' => [
+				'users','posts' => [
 					'url'        => 'mongodb://localhost:27017',
 					'database'   => 'project',
 					// 'options'    => ['readPreference' => MongoClient::RP_SECONDARY_PREFERRED],
 				]
 			]
+		],
+		'gfs' => 'MongoGridFS', [
+			'url' => 'mongodb://localhost:27017',
 		],
 		'db' => 'PDO', [
 			'config' => [

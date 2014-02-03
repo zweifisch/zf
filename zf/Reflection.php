@@ -10,8 +10,9 @@ class Reflection
 {
 	public static function apply($callable, $params=null, $context=null)
 	{
-		if ($context && $callable instanceof Closure)
+		if ($context)
 		{
+			$callable instanceof Closure or $callable = self::getClosure($callable);
 		  	$callable = $callable->bindTo($context);
 		}
 		if ($params)
@@ -54,6 +55,12 @@ class Reflection
 	{
 		$reflection = new ReflectionFunction($callable);
 		return $reflection->getParameters();
+	}
+
+	public static function getClosure($fn)
+	{
+		$reflection = new ReflectionFunction($fn);
+		return $reflection->getClosure();
 	}
 
 	public static function parseDoc($fn)

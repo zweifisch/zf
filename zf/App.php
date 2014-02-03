@@ -271,47 +271,40 @@ class App extends Laziness
 					if (strpos($handler, ':'))
 					{
 						$handler = preg_replace_callback('#:([^/]+)#', function($matches) {
-							return $this->router->params->{$matches[1]};
+							return $this->router->params[$matches[1]];
 						}, $handler);
 					}
 					$handler = $this->resource->resolve($handler);
 				}
 
 				$realHandler = function() use ($handler) {
-					try
+					$params = [];
+					foreach (Reflection::parameters($handler) as $param)
 					{
-						$params = [];
-						foreach (Reflection::parameters($handler) as $param)
+						if ($this->params->_enabled($param->name))
 						{
-							if ($this->params->_enabled($param->name))
+							if (isset($this->params->{$param->name}))
 							{
-								if (isset($this->params->{$param->name}))
-								{
-									$params[$param->name] = $this->params->{$param->name};
-								}
-								elseif (!$param->isOptional())
-								{
-									return [400, "paramter \"{$param->name}\" is required"];
-								}
+								$params[$param->name] = $this->params->{$param->name};
+							}
+							elseif (!$param->isOptional())
+							{
+								return [400, "paramter \"{$param->name}\" is required"];
+							}
+						}
+						else
+						{
+							if (isset($this->{$param->name}))
+							{
+								$params[$param->name] = $this->{$param->name};
 							}
 							else
 							{
-								if (isset($this->{$param->name}))
-								{
-									$params[$param->name] = $this->{$param->name};
-								}
-								else
-								{
-									throw new Exception("component \"{$param->name}\" not available");
-								}
+								throw new Exception("component \"{$param->name}\" not available");
 							}
 						}
-						return Reflection::apply($handler, $params, $this);
 					}
-					catch(exceptions\ArgumentMissingException $e)
-					{
-						$this->response->notFound($e->getMessage());
-					}
+					return Reflection::apply($handler, $params, $this);
 				};
 
 				if($middlewares = $this->processDocString($handler))
