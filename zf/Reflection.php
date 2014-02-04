@@ -8,22 +8,21 @@ use Closure;
 
 class Reflection
 {
-	public static function apply($callable, $params=null, $context=null)
+	public static function apply($closure, $params=null, $context=null)
 	{
 		if ($context)
 		{
-			$callable instanceof Closure or $callable = self::getClosure($callable);
-		  	$callable = $callable->bindTo($context);
+		  	$closure = $closure->bindTo($context);
 		}
 		if ($params)
 		{
 			if (is_object($params) || Data::is_assoc($params))
 			{
-				$params = self::keyword2position($callable, $params);
+				$params = self::keyword2position($closure, $params);
 			}
-			return call_user_func_array($callable, $params);
+			return call_user_func_array($closure, $params);
 		}
-		return $callable();
+		return $closure();
 	}
 
 	public static function keyword2position($callable, $params)
@@ -59,6 +58,7 @@ class Reflection
 
 	public static function getClosure($fn)
 	{
+		if (!$fn) throw new Exception("function name can't be empty");
 		$reflection = new ReflectionFunction($fn);
 		return $reflection->getClosure();
 	}

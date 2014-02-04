@@ -2,7 +2,7 @@
 
 require '../vendor/autoload.php';
 
-$app = new \zf\App();
+$app = new zf\App();
 
 $app->useMiddleware('debug');
 

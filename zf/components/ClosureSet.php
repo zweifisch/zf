@@ -3,135 +3,105 @@
 namespace zf\components;
 
 use Exception, Closure;
+use zf\Reflection;
 
 class ClosureSet
 {
-	private $_registered;
-	private $_lookupPath;
+	private $_path;
+	private $_namespacePrefix;
 	private $_context;
-	public $delayed;
-	public $_fullname;
 
-	public function __construct($context, $path, $closures = null)
+	private $_namespace;
+
+	private $_registered = [];
+
+	public $delayed;
+
+	public function __construct($path, $namespace, $context=null, $closures=null)
 	{
+		$this->_path = str_replace('/', DIRECTORY_SEPARATOR, $path);
+		$this->_namespacePrefix = $namespace;
 		$this->_context = $context;
-		$this->_lookupPath = $path;
 		$this->delayed = new _Delayed($this);
 		if($closures) $this->register($closures);
 	}
 
-	private function _getPath($fullname)
+	public function resolve($fn)
 	{
-		return $this->_lookupPath.DIRECTORY_SEPARATOR.$fullname;
-	}
-
-	private function _getFullname($append)
-	{
-		return ($this->_fullname ? $this->_fullname . DIRECTORY_SEPARATOR : '') . $append;
-	}
-
-	private function _load($fullname)
-	{
-		$filename = $this->_getPath(str_replace(['.','/'], DIRECTORY_SEPARATOR, $fullname) . '.php');
-		$this->_fullname = null;
-		$closure = stream_resolve_include_path($filename) ? require $filename: null;
-		if(!$closure)
-		{
-			throw new Exception("closure '$fullname' not found under '$this->_lookupPath'");
+		$fn = str_replace('.', '/', $fn);
+		$fullname = '\\' . $this->_namespacePrefix . '\\' . str_replace('/', '\\', $fn);
+		if (!function_exists($fullname)) {
+			$segments = explode('/', $fn);
+			array_pop($segments);
+			$baseFilename = $segments
+				? $this->_path .DIRECTORY_SEPARATOR. implode(DIRECTORY_SEPARATOR, $segments)
+				: $this->_path;
+			$filename = $baseFilename . '.php';
+			if (!stream_resolve_include_path($filename))
+			{
+				$filename = $baseFilename . DIRECTORY_SEPARATOR . 'index.php';
+			}
+			if (!stream_resolve_include_path($filename))
+			{
+				return false;
+			}
+			require $filename;
 		}
-		elseif (1 === $closure)
-		{
-			throw new Exception("invalid closure in '$filename', forgot to return the closure?");
-		}
-		return $closure;
+		return $fullname;
 	}
 
-	public function __get($name)
+	public function __call($name, $params)
 	{
 		if(isset($this->_registered[$name]))
 		{
 			$closure = $this->_registered[$name];
-			$this->_registered[$name] = null; #  keep the key in $_registered array
-			if(is_string($closure))
-			{
-				$closure = $this->_load($closure);
-			}
-			else if(!$closure instanceof Closure)
-			{
-				throw new Exception("invalid closure \"$name\"");
-			}
 		}
 		else
 		{
-			$name = $this->_getFullname($name);
-			if(is_dir($this->_getPath($name, true)))
+			$this->_namespace[] = $name;
+			$fn = implode('/', $this->_namespace);
+			$this->_namespace = null;
+			if (!$fullname = $this->resolve($fn))
 			{
-				$this->_fullname = $name;
-				return  $this;
+				throw new Exception("can't locate $fn in $this->_path");
 			}
-			$closure = $this->_load($name);
+			$closure = Reflection::getClosure($fullname);
 		}
-		if($this->_context)
+		if ($this->_context)
 		{
 			$closure = $closure->bindTo($this->_context);
 		}
-		return $this->{$name} = $closure;
+		return call_user_func_array($closure, $params);
 	}
 
-	public function __call($name, $args=null)
+	public function __get($key)
 	{
-		$closure = isset($this->{$name}) ? $this->{$name} : $this->__get($name);
-		if($args)
-		{
-			$numArgs = count($args);
-			return
-				(1 == $numArgs ? $closure($args[0]) :
-				(2 == $numArgs ? $closure($args[0], $args[1]) :
-				(3 == $numArgs ? $closure($args[0], $args[1], $args[2]) : call_user_func_array($closure, $args))));
-		}
-		return $closure();
-	}
-
-	public function __apply($name, $args)
-	{
-		return $this->__call($name, \zf\Data::is_assoc($args) ? \zf\Reflection::keyword2position($this->$name, $args) : $args);
+		$this->_namespace[] = $key;
+		return $this;
 	}
 
 	public function register($name, $closure=null)
 	{
-		if(is_array($name))
+		if ($closure)
 		{
-			foreach($name as $name=>$closure)
-			{
-				is_int($name)
-					? $this->_registered[$ret[] = $closure] = null
-					: $this->_registered[$ret[] = $name] = $closure;
-			}
+			$this->_registered[$name] = $closure;
 		}
 		else
 		{
-			$this->_registered[$ret[] = $name] = $closure;
+			$this->_registered = array_merge($this->_registered, $name);
 		}
-		return $ret;
+		return $this;
 	}
 
 	public function registered($name)
 	{
-		return $this->_registered && array_key_exists($name, $this->_registered);
+		return array_key_exists($name, $this->_registered);
 	}
 
 	public function exists($name)
 	{
-		if($this->_registered && array_key_exists($name, $this->_registered) || isset($this->$name))
-		{
-			return true;
-		}
-
-		$name = str_replace(['.','/'], DIRECTORY_SEPARATOR, $name);
-		$filename = $this->_getPath($name.'.php');
-		return stream_resolve_include_path($filename);
+		return $this->registered($name) || $this->resolve($name);
 	}
-
 }
 
 class _Delayed
@@ -146,6 +116,8 @@ class _Delayed
 	public function __call($name, $args)
 	{
 		$closureSet = $this->closureSet;
-		return function() use ($name, $args, $closureSet){ return $closureSet->__call($name, $args); };
+		return function() use ($name, $args, $closureSet) {
+			return $closureSet->__call($name, $args);
+		};
 	}
 }

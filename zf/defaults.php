@@ -22,22 +22,27 @@ return [
 	'components' => [
 		'helper' => 'ClosureSet', [
 			'context' => $this,
-			'path' => 'helpers'
+			'path' => 'helpers',
+			'namespace' => 'helpers',
 		],
 		'handlers' => 'ClosureSet', [
 			'context' => $this,
 			'path' => 'handlers',
+			'namespace' => 'handlers',
 		],
 		'middlewares' => 'ClosureSet', [
 			'context' => $this,
 			'path' => 'middlewares',
+			'namespace' => 'middlewares',
 			'closures' => require __DIR__ . DIRECTORY_SEPARATOR . 'middlewares.php'
 		],
 		'paramHandlers' => 'ClosureSet', [
 			'context' => $this,
 			'path' => 'params',
+			'namespace' => 'paramHandlers',
 		],
-		'resource' => 'Resource', [
+		'resource' => 'ClosureSet', [
+			'context' => $this,
 			'path' => 'resources',
 			'namespace' => 'resources',
 		],

@@ -274,7 +274,7 @@ class App extends Laziness
 							return $this->router->params[$matches[1]];
 						}, $handler);
 					}
-					$handler = $this->resource->resolve($handler);
+					$handler = Reflection::getClosure($this->resource->resolve($handler));
 				}
 
 				$realHandler = function() use ($handler) {

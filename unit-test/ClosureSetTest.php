@@ -13,15 +13,6 @@ class ClosureSetTest extends PHPUnit_Framework_TestCase
 
 	public function testRegister()
 	{ 
-		$this->helper->register(['notset','alias'=>'inc','dec']);
-
-		$this->assertTrue($this->helper->registered('notset'));
-		$this->assertTrue($this->helper->registered('alias'));
-		$this->assertTrue($this->helper->registered('dec'));
-
-		$this->assertSame($this->helper->alias(0), 1);
-		$this->assertSame($this->helper->dec(1), 0);
-
 		$this->helper->register(['h4'=> function(){return true;}]);
 		$this->assertTrue($this->helper->h4());
 	}
@@ -45,30 +36,10 @@ class ClosureSetTest extends PHPUnit_Framework_TestCase
 		$this->assertSame(6, $this->helper->{'math/sum'}(1,2,3));
 	}
 
-	public function testKeywordArguments()
-	{
-		$this->helper->register('name', function($firstname, $lastname='bar'){
-			return $firstname . ' ' . $lastname;
-		});
-
-		$this->assertEquals('foo bar', $this->helper->__apply('name', ['firstname'=> 'foo']));
-		$this->assertEquals('foo oof', $this->helper->__apply('name', ['lastname'=> 'oof', 'firstname'=> 'foo']));
-	}
-
-	/**
-	 * @expectedException \zf\exceptions\ArgumentMissingException
-	 */
-	public function testKeywordArgumentsException()
-	{
-		$this->helper->register('name', function($firstname, $lastname='bar'){
-			return $firstname . ' ' . $lastname;
-		});
-
-		$this->assertEquals('foo bar', $this->helper->__apply('name', ['lastname'=> 'foo']));
-	}
-
 	public function setup()
 	{
-		$this->helper = new ClosureSet(null, __DIR__ . DIRECTORY_SEPARATOR . 'closures');
+		$this->helper = new ClosureSet(
+			__DIR__ . DIRECTORY_SEPARATOR . 'closures',
+			'helper');
 	}
 }
