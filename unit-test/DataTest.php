@@ -31,4 +31,24 @@ class DataTest extends PHPUnit_Framework_TestCase
 			'key3' => 2,
 		]);
 	}
+
+	public function testTransform()
+	{
+		$input = [
+			[1, 2, 3],
+			[4, 5, 6],
+			[7, 8, 9],
+		];
+		$this->assertSame(Data::transform($input), [
+			[1, 4, 7],
+			[2, 5, 8],
+			[3, 6, 9],
+		]);
+	}
+
+	public function testZip()
+	{
+		$this->assertSame(Data::zip([1, 2, 3], [4, 5, 6]),
+			[[1,4], [2, 5], [3, 6]]);
+	}
 }

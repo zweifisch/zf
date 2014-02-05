@@ -289,7 +289,7 @@ class App extends Laziness
 							}
 							elseif (!$param->isOptional())
 							{
-								return [400, "paramter \"{$param->name}\" is required"];
+								return [400, "parameter \"{$param->name}\" is required"];
 							}
 						}
 						else
@@ -300,7 +300,7 @@ class App extends Laziness
 							}
 							else
 							{
-								throw new Exception("component \"{$param->name}\" not available");
+								throw new Exception("\"{$param->name}\" not available as a component, if it's an parameter add @param <type> \"{$param->name}\" to the doc block");
 							}
 						}
 					}
@@ -323,12 +323,6 @@ class App extends Laziness
 		{
 			$this->response->notFound();
 		}
-	}
-
-	public function options($options)
-	{
-		IS_CLI and $this->router->options($options);
-		return $this;
 	}
 
 	public function resolvePath()

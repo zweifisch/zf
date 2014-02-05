@@ -106,4 +106,7 @@ assert_raises 'curl -si $host/admin | grep 401'
 
 assert_end auth
 
+assert "curl -sL $host/redirect" "redirected"
+assert_end redirect
+
 kill $pid

@@ -1,24 +1,31 @@
 <?php
 
+use zf\Data;
+
 return [
 	'schema' => function($schema) {
 		if($this->errors = $this->validator->validate($this->body, $schema)) {
 			$this->emit('validationfailed', ['errors'=> $this->errors]);
 		}
 	},
-	'param' => function($param) {
-		$exploded = explode(' ', $param, 3);
-		$type = $exploded[0];
-		$name = substr($exploded[1], 1);
+	'param' => function() {
+		$line = implode(',', func_get_args());
+		list($type, $name, $comment)= Data::explode(' ', $line, 3, '');
+		$name = ltrim($name, '$');
 		$this->params->_enable($name);
-		if (isset($this->params->$name))
-		{
+		if (isset($this->params->$name)) {
 			if($type === 'int')
 				$this->params->_swap($name, 'intval');
 			elseif($type === 'string')
 				$this->params->_swap($name, 'strval');
 			elseif($type === 'float')
 				$this->params->_swap($name, 'floatval');
+			elseif($type === 'bool')
+				$this->params->_swap($name, 'boolval');
+			elseif($type === 'array')
+				if (!is_array($this->params->$name)) return 400;
+		} else {
+			$this->params->_set($name, null);
 		}
 	},
 	'mockup' => function($mockup) {

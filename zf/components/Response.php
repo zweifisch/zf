@@ -2,8 +2,7 @@
 
 namespace zf\components;
 
-use JsonSerializable;
-use stdClass;
+use JsonSerializable, stdClass;
 
 class Response
 { 
@@ -128,25 +127,8 @@ class Response
 	{
 		if(IS_CLI)
 		{
-			$this->router->cmds() or exit(1);
-			echo "Usage:\n\n";
-			foreach($this->router->cmds() as $cmd)
-			{
-				list($cmd, $options) = $cmd;
-				echo '  php ', $_SERVER['argv'][0], ' ' , $cmd, "\n";
-				foreach($options as $option=>$default)
-				{
-					if(is_bool($default))
-					{
-						echo "      --$option\n";
-					}
-					else
-					{
-						echo "      --$option\tdefault: $default\n";
-					}
-				}
-				echo "\n";
-			}
+			$this->router->rules or exit(1);
+			echo $this->router->help();
 			exit(1);
 		}
 		else

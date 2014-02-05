@@ -2,9 +2,12 @@
 
 namespace zf\components;
 
+use zf\Reflection;
+use zf\Data;
+
 class CliRouter
 {
-	private $rules = [];
+	public $rules = [];
 	private $options;
 	private $module;
 
@@ -18,22 +21,12 @@ class CliRouter
 		$this->module = $module;
 	}
 
-	public function append($method, $pattern, $handlers)
+	public function append($method, $pattern, $handler)
 	{
-		if('cmd' == $method) $this->rules[] = [$pattern, $handlers, $this->module];
+		if('cmd' === $method) $this->rules[] = [$pattern, $handler, $this->module];
 	}
 
-	public function options($options)
-	{
-		$opts = [];
-		foreach($options as $key=>$value)
-		{
-			is_int($key) ? $opts[$value] = false : $opts[$key] = $value;
-		}
-		$this->options[count($this->rules) - 1] = $opts;
-	}
-
-	private function parse($args)
+	public function parse($args)
 	{
 		$positionalArgs = [];
 		$options = [];
@@ -43,12 +36,15 @@ class CliRouter
 			{
 				if($optname = strstr($arg, '=', true))
 				{
-					$options[substr($optname, 2)] = substr(strstr($arg, '='), 1);
+					$value = substr(strstr($arg, '='), 1);
 				}
 				else
 				{
-					$options[substr($arg, 2)] = true;
+					$optname = $arg;
+					$value = true;
 				}
+				$camelName = lcfirst(implode('', array_map('ucfirst', explode('-', $optname))));
+				$options[$camelName] = $value;
 			}
 			else
 			{
@@ -87,26 +83,55 @@ class CliRouter
 
 		foreach($this->rules as $idx => $rule)
 		{
-			list($pattern, $handlers, $module) = $rule;
+			list($pattern, $handler, $module) = $rule;
 			$params = $this->match($positionalArgs, $pattern);
 			if($params !== false)
 			{
-				$this->params = isset($this->options[$idx])
-					? array_merge($this->options[$idx], $params, $options)
-					: array_merge($params, $options);
-				return [$handlers, $this->params, $module];
+				$this->params = array_merge($params, $options);
+				return [$handler, $this->params, $module];
 			}
 		}
 	}
 
-	public function cmds()
+	public function help()
 	{
-		$cmds = [];
-		foreach($this->rules as $idx=>$rule)
+		$buffer[] = "Usage:\n";
+
+		foreach($this->rules as $rule)
 		{
-			$options = isset($this->options[$idx]) ? $this->options[$idx] : [];
-			$cmds[] = [$rule[0], $options];
+			list($pattern, $handler, $module) = $rule;
+			$buffer[] = "  php {$_SERVER['argv'][0]} $pattern";
+			$params = array_filter(Reflection::parseDoc($handler), function($doc) {
+				return $doc[0] === 'param';
+			});
+
+			$lines = array_map(function($param) use ($pattern) {
+				list($type, $name, $comment) = explode(' ', $param[1], 3);
+				$name = ltrim($name, '$');
+				if (false === strpos($pattern, "<$name>")) {
+					$name = '--' . implode('-', array_map('lcfirst',
+						preg_split('/(?=[A-Z])/', $name)));
+				}
+				return [$name, $comment];
+			}, $params);
+
+			foreach($this->column($lines) as $line) {
+				$buffer[] = "      $line";
+			}
+
+			$buffer[] = '';
 		}
-		return $cmds;
+		return implode("\n", $buffer);
+	}
+
+	private function column($rows)
+	{
+		$cols = Data::transform($rows);
+		$lens = array_map(function($col) {
+			return max(array_map('strlen', $col));
+		}, $cols);
+		return array_map(function($row) use ($lens) {
+			return implode("\t", array_map('str_pad', $row, $lens));
+		},$rows);
 	}
 }

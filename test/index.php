@@ -134,4 +134,12 @@ $app->any('/any', function() {
 	return $this->request->method;
 });
 
+$app->get('/redirect', function() {
+	$this->response->redirect('/redirected');
+});
+
+$app->get('/redirected', function() {
+	return 'redirected';
+});
+
 $app->run();

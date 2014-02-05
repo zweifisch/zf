@@ -56,4 +56,9 @@ class Params implements JsonSerializable
 	{
 		$this->_enabledParams[$key] = true;
 	}
+
+	public function _set($key, $value)
+	{
+		$this->_params[$key] = $value;
+	}
 }

@@ -56,4 +56,19 @@ class Data
 		return $ret;
 	}
 
+	static function transform(array $matrix)
+	{
+		array_unshift($matrix, function(){ return func_get_args(); });
+		return call_user_func_array('array_map', $matrix);
+	}
+
+	static function zip()
+	{
+		return self::transform(func_get_args());
+	}
+
+	static function explode($delimiter, $string, $limit, $pad_value=null)
+	{
+		return array_pad(explode($delimiter, $string, $limit), $limit, $pad_value);
+	}
 }
