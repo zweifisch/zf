@@ -164,13 +164,7 @@ class App extends Laziness
 		}
 	}
 
-	public function param($name, $handler=null)
-	{
-		$this->paramHandlers->register($name, $handler);
-		return $this;
-	}
-
-	public function helper($name, $closure=null)
+	public function helper($name, $closure)
 	{
 		$this->helper->register($name, $closure);
 		return $this;
@@ -409,6 +403,9 @@ class App extends Laziness
 
 	public function __toString()
 	{
-		return 'App';
+		if (!IS_CLI)
+		{
+			return implode("\n", $this->router->debug());
+		}
 	}
 }

@@ -36,11 +36,6 @@ return [
 			'namespace' => 'middlewares',
 			'closures' => require __DIR__ . DIRECTORY_SEPARATOR . 'middlewares.php'
 		],
-		'paramHandlers' => 'ClosureSet', [
-			'context' => $this,
-			'path' => 'params',
-			'namespace' => 'paramHandlers',
-		],
 		'resource' => 'ClosureSet', [
 			'context' => $this,
 			'path' => 'resources',
@@ -57,6 +52,7 @@ return [
 		'request' => 'Request',
 		'response' => 'Response',
 		'params' => 'Params',
+        'query' => 'Query',
 		'session' => 'Session',
 		'cookie' => 'Cookie',
 		'router' => IS_CLI ? 'CliRouter' : 'WebRouter',

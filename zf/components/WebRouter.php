@@ -6,7 +6,7 @@ use Closure;
 
 class WebRouter
 {
-	private $rules = [];
+	public $rules = [];
 	private $module;
 	public $params = [];
 
