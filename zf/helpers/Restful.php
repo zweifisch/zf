@@ -11,9 +11,8 @@ trait Restful
 	 * resources("user", "post", "post/comment");
 	 * </code>
 	 */
-	public function resources()
+	public function resources(...$args)
 	{
-		$args = func_get_args();
 		$resources = end($args);
 		if (is_array($resources))
 		{

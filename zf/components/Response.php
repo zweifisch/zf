@@ -72,9 +72,8 @@ class Response
 		}
 	}
 
-	public function cacheControl()
+	public function cacheControl(...$args)
 	{
-		$args = func_get_args();
 		if(is_array(end($args)))
 		{
 			$args += array_pop($args);

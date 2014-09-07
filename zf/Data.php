@@ -58,13 +58,13 @@ class Data
 
 	static function transform(array $matrix)
 	{
-		array_unshift($matrix, function(){ return func_get_args(); });
+		array_unshift($matrix, function(...$args){ return $args; });
 		return call_user_func_array('array_map', $matrix);
 	}
 
-	static function zip()
+	static function zip(...$args)
 	{
-		return self::transform(func_get_args());
+		return self::transform($args);
 	}
 
 	static function explode($delimiter, $string, $limit, $pad_value=null)

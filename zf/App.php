@@ -45,9 +45,9 @@ class App extends Laziness
 		};
 		register_shutdown_function($on_shutdown->bindTo($this));
 
-		$on_error = function() {
+		$on_error = function(...$args) {
 			return $this->emit('error', (object)array_combine(
-				['no','str','file','line','context'], func_get_args()));
+				['no','str','file','line','context'], $args));
 		};
 		set_error_handler($on_error->bindTo($this));
 
@@ -128,9 +128,8 @@ class App extends Laziness
 		return $this;
 	}
 
-	public function useModule()
+	public function useModule(...$modules)
 	{
-		$modules = func_get_args();
 		foreach($modules as $module)
 		{
 			$this->router->module($module);
@@ -305,9 +304,9 @@ class App extends Laziness
         return $this->runAllMiddlewares();
     }
 
-	public function resolvePath()
+	public function resolvePath(...$args)
 	{
-		return $this->config->basedir.DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, Data::flatten(func_get_args()));
+		return $this->config->basedir.DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, Data::flatten($args));
 	}
 
 	private function processDocString($handler)
