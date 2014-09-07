@@ -25,6 +25,25 @@ class ParamsTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($result->status, 200);
         $this->assertEquals($result->body, json_encode([
             'key'=> 'value',
-            'id'=>'9']));
+            'id'=> '9']));
+    }
+
+    public function testParamDocString()
+    {
+        $request = get($this->app, '/9', ['key'=> 'value']);
+
+        /**
+         * @param int $id
+         */
+        $this->app->get('/:id', function($id, $key) {
+            return $this->params;
+        });
+
+        $result = $request->run();
+
+        $this->assertEquals($result->body, json_encode([
+            'key'=> 'value',
+            'id'=> 9]));
+        $this->assertEquals($result->status, 200);
     }
 }

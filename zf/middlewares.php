@@ -8,24 +8,23 @@ return [
 			$this->emit('validationfailed', ['errors'=> $this->errors]);
 		}
 	},
-	'param' => function() {
-		$line = implode(',', func_get_args());
+	'param' => function(...$args) {
+		$line = implode(',', $args);
 		list($type, $name, $comment)= Data::explode(' ', $line, 3, '');
 		$name = ltrim($name, '$');
-		$this->params->_enable($name);
 		if (isset($this->params->$name)) {
 			if($type === 'int')
-				$this->params->_swap($name, 'intval');
-			elseif($type === 'string')
-				$this->params->_swap($name, 'strval');
+				$this->params->$name = intval($this->params->$name);
 			elseif($type === 'float')
-				$this->params->_swap($name, 'floatval');
+				$this->params->$name = floatval($this->params->$name);
 			elseif($type === 'bool')
-				$this->params->_swap($name, 'boolval');
+				$this->params->$name = boolval($this->params->$name);
 			elseif($type === 'array')
 				if (!is_array($this->params->$name)) return 400;
+            else
+                if($type !== 'string') return [500, 'unknow param type '. $type];
 		} else {
-			$this->params->_set($name, null);
+			$this->params->$name = null;
 		}
 	},
 	'mockup' => function($mockup) {

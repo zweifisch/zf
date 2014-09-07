@@ -6,5 +6,5 @@ inotifywait -mr --timefmt '%d/%m/%y %H:%M' --format '%T %w %f' \
     while read date time dir file; do
         echo "${dir}${file} at ${date} ${time}"
 
-        vendor/bin/phpunit -c test
+        CONFIG_FILE=test/configs.php vendor/bin/phpunit -c test
 done

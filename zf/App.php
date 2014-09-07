@@ -280,27 +280,13 @@ class App extends Laziness
                 $params = [];
                 foreach (Reflection::parameters($handler) as $param)
                 {
-                    if ($this->params->_enabled($param->name))
+                    if (isset($this->params->{$param->name}))
                     {
-                        if (isset($this->params->{$param->name}))
-                        {
-                            $params[$param->name] = $this->params->{$param->name};
-                        }
-                        elseif (!$param->isOptional())
-                        {
-                            return [400, "parameter \"{$param->name}\" is required"];
-                        }
+                        $params[$param->name] = $this->params->{$param->name};
                     }
-                    else
+                    elseif (!$param->isOptional())
                     {
-                        if (isset($this->{$param->name}))
-                        {
-                            $params[$param->name] = $this->{$param->name};
-                        }
-                        else
-                        {
-                            throw new Exception("\"{$param->name}\" not available as a component, if it's an parameter add @param <type> \"{$param->name}\" to the doc block");
-                        }
+                        return [400, "parameter \"{$param->name}\" is required"];
                     }
                 }
                 return Reflection::apply($handler, $params, $this);
