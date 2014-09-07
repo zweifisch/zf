@@ -5,8 +5,8 @@ namespace zf\components;
 use JsonSerializable, stdClass;
 
 class Response
-{ 
-	private $statuses = [
+{
+	protected $statuses = [
 		200 => 'OK',
 		201 => 'Created',
 		202 => 'Accepted',
@@ -44,10 +44,10 @@ class Response
 		504 => 'Gateway Timeout',
 		505 => 'HTTP Version Not Supported'
 	];
-	private $headers = [];
-	private $viewEngine;
-	private $router;
-	private $buffer;
+	protected $headers = [];
+	protected $viewEngine;
+	protected $router;
+	protected $buffer;
 
 	public $status = 200;
 	public $body = '';
@@ -84,10 +84,6 @@ class Response
 
 	public function stderr($content)
 	{
-		if (IS_CLI)
-		{
-			$content = "\033[01;31m$content\033[0m";
-		}
 		file_put_contents('php://stderr', $content, FILE_APPEND);
 	}
 
@@ -125,18 +121,9 @@ class Response
 
 	public function notFound($message='')
 	{
-		if(IS_CLI)
-		{
-			$this->router->rules or exit(1);
-			echo $this->router->help();
-			exit(1);
-		}
-		else
-		{
-			$this->status = 404;
-			$this->body = $message;
-			$this->send();
-		}
+        $this->status = 404;
+        $this->body = $message;
+        $this->send();
 	}
 
 	public function redirect($url, $permanent=false)

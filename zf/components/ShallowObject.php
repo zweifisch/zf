@@ -19,7 +19,7 @@ class ShallowObject implements JsonSerializable
 
 	public function jsonSerialize()
 	{
-		return $this->_soruce;
+		return $this->_source;
 	}
 
 	public function __isset($key)

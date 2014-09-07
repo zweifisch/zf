@@ -50,12 +50,7 @@ class Request
 
 	public function getMethod()
 	{
-		return $this->method = IS_CLI ? 'CLI' : $_SERVER['REQUEST_METHOD'];
-	}
-
-	public function getIsCli()
-	{
-		return IS_CLI;
+		return $_SERVER['REQUEST_METHOD'];
 	}
 
 	public function getArgv()

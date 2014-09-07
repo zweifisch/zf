@@ -50,11 +50,11 @@ return [
 			'context' => $this,
 		],
 		'request' => 'Request',
-		'response' => 'Response',
+		'response' => $this->isCli ? 'CliResponse' : 'Response',
 		'params' => 'Params',
         'query' => 'Query',
 		'session' => 'Session',
 		'cookie' => 'Cookie',
-		'router' => IS_CLI ? 'CliRouter' : 'WebRouter',
+		'router' => $this->isCli ? 'CliRouter' : 'WebRouter',
 	],
 ];

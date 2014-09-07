@@ -15,21 +15,24 @@ class App extends Laziness
 
 	public $config;
 
-	function __construct()
+	function __construct($mode=null)
 	{
 		ob_start();
 		ob_implicit_flush(false);
 		parent::__construct();
 
-		defined('IS_CLI') or define('IS_CLI', 'cli' == PHP_SAPI);
+		$this->isCli = 'cli' == ($mode ? $mode : PHP_SAPI);
 
-		$basedir = IS_CLI ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT'];
+		$basedir = $this->isCli ? dirname(realpath($_SERVER['argv'][0])) : $_SERVER['DOCUMENT_ROOT'];
 		set_include_path($basedir . PATH_SEPARATOR . get_include_path());
 
 		$this->config = new Config($this);
 		$this->config->load(__DIR__ . DIRECTORY_SEPARATOR . 'defaults.php');
-		$this->config->load('configs.php', true);
-		getenv('ZF_ENV') && $this->config->load('configs-'.getenv('ZF_ENV').'.php', true);
+        if ($configFile = getenv('CONFIG_FILE')) {
+            $this->config->load($configFile, true);
+        } else {
+            $this->config->load('configs.php', false);
+        }
 		$this->config->basedir = $basedir;
 
 		$on_exception = function($exception) {
@@ -253,71 +256,68 @@ class App extends Laziness
 		return $this->response->render($viewName, $vars);
 	}
 
-	public function run()
-	{
-		list($handler, $params, $module) = $this->router->dispatch();
-		if($handler)
-		{
-			set_include_path($this->resolvePath('modules', $module) . PATH_SEPARATOR . get_include_path());
-			$this->useMiddleware('handler', function() use ($handler) {
-				if(is_string($handler))
-				{
-					if (strpos($handler, ':'))
-					{
-						$handler = preg_replace_callback('#:([^/]+)#', function($matches) {
-							return $this->router->params[$matches[1]];
-						}, $handler);
-					}
-					$handler = Reflection::getClosure($this->resource->resolve($handler));
-				}
+    public function run()
+    {
+        list($handler, $params, $module) = $this->router->dispatch();
+        if(!$handler) {
+            return $this->response->notFound();
+        }
 
-				$realHandler = function() use ($handler) {
-					$params = [];
-					foreach (Reflection::parameters($handler) as $param)
-					{
-						if ($this->params->_enabled($param->name))
-						{
-							if (isset($this->params->{$param->name}))
-							{
-								$params[$param->name] = $this->params->{$param->name};
-							}
-							elseif (!$param->isOptional())
-							{
-								return [400, "parameter \"{$param->name}\" is required"];
-							}
-						}
-						else
-						{
-							if (isset($this->{$param->name}))
-							{
-								$params[$param->name] = $this->{$param->name};
-							}
-							else
-							{
-								throw new Exception("\"{$param->name}\" not available as a component, if it's an parameter add @param <type> \"{$param->name}\" to the doc block");
-							}
-						}
-					}
-					return Reflection::apply($handler, $params, $this);
-				};
+        set_include_path($this->resolvePath('modules', $module) . PATH_SEPARATOR . get_include_path());
+        $this->useMiddleware('handler', function() use ($handler) {
+            if(is_string($handler))
+            {
+                if (strpos($handler, ':'))
+                {
+                    $handler = preg_replace_callback('#:([^/]+)#', function($matches) {
+                        return $this->router->params[$matches[1]];
+                    }, $handler);
+                }
+                $handler = Reflection::getClosure($this->resource->resolve($handler));
+            }
 
-				if($middlewares = $this->processDocString($handler))
-				{
-					$this->useMiddleware($middlewares);
-					$this->useMiddleware('realHandler', $realHandler);
-				}
-				else
-				{
-					return $realHandler();
-				}
-			});
-			$this->runAllMiddlewares();
-		}
-		else
-		{
-			$this->response->notFound();
-		}
-	}
+            $realHandler = function() use ($handler) {
+                $params = [];
+                foreach (Reflection::parameters($handler) as $param)
+                {
+                    if ($this->params->_enabled($param->name))
+                    {
+                        if (isset($this->params->{$param->name}))
+                        {
+                            $params[$param->name] = $this->params->{$param->name};
+                        }
+                        elseif (!$param->isOptional())
+                        {
+                            return [400, "parameter \"{$param->name}\" is required"];
+                        }
+                    }
+                    else
+                    {
+                        if (isset($this->{$param->name}))
+                        {
+                            $params[$param->name] = $this->{$param->name};
+                        }
+                        else
+                        {
+                            throw new Exception("\"{$param->name}\" not available as a component, if it's an parameter add @param <type> \"{$param->name}\" to the doc block");
+                        }
+                    }
+                }
+                return Reflection::apply($handler, $params, $this);
+            };
+
+            if($middlewares = $this->processDocString($handler))
+            {
+                $this->useMiddleware($middlewares);
+                $this->useMiddleware('realHandler', $realHandler);
+            }
+            else
+            {
+                return $realHandler();
+            }
+        });
+        return $this->runAllMiddlewares();
+    }
 
 	public function resolvePath()
 	{
@@ -361,6 +361,7 @@ class App extends Laziness
 				$middleware($this->response);
 			}
 		}
+        return $this->response;
 	}
 
 	private function runMiddlewares($middlewares)
@@ -393,7 +394,7 @@ class App extends Laziness
 		{
 			$this->response->body = $body;
 		}
-		$this->response->send();
+		return $this->response->send();
 	}
 
 	public function trace($object)
@@ -401,11 +402,11 @@ class App extends Laziness
 		$this->response->trace($object);
 	}
 
-	public function __toString()
+	public function __debugInfo()
 	{
-		if (!IS_CLI)
+		if (!$this->isCli)
 		{
-			return implode("\n", $this->router->debug());
+			return $this->router->__debugInfo();
 		}
 	}
 }

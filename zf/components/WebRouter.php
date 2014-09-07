@@ -57,7 +57,7 @@ class WebRouter
 		}
 	}
 
-	public function debug()
+	public function __debugInfo()
 	{
 		$ret = [];
 		foreach ($this->rules as $rule)
