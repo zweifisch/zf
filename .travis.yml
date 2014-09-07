@@ -1,6 +1,6 @@
-script: phpunit -c unit-test
+script: CONFIG_FILE=test/configs.php phpunit -c test
 language: php
 php:
-  - 5.4
+  - 5.6
 before_script:
   - composer install --dev

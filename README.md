@@ -14,11 +14,10 @@ require 'vendor/autoload.php';
 $app = new zf\App;
 
 /**
- * @param string $name your name
- * @param string $more an optional param
+ * @param int $times an optional param
  */
-$app->get('/hello/:name', function($name, $more='') {
-	return ['hello' => $name.$more];
+$app->get('/hello/:name', function($name, $times=1) {
+	return ['hello' => $name, 'times' => $times];
 });
 
 $app->get('/', function() {
@@ -32,8 +31,8 @@ $app->run();
 
 ```
 $ php -S localhost:8000/index.php &> /tmp/server.log
-$ curl localhost:8000/hello/foo?more=bar
-{"hello": "foobar"}
+$ curl localhost:8000/hello/foo?times=3
+{"hello": "foo", "times': 3}
 ```
 
 ### cli
@@ -50,8 +49,8 @@ $app = new zf\App;
  * @param int $times times to repeat
  */
 $app->cmd('hello <name>', function($name, $times=1) {
-	return str_repeat("hello $name\n", $times);
-});
+    return str_repeat("hello $name\n", $times);
+})
 
 /**
  * @param bool $showDate also print date
@@ -89,5 +88,5 @@ to run tests
 
 ```sh
 composer.phar install --dev
-vendor/bin/phpunit -c unit-test
+CONFIG_FILE=test/configs.php vendor/bin/phpunit -c test
 ```

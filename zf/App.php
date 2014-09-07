@@ -29,9 +29,9 @@ class App extends Laziness
 		$this->config = new Config($this);
 		$this->config->load(__DIR__ . DIRECTORY_SEPARATOR . 'defaults.php');
         if ($configFile = getenv('CONFIG_FILE')) {
-            $this->config->load($configFile, true);
+            $this->config->load($configFile, false);
         } else {
-            $this->config->load('configs.php', false);
+            $this->config->load('configs.php', true);
         }
 		$this->config->basedir = $basedir;
 
